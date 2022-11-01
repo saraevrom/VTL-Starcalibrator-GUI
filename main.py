@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from plotter import Plotter
 
 if __name__ == "__main__":
     root = tk.Tk()
@@ -7,6 +8,8 @@ if __name__ == "__main__":
 
     view_panel = ttk.Frame(root)
     view_panel.grid(row=0,column=0)
+    plot = Plotter(view_panel)
+    plot.pack(fill=tk.BOTH, expand=True)
 
     control_panel = ttk.Frame(root)
     control_panel.grid(row=0, column=1)
