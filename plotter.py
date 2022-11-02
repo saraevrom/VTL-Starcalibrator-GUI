@@ -80,6 +80,10 @@ class Plotter(ttk.Frame):
             line, = self.axes.plot(xs, ys, "-o", label=label)
             self.lines[key] = line
 
+    def remove_line(self,key):
+        if key in self.lines.keys():
+            self.lines[key].remove()
+            del self.lines[key]
 
     def draw(self):
         self.axes.legend()

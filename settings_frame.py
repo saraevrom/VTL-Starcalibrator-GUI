@@ -44,6 +44,7 @@ class Setting(tk.Frame):
         self.initial_value = initial_value
         self.build_setting(self)
         self.reset()
+        self.change_callback = None
 
     def build_setting(self, frame):
         raise NotImplementedError("Required to use setting")
@@ -156,12 +157,18 @@ class SettingMenu(ScrollableFrame):
         self.user_settings = []
         self.columnconfigure(0,weight=1)
         self.separator_count = 0
+        self.on_change_callback = None
 
     def get_new_row(self):
         return len(self.user_settings)+self.separator_count
 
+    def on_change(self):
+        if self.on_change_callback:
+            self.on_change_callback()
+
     def add_setting(self, setting_type, setting_key, display_name, initial_value, **kwargs):
         newsetting = setting_type(self.view_port, setting_key, initial_value, **kwargs)
+        newsetting.change_callback = self.on_change
         newrow = self.get_new_row()
         self.user_settings.append(newsetting)
         ttk.Label(self.view_port,text=display_name).grid(row=newrow, column=0, sticky="ew")
