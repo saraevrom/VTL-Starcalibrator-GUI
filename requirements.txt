@@ -2,3 +2,5 @@ pandas
 numpy
 matplotlib
 h5py
+skyfield
+astropy
