@@ -17,6 +17,8 @@ def name_a_star(row):
     if not pd.isnull(row["Gliese"]):
         data.append(f"Gliese {row['Gliese']}")
     if data:
+        if len(data) > 3:
+            data = data[:3]
         if len(data) > 1:
             return f"{data[0]} ({', '.join(data[1:])})"
         else:
@@ -27,16 +29,18 @@ def name_a_star(row):
 class Star(object):
 
     # ra, dec in radians
-    def __init__(self, ra, dec, name):
+    def __init__(self, ra, dec, name, identifier):
         self.ra = ra
         self.dec = dec
         self.name = name
+        self.identifier = identifier
 
     @staticmethod
     def from_row(row):
         ra = row["RA"]*np.pi/12
         dec = row["Dec"]*np.pi/180
-        return Star(ra, dec, name_a_star(row))
+        ident = row["StarID"]
+        return Star(ra, dec, name_a_star(row),ident)
 
     def get_local_coords(self, era, dec, ra0, psi, f):
         phase = era + ra0 - self.ra
@@ -50,6 +54,13 @@ class Star(object):
         x1 = -x*f/z
         y1 = y*f/z
         return x1, y1, z > 0
+
+    def get_pixel(self, era, dec, ra0, psi, f):
+        x1, y1, visible = self.get_local_coords(era, dec, ra0, psi, f)
+        i1 = find_index(x1)*visible - (np.logical_not(visible))
+        j1 = find_index(y1)*visible - (np.logical_not(visible))
+        return i1, j1
+
 
 
 def range_calculate(params:dict, t1: Time, t2:Time):
@@ -69,3 +80,15 @@ def range_calculate(params:dict, t1: Time, t2:Time):
     dec_low = dec0 - half_fov
     dec_high = dec0 + half_fov
     return ra_low, ra_high, dec_low, dec_high
+
+
+def find_index(coord: np.ndarray):
+    coord_sign = np.sign(coord)
+    coord_abs = np.abs(coord)
+    inbounds = np.logical_and(coord_abs <= HALF_GAP_SIZE+HALF_PIXELS*PIXEL_SIZE, coord_abs >= HALF_GAP_SIZE)
+
+    pre_index = ((coord_abs-HALF_GAP_SIZE) / PIXEL_SIZE + HALF_PIXELS).astype(int)
+    after_index = pre_index * (coord_sign > 0) + (2*HALF_PIXELS - 1 - pre_index) * (coord_sign < 0)
+
+    return after_index * inbounds - (np.logical_not(inbounds))
+

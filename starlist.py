@@ -11,12 +11,17 @@ class Starlist(ScrollableFrame):
     def __init__(self, master, *args, **kwargs):
         super(Starlist, self).__init__(master, *args, **kwargs)
         self.stars = []
-        self.mat_file = None
+        self.star_callback = None
+
+    def on_selection_change(self, *args):
+        if self.star_callback:
+            self.star_callback()
 
     def add_star(self, row):
         name = name_a_star(row)
         mag = row["Mag"]
         new_var = tkinter.IntVar(self)
+        new_var.trace("w",self.on_selection_change)
         new_entry = tkinter.Checkbutton(self.view_port, text=f"{mag} {name}", variable=new_var)
         new_entry.grid(row=len(self.stars), column=0, sticky="ew")
         self.stars.append((Star.from_row(row), new_entry, new_var))
@@ -29,10 +34,11 @@ class Starlist(ScrollableFrame):
     def get_selection(self):
         return [star[0] for star in self.stars if star[2].get()]
 
+    def get_selection_full(self):
+        return [(star[0],bool(star[2].get())) for star in self.stars]
+
     def add_stars(self, stars_df: pd.DataFrame):
         ordered_stars = stars_df.sort_values(by="Mag")
         for index, row in ordered_stars.iterrows():
             self.add_star(row)
 
-    def update_mat_file(self,f):
-        self.mat_file = f

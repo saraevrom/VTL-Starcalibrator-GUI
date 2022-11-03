@@ -6,6 +6,7 @@ def build_menu(menu: SettingMenu):
     menu.add_separator("Выбор звёзд")
     menu.add_setting(RangeDoubleValue, "Mag_threshold", "Порог звёздной величины", 4, start=-1.44, end=6.0,
                      step=1e-2, fmt="%.2f")
+    menu.add_setting(RangeIntValue, "star_samples", "Количество точек на траектории.", 10, start=0, end=100)
     menu.add_separator("Параметры ориентации")
     menu.add_setting(RangeDoubleValue, "dec0", "Склонение прибора, °", 53.688444, start=-90, end=90, step=1e-3, fmt="%.6f")
     menu.add_setting(RangeDoubleValue, "ra0", "П. в. прибора (при ERA=0), °", 40.754414, start=0., end=360.,
