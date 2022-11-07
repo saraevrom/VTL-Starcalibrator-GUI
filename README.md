@@ -1,2 +1,2 @@
-# Satcalibrator-GUI
+# VTL-Starcalibrator-GUI
 Orientation determining software for VTL telescope
