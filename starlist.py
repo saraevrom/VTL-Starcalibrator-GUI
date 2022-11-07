@@ -34,6 +34,25 @@ class Starlist(ScrollableFrame):
     def get_selection(self):
         return [star[0] for star in self.stars if star[2].get()]
 
+    def get_pixels(self, era, dec, ra0, psi, f):
+        stars = self.get_selection()
+        t = np.arange(len(era))
+        rows = None
+        for star in stars:
+            i, j = star.get_pixel(era, dec, ra0, psi, f)
+            accessible = np.logical_and(i >= 0, j >= 0)
+            new_arr = np.array([t[accessible], i[accessible], j[accessible]]).T
+            if rows is None:
+                rows = new_arr
+            else:
+                rows = np.vstack([rows, new_arr])
+        if rows is None:
+            rows = np.array([])
+        res = np.unique(rows, axis=0)
+        return res
+
+
+
     def get_selection_full(self):
         return [(star[0],bool(star[2].get())) for star in self.stars]
 

@@ -262,7 +262,11 @@ class SettingMenu(ScrollableFrame):
                 self.change_notify[k] = False
 
 
-    def pull_settings_dict(self,in_settings_dict: dict):
+    def pull_settings_dict(self,in_settings_dict: dict, custom_keys = None):
         for s in self.user_settings:
             s:Setting
-            s.get_dict_value(in_settings_dict)
+            if custom_keys is not None:
+                if s.setting_key in custom_keys:
+                    s.get_dict_value(in_settings_dict)
+            else:
+                s.get_dict_value(in_settings_dict)

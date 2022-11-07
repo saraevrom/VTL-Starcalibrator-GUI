@@ -24,11 +24,14 @@ def build_menu(menu: SettingMenu):
     menu.add_setting(RangeDoubleValue, "d_f", "Фокусное расстояние, мм", 1., start=0., end=10.,
                      step=1.0, fmt="%.2f")
     menu.add_setting(CheckboxValue, "optimizer_run", "Запустить оптимизатор", False)
+    menu.add_setting(RangeIntValue, "optimizer_steps", "Количество шагов оптимизатора", 0, start=0, end=100)
     menu.add_separator("Выбор времени")
     menu.add_setting(RangeIntValue, "time_1", "Точка 1", 0, start=0, end=100)
     menu.add_setting(RangeIntValue, "time_2", "Точка 2", 100, start=0, end=100)
     menu.add_separator("Параметры отображения")
+    menu.add_setting(CheckboxValue, "display_use_filter", "Включить фильтр", True)
+    menu.add_setting(CheckboxValue, "display_use_max", "Использовать максимум вместо порога", False)
+    menu.add_setting(CheckboxValue, "global_filter", "Глобальный фильтр", False)
     menu.add_setting(RangeDoubleValue, "display_threshold", "Порог", 10, start=0, end=1000,
                      step=1.0, fmt="%.2f")
     menu.add_setting(RangeIntValue, "filter_window", "Окно фильтра", 60, start=0, end=1200)
-    menu.add_setting(CheckboxValue, "global_filter", "Глобальный фильтр", False)
