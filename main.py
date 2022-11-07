@@ -16,6 +16,7 @@ from astropy.time import Time
 from astronomy import range_calculate
 import json
 from random_roaming import RandomRoaming
+from mat_converter import MatConverter
 
 class App(tk.Tk):
     def __init__(self):
@@ -42,7 +43,11 @@ class App(tk.Tk):
         self.filemenu.add_command(label="Загрузить настройки", command=self.on_settings_load)
         self.filemenu.add_command(label="Сохранить настройки", command=self.on_settings_save)
 
+        self.toolsmenu = tk.Menu(self.topmenu, tearoff=0)
+        self.toolsmenu.add_command(label="Преобразовать mat файлы", command=self.on_converter_open)
+
         self.topmenu.add_cascade(label="Файл", menu=self.filemenu)
+        self.topmenu.add_cascade(label="Инструменты", menu=self.toolsmenu)
         self.config(menu=self.topmenu)
         self.rowconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
@@ -242,6 +247,8 @@ class App(tk.Tk):
         self.settings_dict["f"] = f
         self.settings_push(["dec0", "ra0", "psi", "f"])
 
+    def on_converter_open(self):
+        MatConverter(self)
 
 
 if __name__ == "__main__":
