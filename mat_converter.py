@@ -1,6 +1,10 @@
 import tkinter as tk
 from tkinter import ttk
 import tkinter.filedialog as filedialog
+import tkinter.messagebox as messagebox
+import h5py
+import numpy as np
+import tqdm
 
 class MatConverter(tk.Toplevel):
     def __init__(self, master):
@@ -35,8 +39,10 @@ class MatConverter(tk.Toplevel):
                                                 filetypes=[("Файл с сырыми данными", "*.mat *.hdf")])
         if filenames:
             for filename in filenames:
-                if filename not in self.file_listbox.get(0,tk.END):
-                    self.file_listbox.insert(tk.END,filename)
+                if filename not in self.file_listbox.get(0, tk.END):
+                    self.file_listbox.insert(tk.END, filename)
+                else:
+                    messagebox.showwarning(title="Добавка файла", message=f"Файл {filename} уже в списке")
 
     def on_remove_file(self):
         cursel = self.file_listbox.curselection()
@@ -46,12 +52,63 @@ class MatConverter(tk.Toplevel):
 
     def on_output_file_select(self):
         filename = filedialog.asksaveasfilename(title="Экспорт",
-                                                filetypes=[("Файл с упрощёными данными", "*.mat *.hdf")])
+                                                filetypes=[("Файл с упрощёными данными", "*.mat *.hdf")],
+                                                initialdir=".")
         if filename:
             self.output_file.set(filename)
 
     def on_convert(self):
-        pass
+        try:
+            average_window = int(self.average_window.get())
+        #Average window test
+        except ValueError:
+            messagebox.showerror(title="Ввод данных",message="Введите число элементов для усреднения")
+            return
+        if average_window <= 0:
+            messagebox.showerror(title="Ввод данных", message="Число элементов для усреднения должно быть натуральным")
+            return
+        #Filename tests
+        output_filename = self.output_file.get()
+        input_filenames = self.file_listbox.get(0,tk.END)
+        print(input_filenames)
+        if not output_filename:
+            messagebox.showerror(title="Ввод данных", message="Выберите имя файла для готовых данных")
+            return
+
+        if output_filename in input_filenames:
+            messagebox.showerror(title="Ввод данных", message="Попытка перезаписать один из входных данных")
+            return
+
+        frames = 0
+        try:
+            for input_filename in input_filenames:
+                with h5py.File(input_filename,"r") as input_file:
+                    file_len = len(input_file['unixtime_dbl_global'])
+                    if file_len != len(input_file["pdm_2d_rot_global"]):
+                        print(file_len, len(input_file["pdm_2d_rot_global"]))
+                        messagebox.showerror(title="Данные", message=f"Файл {input_filename} повреждён")
+                        return
+                    subframe = file_len // average_window
+                    frames += subframe
+        except KeyError:
+            messagebox.showerror(title="Ввод данных",
+                        message="Во входных файлах есть данные без полей unixtime_dbl_global или pdm_2d_rot_global")
+            return
+
+        if messagebox.askyesno(title="Преобразование",
+                               message=f"Будет создан файл с {frames} кадрами, хотите продолжить?"):
+            with h5py.File(output_filename,"w") as output_file:
+                data0 = output_file.create_dataset("data0", (frames, 16, 16), dtype="f8")
+                utc_time = output_file.create_dataset("UT0", (frames,), dtype="f8")
+                pointer = 0
+                for input_filename in input_filenames:
+                    with h5py.File(input_filename, "r") as input_file:
+                        file_len = len(input_file['unixtime_dbl_global'])
+                        for i in tqdm.tqdm(range(0, file_len, average_window)):
+                            data0[pointer] = np.mean(input_file["pdm_2d_rot_global"][i:i+average_window])
+                            utc_time[pointer] = input_file['unixtime_dbl_global'][i][0]
+                            pointer += 1
+
 
 if __name__=="__main__":
     root = tk.Tk()
