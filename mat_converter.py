@@ -9,6 +9,8 @@ import tqdm
 class MatConverter(tk.Toplevel):
     def __init__(self, master):
         super(MatConverter, self).__init__(master)
+        if hasattr(self.master, "close_mat_file"):
+            self.master.close_mat_file()
         self.title("Преобразователь mat файлов")
         self.file_listbox = tk.Listbox(self, selectmode=tk.MULTIPLE)
         self.file_listbox.grid(row=0, column=0, sticky="nsew", columnspan=2)
@@ -97,7 +99,9 @@ class MatConverter(tk.Toplevel):
 
         if messagebox.askyesno(title="Преобразование",
                                message=f"Будет создан файл с {frames} кадрами, хотите продолжить?"):
-            with h5py.File(output_filename,"w") as output_file:
+            if hasattr(self.master, "close_mat_file"):
+                self.master.close_mat_file()
+            with h5py.File(output_filename, "w") as output_file:
                 data0 = output_file.create_dataset("data0", (frames, 16, 16), dtype="f8")
                 utc_time = output_file.create_dataset("UT0", (frames,), dtype="f8")
                 pointer = 0
@@ -105,7 +109,7 @@ class MatConverter(tk.Toplevel):
                     with h5py.File(input_filename, "r") as input_file:
                         file_len = len(input_file['unixtime_dbl_global'])
                         for i in tqdm.tqdm(range(0, file_len, average_window)):
-                            data0[pointer] = np.mean(input_file["pdm_2d_rot_global"][i:i+average_window])
+                            data0[pointer] = np.mean(input_file["pdm_2d_rot_global"][i:i+average_window], axis=0)
                             utc_time[pointer] = input_file['unixtime_dbl_global'][i][0]
                             pointer += 1
 

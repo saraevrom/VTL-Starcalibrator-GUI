@@ -216,6 +216,11 @@ class App(tk.Tk):
             self.refresh()
             self.read_stars()
 
+    def close_mat_file(self):
+        if self.file:
+            self.file.close()
+            self.file = None
+
     def calculate_score(self, dec, ra0, psi, f):
         if self.file:
             eras, framespace = self.get_era_range()
