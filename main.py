@@ -2,7 +2,7 @@
 import os
 import tkinter as tk
 from tkinter import ttk
-from plotter import Plotter
+from plotter import GridPlotter
 from settings_frame import SettingMenu
 from vtl_settings_build import build_menu
 from starlist import Starlist
@@ -17,6 +17,15 @@ from astronomy import range_calculate
 import json
 from random_roaming import RandomRoaming
 from mat_converter import MatConverter
+from flatfielder import FlatFielder
+
+class Tool(object):
+    def __init__(self,master,tool_class):
+        self.master = master
+        self.tool_class = tool_class
+
+    def __call__(self):
+        self.tool_class(self.master)
 
 class App(tk.Tk):
     def __init__(self):
@@ -26,7 +35,7 @@ class App(tk.Tk):
         self.star_menu.grid(row=0, column=0, sticky="nsew")
         self.star_menu.star_callback = self.on_star_selection_change
 
-        self.plot = Plotter(self)
+        self.plot = GridPlotter(self)
         self.plot.grid(row=0, column=1, sticky="nsew")
 
         self.settings = SettingMenu(self)
@@ -44,7 +53,8 @@ class App(tk.Tk):
         self.filemenu.add_command(label="Сохранить настройки", command=self.on_settings_save)
 
         self.toolsmenu = tk.Menu(self.topmenu, tearoff=0)
-        self.toolsmenu.add_command(label="Преобразовать mat файлы", command=self.on_converter_open)
+        self.toolsmenu.add_command(label="Преобразовать mat файлы", command=Tool(self, MatConverter))
+        self.toolsmenu.add_command(label="Выравнивание пикселей", command=Tool(self, FlatFielder))
 
         self.topmenu.add_cascade(label="Файл", menu=self.filemenu)
         self.topmenu.add_cascade(label="Инструменты", menu=self.toolsmenu)

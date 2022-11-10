@@ -32,21 +32,26 @@ def star_id_to_rgb(i):
     return '#%02x%02x%02x' % (r,g,b)
 
 class Plotter(ttk.Frame):
-    def __init__(self, master, norm=None, *args, **kwargs):
+    def __init__(self, master, *args, **kwargs):
         super(Plotter, self).__init__(master, *args, **kwargs)
         self.figure: Figure
         self.figure = Figure(figsize=(5, 4), dpi=100)
         self.axes: Axes
         self.axes = self.figure.add_subplot(1, 1, 1)
-        span = HALF_PIXELS*PIXEL_SIZE+HALF_GAP_SIZE
-        self.axes.set_xlim(-span, span)
-        self.axes.set_ylim(-span, span)
-        self.axes.set_box_aspect(1)
 
         self.mpl_canvas = FigureCanvasTkAgg(self.figure, self)
         self.mpl_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         self.toolbar = NavigationToolbar2Tk(self.mpl_canvas, self)
         self.toolbar.update()
+
+class GridPlotter(Plotter):
+    def __init__(self, master, norm=None, *args, **kwargs):
+        super(GridPlotter, self).__init__(master, *args, **kwargs)
+
+        span = HALF_PIXELS*PIXEL_SIZE+HALF_GAP_SIZE
+        self.axes.set_xlim(-span, span)
+        self.axes.set_ylim(-span, span)
+        self.axes.set_box_aspect(1)
 
         self.buffer_matrix = np.zeros((16, 16))
         self.patches = []
