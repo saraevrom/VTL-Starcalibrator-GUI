@@ -12,7 +12,7 @@ import colorsys
 matplotlib.use("TkAgg")
 
 PIXEL_SIZE = 2.85
-HALF_GAP_SIZE = 3.0
+HALF_GAP_SIZE = 2.0
 HALF_PIXELS = 8
 CMAP = plt.cm.viridis
 

@@ -25,6 +25,7 @@ def build_menu(menu: SettingMenu):
                      step=1.0, fmt="%.2f")
     menu.add_setting(CheckboxValue, "optimizer_run", "Запустить оптимизатор", False)
     menu.add_setting(RangeIntValue, "optimizer_steps", "Количество шагов оптимизатора", 0, start=0, end=100)
+    menu.add_setting(CheckboxValue, "optimizer_use_min", "Использовать минимум вместо суммы", False)
     menu.add_separator("Выбор времени")
     menu.add_setting(RangeIntValue, "time_1", "Точка 1", 0, start=0, end=100)
     menu.add_setting(RangeIntValue, "time_2", "Точка 2", 100, start=0, end=100)

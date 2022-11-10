@@ -222,13 +222,16 @@ class App(tk.Tk):
             self.file = None
 
     def calculate_score(self, dec, ra0, psi, f):
+        final_calc_func = np.sum
+        if self.settings_dict["optimizer_use_min"]:
+            final_calc_func = np.min
         if self.file:
             eras, framespace = self.get_era_range()
             pixels = self.star_menu.get_pixels(eras, dec, ra0, psi, f)
             if len(pixels)>0:
                 t, i, j = pixels.T
                 frames = np.array(self.file["data0"])[framespace[t], i, j]
-                return np.sum(frames)
+                return final_calc_func(frames)
         return 0
 
     def get_parameters(self):
