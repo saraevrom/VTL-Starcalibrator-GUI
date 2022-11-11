@@ -44,6 +44,11 @@ class Plotter(ttk.Frame):
         self.toolbar = NavigationToolbar2Tk(self.mpl_canvas, self)
         self.toolbar.update()
 
+    def draw(self):
+        self.figure.canvas.draw()
+        self.figure.canvas.flush_events()
+        self.mpl_canvas.draw()
+
 class GridPlotter(Plotter):
     def __init__(self, master, norm=None, *args, **kwargs):
         super(GridPlotter, self).__init__(master, *args, **kwargs)
@@ -108,6 +113,4 @@ class GridPlotter(Plotter):
 
     def draw(self):
         self.axes.legend()
-        self.figure.canvas.draw()
-        self.figure.canvas.flush_events()
-        self.mpl_canvas.draw()
+        super(GridPlotter, self).draw()

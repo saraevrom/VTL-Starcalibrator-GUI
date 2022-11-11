@@ -2,4 +2,9 @@ from settings_frame import SettingMenu, RangeDoubleValue, SliderRangeDoubleValue
 from math import pi
 
 def build_settings(menu:SettingMenu):
-    pass
+    menu.add_separator("Выбор диапазона")
+    menu.add_setting(RangeIntValue, "time_1", "Точка 1", 0, start=0, end=100)
+    menu.add_setting(RangeIntValue, "time_2", "Точка 2", 100, start=0, end=100)
+    menu.add_separator("Данные")
+    menu.add_setting(RangeIntValue, "samples_mean", "Усреднение", 60, start=0, end=1200)
+
