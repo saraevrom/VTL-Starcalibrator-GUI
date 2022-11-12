@@ -9,6 +9,12 @@ import h5py
 from .settings_build import build_settings
 from .signal_plotter import SignalPlotter
 import numpy as np
+from robustats import weighted_median
+import matplotlib.pyplot as plt
+
+def line_fit_robust(xs, ys):
+    k = np.float(weighted_median(ys/xs, xs))
+    return k
 
 class FlatFielder(tk.Toplevel):
     def __init__(self, master):
@@ -32,6 +38,11 @@ class FlatFielder(tk.Toplevel):
         self.t1_setting = self.settings_menu.lookup_setting("time_1")
         self.t2_setting = self.settings_menu.lookup_setting("time_2")
         self.get_mat_file()
+        self.drawn_data = None
+
+        btn = ttk.Button(self, text="Расчёт коэффициентов", command=self.on_calculate)
+        btn.grid(row=1,column=0,sticky="ew")
+        self.on_apply_settings()
 
     def sync_settings(self):
         self.settings_menu.push_settings_dict(self.settings_dict)
@@ -46,22 +57,61 @@ class FlatFielder(tk.Toplevel):
     def on_apply_settings(self):
         self.sync_settings()
         self.signal_plotter.set_xrange(self.settings_dict["time_1"], self.settings_dict["time_2"])
-        self.propagate_limits()
-        self.signal_plotter.draw()
         if self.file:
-            skip = self.settings_dict["samples_mean"]
-            data0 = self.file["data0"]
-            res_array = None
-            for i in range(0, len(self.file), skip):
-                layer = np.mean(data0[i:i+skip], axis=0)
-                if res_array is not None:
-                    res_array = np.vstack([res_array, layer])
-                else:
-                    res_array = layer
-            self.draw_array = res_array
+            self.propagate_limits()
+            self.draw_plot()
+        self.signal_plotter.draw()
+
+    def on_calculate(self):
+        if self.drawn_data is not None:
+            t1 = self.settings_dict["time_1"]
+            t2 = self.settings_dict["time_2"]
+            if t1 > t2:
+                t1, t2 = t2, t1
+            requested_data = self.drawn_data[t1:t2]
+            tim_len, x_len, y_len = requested_data.shape
+            requested_data = requested_data.reshape((tim_len, x_len * y_len))
+            #fig, ax = plt.subplots()
+            #fig.show()
+            #scattering = ax.scatter(requested_data[:,0],requested_data[:,1])
+            coeff_matrix = np.zeros([x_len*y_len, x_len*y_len])
+            for i in range(x_len*y_len):
+                i_data = requested_data[:, i]
+                for j in range(x_len*y_len):
+                    j_data = requested_data[:, j]
+                    k_ij = line_fit_robust(i_data, j_data)
+                    coeff_matrix[i, j] = k_ij
+            coeff_matrix = np.nan_to_num(coeff_matrix, nan=0)
+            #good_indices = np.where((coeff_matrix != 0).any(axis=0))
+            #assert len(good_indices) > 0
+            correct_row = np.argmax(coeff_matrix) // x_len
+            coeff_array = coeff_matrix[correct_row]
+            draw_coeff_matrix = coeff_array.reshape(x_len, y_len)
+            self.plotter.buffer_matrix = draw_coeff_matrix
+            self.plotter.update_matrix_plot(update_norm=True)
+            self.plotter.draw()
+            np.save("flat_fielding.npy", draw_coeff_matrix)
 
     def get_mat_file(self):
         self.sync_settings()
         if hasattr(self.master, "file"):
             self.file = self.master.file
-            self.propagate_limits()
+            if self.file:
+                self.propagate_limits()
+                self.draw_plot()
+        self.signal_plotter.draw()
+
+    def draw_plot(self):
+        data0 = self.file["data0"]
+        skip = self.settings_dict["samples_mean"]
+        res_array = []
+        for i in range(0, len(data0), skip):
+            layer = np.mean(data0[i:i+skip], axis=0)
+            res_array.append(layer)
+        print(len(res_array))
+        self.drawn_data = np.array(res_array)
+        self.signal_plotter.plot_data(self.drawn_data)
+        bottom = -10
+        top = np.max(self.drawn_data)
+        self.signal_plotter.view_y(bottom, top)
+        self.signal_plotter.set_yrange(0, top)

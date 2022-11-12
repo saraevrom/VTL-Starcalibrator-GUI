@@ -5,3 +5,4 @@ h5py
 skyfield
 astropy
 tqdm
+robustats

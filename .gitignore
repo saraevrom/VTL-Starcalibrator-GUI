@@ -3,3 +3,4 @@ venv
 settings*.json
 __pycache__/
 *.mat
+*.npy

@@ -44,6 +44,8 @@ class App(tk.Tk):
         self.settings.commit_action = self.on_settings_change
         self.settings.add_tracer("Mag_threshold", self.read_stars)
         self.settings.add_tracer("star_samples", self.on_star_sample_change)
+        self.settings.add_tracer("time_1", self.read_stars)
+        self.settings.add_tracer("time_2", self.read_stars)
 
         self.topmenu = tk.Menu(self)
 
@@ -135,8 +137,19 @@ class App(tk.Tk):
                 subframes = slide[:, :, :, win // 2]
                 assert subframes.shape == bg.shape
                 subframes = subframes - bg
-        return subframes
+        return self.flat_field_opt(subframes)
 
+    def flat_field_opt(self, data_array):
+        FILENAME = "flat_fielding.npy"
+        if not self.settings_dict["flatfielding"]:
+            return data_array
+        if os.path.isfile(FILENAME):
+            flat_field = np.load(FILENAME)
+            retdata = data_array / flat_field
+            retdata = np.nan_to_num(retdata, nan=0)
+            return retdata
+        else:
+            return data_array
 
     def refresh_bg(self):
         if self.file:
@@ -154,7 +167,8 @@ class App(tk.Tk):
 
     def read_stars(self):
         if self.file:
-            f1, f2 = 0, len(self.file["data0"])-1
+            # f1, f2 = 0, len(self.file["data0"])-1
+            f1, f2 = self.cut_frames()
             ut1 = Time(self.file["UT0"][f1], format="unix",scale="utc")
             ut2 = Time(self.file["UT0"][f2], format="unix",scale="utc")
             hygfull = pd.read_csv("hygfull_mod.csv", sep=",")
@@ -238,7 +252,7 @@ class App(tk.Tk):
         if self.file:
             eras, framespace = self.get_era_range()
             pixels = self.star_menu.get_pixels(eras, dec, ra0, psi, f)
-            if len(pixels)>0:
+            if len(pixels) > 0:
                 t, i, j = pixels.T
                 frames = np.array(self.file["data0"])[framespace[t], i, j]
                 return final_calc_func(frames)
@@ -267,6 +281,8 @@ class App(tk.Tk):
 
     def on_converter_open(self):
         MatConverter(self)
+
+
 
 
 if __name__ == "__main__":
