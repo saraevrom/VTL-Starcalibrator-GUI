@@ -49,6 +49,7 @@ class Plotter(ttk.Frame):
         self.figure.canvas.flush_events()
         self.mpl_canvas.draw()
 
+
 class GridPlotter(Plotter):
     def __init__(self, master, norm=None, *args, **kwargs):
         super(GridPlotter, self).__init__(master, *args, **kwargs)
@@ -77,7 +78,6 @@ class GridPlotter(Plotter):
         self.axes.hlines(LOWER_EDGES, span, HALF_GAP_SIZE, colors="black")
         self.axes.hlines([-HALF_GAP_SIZE, span], -span, -HALF_GAP_SIZE, colors="black")
         self.axes.hlines([-HALF_GAP_SIZE, span], span, HALF_GAP_SIZE, colors="black")
-        self.lines = dict()
 
     def update_matrix_plot(self, update_norm=False):
         if update_norm or (self.norm is None):
@@ -89,6 +89,11 @@ class GridPlotter(Plotter):
         for j in range(16):
             for i in range(16):
                 self.patches[j][i].set_color(CMAP(self.norm(self.buffer_matrix[i,j])))
+
+class StarGridPlotter(GridPlotter):
+    def __init__(self, master, norm=None, *args, **kwargs):
+        super(StarGridPlotter, self).__init__(master, norm, *args, **kwargs)
+        self.lines = dict()
 
     def set_line(self, key, xs, ys, label=""):
         if key in self.lines.keys():
@@ -113,4 +118,4 @@ class GridPlotter(Plotter):
 
     def draw(self):
         self.axes.legend()
-        super(GridPlotter, self).draw()
+        super(StarGridPlotter, self).draw()

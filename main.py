@@ -2,7 +2,7 @@
 import os
 import tkinter as tk
 from tkinter import ttk
-from plotter import GridPlotter
+from plotter import StarGridPlotter
 from settings_frame import SettingMenu
 from vtl_settings_build import build_menu
 from starlist import Starlist
@@ -18,6 +18,7 @@ import json
 from random_roaming import RandomRoaming
 from mat_converter import MatConverter
 from flatfielder import FlatFielder
+from mat_player import MatPlayer
 
 class Tool(object):
     def __init__(self,master,tool_class):
@@ -35,7 +36,7 @@ class App(tk.Tk):
         self.star_menu.grid(row=0, column=0, sticky="nsew")
         self.star_menu.star_callback = self.on_star_selection_change
 
-        self.plot = GridPlotter(self)
+        self.plot = StarGridPlotter(self)
         self.plot.grid(row=0, column=1, sticky="nsew")
 
         self.settings = SettingMenu(self)
@@ -57,6 +58,7 @@ class App(tk.Tk):
         self.toolsmenu = tk.Menu(self.topmenu, tearoff=0)
         self.toolsmenu.add_command(label="Преобразовать mat файлы", command=Tool(self, MatConverter))
         self.toolsmenu.add_command(label="Выравнивание пикселей", command=Tool(self, FlatFielder))
+        self.toolsmenu.add_command(label="Просмотр данных", command=Tool(self, MatPlayer))
 
         self.topmenu.add_cascade(label="Файл", menu=self.filemenu)
         self.topmenu.add_cascade(label="Инструменты", menu=self.toolsmenu)

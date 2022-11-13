@@ -41,7 +41,7 @@ class FlatFielder(tk.Toplevel):
         self.drawn_data = None
 
         btn = ttk.Button(self, text="Расчёт коэффициентов", command=self.on_calculate)
-        btn.grid(row=1,column=0,sticky="ew")
+        btn.grid(row=1, column=0, sticky="ew")
         self.on_apply_settings()
 
     def sync_settings(self):
