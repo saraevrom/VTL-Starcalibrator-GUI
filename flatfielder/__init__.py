@@ -77,14 +77,25 @@ class FlatFielder(tk.Toplevel):
             coeff_matrix = np.zeros([x_len*y_len, x_len*y_len])
             for i in range(x_len*y_len):
                 i_data = requested_data[:, i]
-                for j in range(x_len*y_len):
+                coeff_matrix[i, i] = 1
+                for j in range(i+1, x_len*y_len):
                     j_data = requested_data[:, j]
                     k_ij = line_fit_robust(i_data, j_data)
-                    coeff_matrix[i, j] = k_ij
+                    k_ji = line_fit_robust(j_data, i_data)
+                    if k_ij!=0 and k_ji!=0:
+                        coeff_matrix[i, j] = k_ij
+                        coeff_matrix[j, i] = k_ji
+                    else:
+                        coeff_matrix[j, j] = 0
             coeff_matrix = np.nan_to_num(coeff_matrix, nan=0)
+            bad_indices = np.where((coeff_matrix == 0).sum(axis=0)==x_len*y_len-1)
+            print(bad_indices)
+            for i in bad_indices:
+                coeff_matrix[i,i] = 0
             #good_indices = np.where((coeff_matrix != 0).any(axis=0))
             #assert len(good_indices) > 0
-            correct_row = np.argmax(coeff_matrix) // x_len
+            #correct_row = 0
+            correct_row = np.argmax(coeff_matrix) // coeff_matrix.shape[0]
             coeff_array = coeff_matrix[correct_row]
             draw_coeff_matrix = coeff_array.reshape(x_len, y_len)
             self.plotter.buffer_matrix = draw_coeff_matrix

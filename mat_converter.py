@@ -5,6 +5,7 @@ import tkinter.messagebox as messagebox
 import h5py
 import numpy as np
 import tqdm
+import scipy.io as scipio
 
 class MatConverter(tk.Toplevel):
     def __init__(self, master):
@@ -90,7 +91,7 @@ class MatConverter(tk.Toplevel):
                         print(file_len, len(input_file["pdm_2d_rot_global"]))
                         messagebox.showerror(title="Данные", message=f"Файл {input_filename} повреждён")
                         return
-                    subframe = file_len // average_window
+                    subframe = int(np.ceil(file_len / average_window))
                     frames += subframe
         except KeyError:
             messagebox.showerror(title="Ввод данных",
@@ -108,10 +109,17 @@ class MatConverter(tk.Toplevel):
                 for input_filename in input_filenames:
                     with h5py.File(input_filename, "r") as input_file:
                         file_len = len(input_file['unixtime_dbl_global'])
-                        for i in tqdm.tqdm(range(0, file_len, average_window)):
-                            data0[pointer] = np.mean(input_file["pdm_2d_rot_global"][i:i+average_window], axis=0)
-                            utc_time[pointer] = input_file['unixtime_dbl_global'][i][0]
-                            pointer += 1
+                        if average_window == 1:
+                            # Just copy data
+                            data0[pointer:pointer+file_len] = input_file["pdm_2d_rot_global"][:]
+                            utc_time[pointer:pointer+file_len] = np.array(input_file['unixtime_dbl_global']).T[0]
+                            pointer += file_len
+                        else:
+                            for i in tqdm.tqdm(range(0, file_len, average_window)):
+                                data0[pointer] = np.mean(input_file["pdm_2d_rot_global"][i:i+average_window], axis=0)
+                                utc_time[pointer] = input_file['unixtime_dbl_global'][i][0]
+                                pointer += 1
+
 
 
 if __name__=="__main__":

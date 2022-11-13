@@ -120,7 +120,7 @@ class App(tk.Tk):
                         self.plot.set_line(star.identifier, xs, ys, star.name)
                 else:
                     self.plot.remove_line(star.identifier)
-            print("SCORE_raw:", self.calculate_score(*self.get_parameters()))
+            # print("SCORE_raw:", self.calculate_score(*self.get_parameters()))
 
     def read_segment(self):
         f1, f2 = self.cut_frames()
@@ -145,8 +145,10 @@ class App(tk.Tk):
             return data_array
         if os.path.isfile(FILENAME):
             flat_field = np.load(FILENAME)
+            print("BROKEN:", np.where(flat_field == 0))
             retdata = data_array / flat_field
             retdata = np.nan_to_num(retdata, nan=0)
+            retdata = retdata * (flat_field != 0).astype(int)
             return retdata
         else:
             return data_array
@@ -254,7 +256,11 @@ class App(tk.Tk):
             pixels = self.star_menu.get_pixels(eras, dec, ra0, psi, f)
             if len(pixels) > 0:
                 t, i, j = pixels.T
-                frames = np.array(self.file["data0"])[framespace[t], i, j]
+                frame_indices = framespace[t]
+                reind = np.arange(len(frame_indices))
+                asorted = np.argsort(frame_indices)
+
+                frames = np.array(self.file["data0"])[frame_indices, i, j]
                 return final_calc_func(frames)
         return 0
 
