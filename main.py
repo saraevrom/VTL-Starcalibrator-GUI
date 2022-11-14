@@ -147,7 +147,7 @@ class App(tk.Tk):
             return data_array
         if os.path.isfile(FILENAME):
             flat_field = np.load(FILENAME)
-            print("BROKEN:", np.where(flat_field == 0))
+            print("BROKEN:", np.array(np.where(flat_field == 0)).T)
             retdata = data_array / flat_field
             retdata = np.nan_to_num(retdata, nan=0)
             retdata = retdata * (flat_field != 0).astype(int)
