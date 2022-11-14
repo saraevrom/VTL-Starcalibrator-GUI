@@ -4,7 +4,7 @@ from plotter import GridPlotter
 from .player_controls import PlayerControls
 import os
 import numpy as np
-
+from datetime import datetime
 
 class MatPlayer(tk.Toplevel):
     def __init__(self, master):
@@ -23,12 +23,15 @@ class MatPlayer(tk.Toplevel):
     def on_frame_draw(self, frame_num):
         if self.file:
             frame = self.file["data0"][frame_num]
+            ut0 = self.file["UT0"][frame_num]
+            time_str = datetime.utcfromtimestamp(ut0).strftime('%Y-%m-%d %H:%M:%S')
             if self.divider is not None:
                 frame = frame / self.divider
                 frame = np.nan_to_num(frame, nan=0)
                 frame = frame * (self.divider != 0)
             self.plotter.buffer_matrix = frame
             self.plotter.update_matrix_plot(True)
+            self.plotter.axes.set_title(time_str)
             self.plotter.draw()
 
     def get_mat_file(self):
