@@ -69,6 +69,7 @@ class App(tk.Tk):
         self.file = None
         self.data_cache = None
         self.settings_dict = dict()
+        self.flat_field = None
 
         self.t1_setting = self.settings.lookup_setting("time_1")
         self.t2_setting = self.settings.lookup_setting("time_2")
@@ -148,14 +149,16 @@ class App(tk.Tk):
         if not self.settings_dict["flatfielding"]:
             return data_array
         if os.path.isfile(FILENAME):
-            flat_field = np.load(FILENAME)
-            broke = np.array(np.where(flat_field == 0)).T
-            # print("BROKEN:", broke)
-            self.plot.set_broken(broke)
-            self.broken = broke.T
-            retdata = data_array / flat_field
+            if self.flat_field is None:
+                flat_field = np.load(FILENAME)
+                broke = np.array(np.where(flat_field == 0)).T
+                # print("BROKEN:", broke)
+                self.plot.set_broken(broke)
+                self.broken = broke.T
+                self.flat_field = flat_field
+            retdata = data_array / self.flat_field
             retdata = np.nan_to_num(retdata, nan=0)
-            retdata = retdata * (flat_field != 0).astype(int)
+            retdata = retdata * (self.flat_field != 0).astype(int)
             return retdata
         else:
             return data_array
@@ -245,6 +248,7 @@ class App(tk.Tk):
             if self.file:
                 self.file.close()
             self.file = new_file
+            self.flat_field = None
             self.t1_setting.set_limits(0, len(self.file["data0"])-1)
             self.t2_setting.set_limits(0, len(self.file["data0"])-1)
             self.refresh()
