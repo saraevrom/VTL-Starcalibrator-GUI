@@ -22,6 +22,8 @@ class FlatFielder(tk.Toplevel):
         self.title("Выравнивание пикселей")
         self.plotter = GridPlotter(self)
         self.file = None
+        self.remembered_coeffs = None
+        self.remembered_working_pixels = None
         self.plotter.grid(row=0, column=0, sticky="nsew")
         self.settings_menu = SettingMenu(self)
         build_settings(self.settings_menu)
@@ -42,6 +44,8 @@ class FlatFielder(tk.Toplevel):
 
         btn = ttk.Button(self, text="Расчёт коэффициентов", command=self.on_calculate)
         btn.grid(row=1, column=0, sticky="ew")
+        btn = ttk.Button(self, text="Сохранить данные", command=self.on_save_press)
+        btn.grid(row=2, column=0, sticky="ew")
         self.on_apply_settings()
 
     def sync_settings(self):
@@ -108,10 +112,21 @@ class FlatFielder(tk.Toplevel):
             #coeff_array = coeff_matrix[correct_row]
             coeff_array = np.median(coeff_matrix_reduced, axis=0)
             draw_coeff_matrix = coeff_array.reshape(x_len, y_len)
+            broke_signal = np.array(np.where(draw_coeff_matrix == 0)).T
+            print("BROKEN_DETECTION:", broke_signal)
             self.plotter.buffer_matrix = draw_coeff_matrix
+            self.plotter.set_broken(broke_signal)
             self.plotter.update_matrix_plot(update_norm=True)
             self.plotter.draw()
-            np.save("flat_fielding.npy", draw_coeff_matrix)
+            self.remembered_coeffs = draw_coeff_matrix
+            self.remembered_working_pixels = self.plotter.alive_pixels_matrix
+            #np.save("flat_fielding.npy", draw_coeff_matrix)
+
+    def on_save_press(self):
+        if self.remembered_coeffs is not None:
+            coeffs = self.remembered_coeffs
+            coeffs = coeffs * self.remembered_working_pixels
+            np.save("flat_fielding.npy", coeffs)
 
     def get_mat_file(self):
         self.sync_settings()

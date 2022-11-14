@@ -8,13 +8,11 @@ from matplotlib.axes import Axes
 import numpy as np
 from matplotlib.patches import Rectangle
 from matplotlib.pyplot import Normalize
+from astronomy import find_index
 import colorsys
 matplotlib.use("TkAgg")
+from parameters import *
 
-PIXEL_SIZE = 2.85
-HALF_GAP_SIZE = 2.0
-HALF_PIXELS = 8
-CMAP = plt.cm.viridis
 
 LOWER_EDGES = np.arange(HALF_PIXELS)*PIXEL_SIZE+HALF_GAP_SIZE
 LOWER_EDGES = np.concatenate([-np.flip(LOWER_EDGES)-PIXEL_SIZE, LOWER_EDGES])
@@ -60,6 +58,7 @@ class GridPlotter(Plotter):
         self.axes.set_box_aspect(1)
 
         self.buffer_matrix = np.zeros((16, 16))
+        self.alive_pixels_matrix = np.ones([2*HALF_PIXELS, 2*HALF_PIXELS]).astype(bool)
         self.patches = []
         for y in LOWER_EDGES:
             row = []
@@ -78,17 +77,39 @@ class GridPlotter(Plotter):
         self.axes.hlines(LOWER_EDGES, span, HALF_GAP_SIZE, colors="black")
         self.axes.hlines([-HALF_GAP_SIZE, span], -span, -HALF_GAP_SIZE, colors="black")
         self.axes.hlines([-HALF_GAP_SIZE, span], span, HALF_GAP_SIZE, colors="black")
+        self.figure.canvas.mpl_connect("button_press_event", self.on_plot_click)
 
     def update_matrix_plot(self, update_norm=False):
         if update_norm or (self.norm is None):
-            low = np.min(self.buffer_matrix)
-            high = np.max(self.buffer_matrix)
+            alive_data = self.buffer_matrix[self.alive_pixels_matrix]
+            low = np.min(alive_data)
+            high = np.max(alive_data)
             if low >= high:
                 high += 1e-6
             self.norm = Normalize(low, high)
-        for j in range(16):
-            for i in range(16):
-                self.patches[j][i].set_color(CMAP(self.norm(self.buffer_matrix[i,j])))
+        for j in range(2*HALF_PIXELS):
+            for i in range(2*HALF_PIXELS):
+                if self.alive_pixels_matrix[i,j]:
+                    self.patches[j][i].set_color(PLOT_COLORMAP(self.norm(self.buffer_matrix[i, j])))
+                else:
+                    self.patches[j][i].set_color(PLOT_BROKEN_COLOR)
+
+    def set_broken(self, broken):
+        self.alive_pixels_matrix = np.ones([2*HALF_PIXELS, 2*HALF_PIXELS]).astype(bool)
+        for i, j in broken:
+            self.alive_pixels_matrix[i, j] = False
+
+    def toggle_broken(self, i, j):
+        self.alive_pixels_matrix[i, j] = not self.alive_pixels_matrix[i, j]
+
+    def on_plot_click(self, event):
+        if event.button == 1 and (event.xdata is not None) and (event.ydata is not None):
+            i = find_index(event.xdata)
+            j = find_index(event.ydata)
+            if i >= 0 and j >= 0:
+                self.toggle_broken(i, j)
+                self.update_matrix_plot(True)
+                self.draw()
 
 class StarGridPlotter(GridPlotter):
     def __init__(self, master, norm=None, *args, **kwargs):

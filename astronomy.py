@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from astropy.time import Time
 from astropy.coordinates import EarthLocation
-from plotter import HALF_GAP_SIZE, HALF_PIXELS, PIXEL_SIZE
+from parameters import *
 
 def name_a_star(row):
     data = []

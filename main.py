@@ -38,6 +38,7 @@ class App(tk.Tk):
 
         self.plot = StarGridPlotter(self)
         self.plot.grid(row=0, column=1, sticky="nsew")
+        self.broken = []
 
         self.settings = SettingMenu(self)
         build_menu(self.settings)
@@ -66,11 +67,12 @@ class App(tk.Tk):
         self.rowconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
         self.file = None
+        self.data_cache = None
         self.settings_dict = dict()
 
         self.t1_setting = self.settings.lookup_setting("time_1")
         self.t2_setting = self.settings.lookup_setting("time_2")
-        self.roamer = RandomRoaming(self.get_parameters,self.set_parameters,self.calculate_score, self.get_deltas)
+        self.roamer = RandomRoaming(self.get_parameters,self.set_parameters, self.calculate_score, self.get_deltas)
 
 
     def settings_pull(self):
@@ -107,7 +109,7 @@ class App(tk.Tk):
     def refresh_fg(self):
         if self.file:
             stars = self.star_menu.get_selection_full()
-            t1,t2 = self.cut_frames()
+            t1, t2 = self.cut_frames()
             win = 0
             if not self.settings_dict["global_filter"]:
                 win = self.settings_dict["filter_window"]
@@ -147,7 +149,10 @@ class App(tk.Tk):
             return data_array
         if os.path.isfile(FILENAME):
             flat_field = np.load(FILENAME)
-            print("BROKEN:", np.array(np.where(flat_field == 0)).T)
+            broke = np.array(np.where(flat_field == 0)).T
+            # print("BROKEN:", broke)
+            self.plot.set_broken(broke)
+            self.broken = broke.T
             retdata = data_array / flat_field
             retdata = np.nan_to_num(retdata, nan=0)
             retdata = retdata * (flat_field != 0).astype(int)
@@ -206,6 +211,7 @@ class App(tk.Tk):
             for i in range(self.settings_dict["optimizer_steps"]):
                 print(f"Step {i}/{self.settings_dict['optimizer_steps']}")
                 self.roamer.step()
+        self.data_cache = None
 
     def on_star_sample_change(self):
         self.plot.delete_lines()
@@ -258,11 +264,20 @@ class App(tk.Tk):
             pixels = self.star_menu.get_pixels(eras, dec, ra0, psi, f)
             if len(pixels) > 0:
                 t, i, j = pixels.T
-                frame_indices = framespace[t]
-                reind = np.arange(len(frame_indices))
-                asorted = np.argsort(frame_indices)
+                if self.broken is not None:
+                    i_broken_ids, j_broken_ids = self.broken
+                    i_break_test = np.isin(i, i_broken_ids)
+                    j_break_test = np.isin(j, j_broken_ids)
+                    ok_indices = np.logical_not(np.logical_and(i_break_test, j_break_test))
+                    t, i, j = pixels[ok_indices].T
 
-                frames = np.array(self.file["data0"])[frame_indices, i, j]
+                frame_indices = framespace[t]
+                # reind = np.arange(len(frame_indices))
+                # asorted = np.argsort(frame_indices)
+
+                if self.data_cache is None:
+                    self.data_cache = np.array(np.array(self.file["data0"]))
+                frames = self.data_cache[frame_indices, i, j]
                 return final_calc_func(frames)
         return 0
 
