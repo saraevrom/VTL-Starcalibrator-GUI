@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 
-FAST_FWD_SKIP = 10
-FRAME_DELAY = 100 #ms
+FAST_FWD_SKIP = 1
+FRAME_DELAY = 10 #ms
 
 
 
@@ -16,6 +16,7 @@ class ControlButtons(ttk.Frame):
     def __init__(self, master):
         super(ControlButtons, self).__init__(master)
         self.playing_state = self.PAUSE
+        self.multiplier = 1
         tk.Button(self, text="<<", command=lambda: self.on_button_press(self.REWIND))\
             .grid(row=0, column=0, sticky="nsew")
         tk.Button(self, text="<", command=lambda: self.on_button_press(self.PLAYING_INV))\
@@ -29,12 +30,18 @@ class ControlButtons(ttk.Frame):
         self.button_callback = None
 
     def on_button_press(self, btn):
+        if self.playing_state == btn == self.REWIND:
+            self.multiplier *= 2
+        elif self.playing_state == btn == self.FAST_FWD:
+            self.multiplier *= 2
+        else:
+            self.multiplier = 1
         self.playing_state = btn
         if self.button_callback is not None:
             self.button_callback()
 
     def get_frame_step(self):
-        return self.MUL_TABLE[self.playing_state]
+        return self.MUL_TABLE[self.playing_state]*self.multiplier
 
     def stop_playing(self):
         self.playing_state = self.PAUSE
