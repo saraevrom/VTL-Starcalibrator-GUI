@@ -11,10 +11,24 @@ from .signal_plotter import SignalPlotter
 import numpy as np
 from robustats import weighted_median
 import matplotlib.pyplot as plt
+from multiprocessing import Pool
+from parameters import NPROC
 
 def line_fit_robust(xs, ys):
     k = np.float(weighted_median(ys/xs, xs))
     return k
+
+class LineFitter(object):
+    def __init__(self,array):
+        self.array = array
+
+    def __call__(self, ij):
+        i,j = ij
+        i_data = self.array[:, i]
+        j_data = self.array[:, j]
+        if np.median(i_data)==0 or np.median(j_data)==0:
+            return 0
+        return line_fit_robust(i_data, j_data)
 
 class FlatFielder(tk.Toplevel):
     def __init__(self, master):
@@ -78,6 +92,11 @@ class FlatFielder(tk.Toplevel):
             #fig, ax = plt.subplots()
             #fig.show()
             #scattering = ax.scatter(requested_data[:,0],requested_data[:,1])
+            # i_indices, j_indices = np.meshgrid(range(x_len*y_len), range(x_len*y_len))
+            # indices = np.vstack([i_indices.flatten(), j_indices.flatten()]).T
+            # fitter = LineFitter(requested_data)
+            # with Pool(NPROC) as pool:
+            #     coeff_matrix = np.array(pool.map(fitter, indices)).reshape(x_len*y_len, x_len*y_len)
             coeff_matrix = np.zeros([x_len*y_len, x_len*y_len])
             for i in range(x_len*y_len):
                 i_data = requested_data[:, i]
@@ -120,6 +139,8 @@ class FlatFielder(tk.Toplevel):
             self.plotter.draw()
             self.remembered_coeffs = draw_coeff_matrix
             self.remembered_working_pixels = self.plotter.alive_pixels_matrix
+            self.draw_plot(draw_coeff_matrix)
+            self.signal_plotter.draw()
             #np.save("flat_fielding.npy", draw_coeff_matrix)
 
     def on_save_press(self):
@@ -137,7 +158,7 @@ class FlatFielder(tk.Toplevel):
                 self.draw_plot()
         self.signal_plotter.draw()
 
-    def draw_plot(self):
+    def draw_plot(self, coefficients = None):
         data0 = self.file["data0"]
         skip = self.settings_dict["samples_mean"]
         res_array = []
@@ -146,6 +167,10 @@ class FlatFielder(tk.Toplevel):
             res_array.append(layer)
         print(len(res_array))
         self.drawn_data = np.array(res_array)
+        if coefficients is not None:
+            self.drawn_data = self.drawn_data/coefficients
+            self.drawn_data = np.nan_to_num(self.drawn_data)
+            self.drawn_data = self.drawn_data*(coefficients!=0)
         self.signal_plotter.plot_data(self.drawn_data)
         bottom = -10
         top = np.max(self.drawn_data)
