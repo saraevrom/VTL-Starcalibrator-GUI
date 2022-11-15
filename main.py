@@ -98,7 +98,8 @@ class App(tk.Tk):
                 win = self.settings_dict["filter_window"]
 
         assert t1 + win // 2 <= t2 - win // 2
-        framespace = np.linspace(t1 + win // 2, t2 - win // 2, self.settings_dict["star_samples"]).astype(int)
+        step = (t2 - t1 - win) // self.settings_dict["star_samples"]
+        framespace = np.arange(t1 + win // 2, t2 - win // 2, step)
         times = Time(self.file["UT0"][framespace], format="unix")
         # era1 = Time(self.file["UT0"][t1 + win // 2], format="unix", scale="utc").earth_rotation_angle(0).radian
         # era2 = Time(self.file["UT0"][t2 - win // 2], format="unix", scale="utc").earth_rotation_angle(0).radian
