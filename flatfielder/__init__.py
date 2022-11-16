@@ -10,9 +10,7 @@ from .settings_build import build_settings
 from .signal_plotter import SignalPlotter
 import numpy as np
 from robustats import weighted_median
-import matplotlib.pyplot as plt
-from multiprocessing import Pool
-from parameters import NPROC
+from .flat_fielding_methods import median_corr_flatfield, isotropic_lsq_corr_flatfield
 
 def line_fit_robust(xs, ys):
     k = np.float(weighted_median(ys/xs, xs))
@@ -32,23 +30,29 @@ class LineFitter(object):
 
 class FlatFielder(tk.Toplevel):
     def __init__(self, master):
-        super(FlatFielder, self).__init__(master)
-        self.title("Выравнивание пикселей")
-        self.plotter = GridPlotter(self)
         self.file = None
         self.remembered_coeffs = None
+        self.remembered_bg = None
         self.remembered_working_pixels = None
-        self.plotter.grid(row=0, column=0, sticky="nsew")
+        super(FlatFielder, self).__init__(master)
+        self.title("Выравнивание пикселей")
+        self.coeff_plotter = GridPlotter(self)
+        self.coeff_plotter.axes.set_title("Коэффициенты")
+        self.coeff_plotter.grid(row=0, column=0, sticky="nsew")
+
+        self.bg_plotter = GridPlotter(self)
+        self.bg_plotter.axes.set_title("Фон")
+        self.bg_plotter.grid(row=1, column=0, sticky="nsew")
         self.settings_menu = SettingMenu(self)
         build_settings(self.settings_menu)
-        self.settings_menu.grid(row=0, column=2, sticky="nsew")
+        self.settings_menu.grid(row=1, column=1, sticky="nsew")
         self.signal_plotter = SignalPlotter(self)
         self.signal_plotter.grid(row=0, column=1, sticky="nsew")
 
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
-        self.columnconfigure(2, weight=2)
         self.rowconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
         self.settings_dict = dict()
         self.settings_menu.commit_action = self.on_apply_settings
         self.t1_setting = self.settings_menu.lookup_setting("time_1")
@@ -57,9 +61,9 @@ class FlatFielder(tk.Toplevel):
         self.drawn_data = None
 
         btn = ttk.Button(self, text="Расчёт коэффициентов", command=self.on_calculate)
-        btn.grid(row=1, column=0, sticky="ew")
-        btn = ttk.Button(self, text="Сохранить данные", command=self.on_save_press)
         btn.grid(row=2, column=0, sticky="ew")
+        btn = ttk.Button(self, text="Сохранить данные", command=self.on_save_press)
+        btn.grid(row=3, column=0, sticky="ew")
         self.on_apply_settings()
 
     def sync_settings(self):
@@ -87,59 +91,28 @@ class FlatFielder(tk.Toplevel):
             if t1 > t2:
                 t1, t2 = t2, t1
             requested_data = self.drawn_data[t1:t2]
-            tim_len, x_len, y_len = requested_data.shape
-            requested_data = requested_data.reshape((tim_len, x_len * y_len))
-            #fig, ax = plt.subplots()
-            #fig.show()
-            #scattering = ax.scatter(requested_data[:,0],requested_data[:,1])
-            # i_indices, j_indices = np.meshgrid(range(x_len*y_len), range(x_len*y_len))
-            # indices = np.vstack([i_indices.flatten(), j_indices.flatten()]).T
-            # fitter = LineFitter(requested_data)
-            # with Pool(NPROC) as pool:
-            #     coeff_matrix = np.array(pool.map(fitter, indices)).reshape(x_len*y_len, x_len*y_len)
-            coeff_matrix = np.zeros([x_len*y_len, x_len*y_len])
-            for i in range(x_len*y_len):
-                i_data = requested_data[:, i]
-                for j in range(x_len*y_len):
-                    j_data = requested_data[:, j]
 
-                    k_ij = line_fit_robust(i_data, j_data)
-                    if k_ij != 0:
-                        coeff_matrix[i, j] = k_ij
-            coeff_matrix = np.nan_to_num(coeff_matrix, nan=0)
-            print(coeff_matrix.shape)
-            bad_indices, = np.where((coeff_matrix == 0).sum(axis=0) >= x_len*y_len-1)
-            good_indices, = np.where((coeff_matrix == 0).sum(axis=0) < x_len * y_len - 1)
-            coeff_matrix[bad_indices] = np.zeros(x_len*y_len)
+            if self.settings_dict["use_alt_algo"]:
+                draw_coeff_matrix, draw_bg_matrix = isotropic_lsq_corr_flatfield(requested_data)
+            else:
+                draw_coeff_matrix, draw_bg_matrix = median_corr_flatfield(requested_data)
 
-            pivot = good_indices[0]
-            sample_row = coeff_matrix[pivot]
-            print(len(sample_row))
-            sample_median = np.median(sample_row[good_indices])
-            sample_distances = np.abs(sample_row - sample_median)
-            pivot = np.argmin(sample_distances)
-
-            print("Chosen pivot:", pivot)
-
-            coeff_matrix_reduced = coeff_matrix[good_indices]
-            coeff_matrix_reduced = (coeff_matrix_reduced.T/coeff_matrix_reduced[:, pivot]).T
-
-            #good_indices = np.where((coeff_matrix != 0).any(axis=0))
-            #assert len(good_indices) > 0
-            #correct_row = 0
-            #correct_row = np.argmax(coeff_matrix) // coeff_matrix.shape[0]
-            #coeff_array = coeff_matrix[correct_row]
-            coeff_array = np.median(coeff_matrix_reduced, axis=0)
-            draw_coeff_matrix = coeff_array.reshape(x_len, y_len)
             broke_signal = np.array(np.where(draw_coeff_matrix == 0)).T
             print("BROKEN_DETECTION:", broke_signal)
-            self.plotter.buffer_matrix = draw_coeff_matrix
-            self.plotter.set_broken(broke_signal)
-            self.plotter.update_matrix_plot(update_norm=True)
-            self.plotter.draw()
+            self.coeff_plotter.buffer_matrix = draw_coeff_matrix
+            self.coeff_plotter.set_broken(broke_signal)
+            self.coeff_plotter.update_matrix_plot(update_norm=True)
+            self.coeff_plotter.draw()
+
+            self.bg_plotter.buffer_matrix = draw_bg_matrix
+            self.bg_plotter.set_broken(broke_signal)
+            self.bg_plotter.update_matrix_plot(update_norm=True)
+            self.bg_plotter.draw()
+
             self.remembered_coeffs = draw_coeff_matrix
-            self.remembered_working_pixels = self.plotter.alive_pixels_matrix
-            self.draw_plot(draw_coeff_matrix)
+            self.remembered_bg = draw_bg_matrix
+            self.remembered_working_pixels = self.coeff_plotter.alive_pixels_matrix
+            self.draw_plot(draw_coeff_matrix, draw_bg_matrix)
             self.signal_plotter.draw()
             #np.save("flat_fielding.npy", draw_coeff_matrix)
 
@@ -147,7 +120,11 @@ class FlatFielder(tk.Toplevel):
         if self.remembered_coeffs is not None:
             coeffs = self.remembered_coeffs
             coeffs = coeffs * self.remembered_working_pixels
-            np.save("flat_fielding.npy", coeffs)
+            bg = self.remembered_bg
+            bg = bg * self.remembered_working_pixels
+            with open("flat_fielding.npy", "wb") as fp:
+                np.save(fp, coeffs)
+                np.save(fp, bg)
 
     def get_mat_file(self):
         self.sync_settings()
@@ -158,7 +135,7 @@ class FlatFielder(tk.Toplevel):
                 self.draw_plot()
         self.signal_plotter.draw()
 
-    def draw_plot(self, coefficients = None):
+    def draw_plot(self, coefficients = None, offsets = None):
         data0 = self.file["data0"]
         skip = self.settings_dict["samples_mean"]
         res_array = []
@@ -167,11 +144,12 @@ class FlatFielder(tk.Toplevel):
             res_array.append(layer)
         print(len(res_array))
         self.drawn_data = np.array(res_array)
+        apparent_data = self.drawn_data
         if coefficients is not None:
-            self.drawn_data = self.drawn_data/coefficients
-            self.drawn_data = np.nan_to_num(self.drawn_data)
-            self.drawn_data = self.drawn_data*(coefficients!=0)
-        self.signal_plotter.plot_data(self.drawn_data)
+            apparent_data = (apparent_data - offsets)/coefficients
+            apparent_data = np.nan_to_num(apparent_data)
+            apparent_data = apparent_data*(coefficients != 0)
+        self.signal_plotter.plot_data(apparent_data)
         bottom = -10
         top = np.max(self.drawn_data)
         self.signal_plotter.view_y(bottom, top)

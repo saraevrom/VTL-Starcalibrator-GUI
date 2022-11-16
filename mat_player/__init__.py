@@ -17,8 +17,11 @@ class MatPlayer(tk.Toplevel):
         self.player_controls.pack(side=tk.BOTTOM, expand=True, fill=tk.X)
         self.get_mat_file()
         self.divider = None
+        self.displacement = None
         if os.path.isfile("flat_fielding.npy"):
-            self.divider = np.load("flat_fielding.npy")
+            with open("flat_fielding.npy", "rb") as fp:
+                self.divider = np.load(fp)
+                self.displacement = np.load(fp)
 
     def on_frame_draw(self, frame_num):
         if self.file:
@@ -26,7 +29,7 @@ class MatPlayer(tk.Toplevel):
             ut0 = self.file["UT0"][frame_num]
             time_str = datetime.utcfromtimestamp(ut0).strftime('%Y-%m-%d %H:%M:%S')
             if self.divider is not None:
-                frame = frame / self.divider
+                frame = (frame - self.displacement) / self.divider
                 frame = np.nan_to_num(frame, nan=0)
                 frame = frame * (self.divider != 0)
             self.plotter.buffer_matrix = frame

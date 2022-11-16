@@ -52,6 +52,7 @@ class GridPlotter(Plotter):
     def __init__(self, master, norm=None, *args, **kwargs):
         super(GridPlotter, self).__init__(master, *args, **kwargs)
 
+        self.colorbar = None
         span = HALF_PIXELS*PIXEL_SIZE+HALF_GAP_SIZE
         self.axes.set_xlim(-span, span)
         self.axes.set_ylim(-span, span)
@@ -86,7 +87,18 @@ class GridPlotter(Plotter):
             high = np.max(alive_data)
             if low >= high:
                 high += 1e-6
-            self.norm = Normalize(low, high)
+
+            if self.norm is None:
+                self.norm = Normalize(low, high)
+            else:
+                self.norm.autoscale(alive_data)
+            # if self.colorbar:
+            #     self.colorbar.set_clim(low, high)
+            #     new_cbar_ticks = np.linspace(low, high, num=21, endpoint=True)
+            #     self.colorbar.set_ticks(new_cbar_ticks)
+            # else:
+            if self.colorbar is None:
+                self.colorbar = self.figure.colorbar(plt.cm.ScalarMappable(norm=self.norm, cmap=PLOT_COLORMAP))
         for j in range(2*HALF_PIXELS):
             for i in range(2*HALF_PIXELS):
                 if self.alive_pixels_matrix[i,j]:

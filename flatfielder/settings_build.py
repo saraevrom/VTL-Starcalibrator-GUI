@@ -7,4 +7,6 @@ def build_settings(menu:SettingMenu):
     menu.add_setting(RangeIntValue, "time_2", "Точка 2", 100, start=0, end=100)
     menu.add_separator("Данные")
     menu.add_setting(RangeIntValue, "samples_mean", "Усреднение", 60, start=0, end=1200)
+    menu.add_separator("Алгоритм")
+    menu.add_setting(CheckboxValue, "use_alt_algo", "Использовать изотропный МНК.", False)
 
