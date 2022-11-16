@@ -20,6 +20,8 @@ from mat_converter import MatConverter
 from flatfielder import FlatFielder
 from mat_player import MatPlayer
 
+import matplotlib.pyplot as plt
+
 class Tool(object):
     def __init__(self,master,tool_class):
         self.master = master
@@ -38,6 +40,7 @@ class App(tk.Tk):
         self.star_menu.star_callback = self.on_star_selection_change
 
         self.plot = StarGridPlotter(self)
+        self.plot.on_right_click_callback = self.popup_draw_signal
         self.plot.grid(row=0, column=1, sticky="nsew")
         self.broken = []
 
@@ -244,6 +247,20 @@ class App(tk.Tk):
         self.refresh_fg()
         self.plot.update_matrix_plot(True)
         self.plot.draw()
+
+
+    def popup_draw_signal(self,i,j):
+        if self.file:
+            t1, t2 = self.cut_frames()
+            signal = self.file["data0"][t1:t2, i, j]
+            if self.flat_field_coeff is not None:
+                signal = (signal - self.flat_field_bg[i, j]) / self.flat_field_coeff[i, j]
+            fig, ax = plt.subplots()
+            xs = np.arange(t1,t2)
+            ax.plot(xs,signal)
+            ax.set_title(f"[{i}, {j}]")
+            fig.show()
+
 
     def open_mat_file(self):
         filename = filedialog.askopenfilename(title="Открыть mat файл",
