@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.optimize import minimize
 
 def dispersion(x):
     return np.mean(x**2) - np.mean(x)**2
@@ -12,7 +13,7 @@ def displacement(x,y,phi):
 def lsq_error(xs,ys,phi,r0):
     return np.sum((xs*np.sin(phi)-ys*np.cos(phi)+r0)**2)
 
-def isotropic_lsq_line(xs,ys):
+def isotropic_lsq_line(xs, ys):
     dx = dispersion(xs)
     dy = dispersion(ys)
     cov_xy = cov(xs, ys)
@@ -26,6 +27,18 @@ def isotropic_lsq_line(xs,ys):
         return phi_1, r_1
     else:
         return phi_2, r_2
+
+
+def lad_line_score(params, xs, ys):
+    phi, r0 = params
+    return np.sum(np.abs(xs*np.sin(phi)-ys*np.cos(phi) + r0))
+
+
+def isotropic_lad_line(xs, ys):
+    initial_guess = isotropic_lsq_line(xs, ys)
+    res = minimize(lad_line_score, np.array(initial_guess), args=(xs, ys), method="Powell")
+    assert res.success
+    return res.x
 
 
 def phir0_to_kb(phi, r0):

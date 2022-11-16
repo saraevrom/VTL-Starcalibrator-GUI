@@ -41,6 +41,7 @@ class Plotter(ttk.Frame):
         self.mpl_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         self.toolbar = NavigationToolbar2Tk(self.mpl_canvas, self)
         self.toolbar.update()
+        self.on_right_click_callback = None
 
     def draw(self):
         self.figure.canvas.draw()
@@ -115,13 +116,19 @@ class GridPlotter(Plotter):
         self.alive_pixels_matrix[i, j] = not self.alive_pixels_matrix[i, j]
 
     def on_plot_click(self, event):
-        if event.button == 1 and (event.xdata is not None) and (event.ydata is not None):
+        if (event.xdata is not None) and (event.ydata is not None):
             i = find_index(event.xdata)
             j = find_index(event.ydata)
             if i >= 0 and j >= 0:
-                self.toggle_broken(i, j)
-                self.update_matrix_plot(True)
-                self.draw()
+                if event.button == 1:  #LMB
+                    self.toggle_broken(i, j)
+                    self.update_matrix_plot(True)
+                    self.draw()
+                elif event.button == 3:  #RMB
+                    if self.on_right_click_callback:
+                        self.on_right_click_callback(i, j)
+
+        # self.on_right_click_callback
 
 class StarGridPlotter(GridPlotter):
     def __init__(self, master, norm=None, *args, **kwargs):

@@ -11,6 +11,7 @@ from .signal_plotter import SignalPlotter
 import numpy as np
 from robustats import weighted_median
 from .flat_fielding_methods import median_corr_flatfield, isotropic_lsq_corr_flatfield
+from .flat_fielding_methods import isotropic_lsq_corr_flatfield_parallel
 
 def line_fit_robust(xs, ys):
     k = np.float(weighted_median(ys/xs, xs))
@@ -93,9 +94,9 @@ class FlatFielder(tk.Toplevel):
             requested_data = self.drawn_data[t1:t2]
 
             if self.settings_dict["use_alt_algo"]:
-                draw_coeff_matrix, draw_bg_matrix = isotropic_lsq_corr_flatfield(requested_data)
+                draw_coeff_matrix, draw_bg_matrix = isotropic_lsq_corr_flatfield_parallel(requested_data, self.settings_dict)
             else:
-                draw_coeff_matrix, draw_bg_matrix = median_corr_flatfield(requested_data)
+                draw_coeff_matrix, draw_bg_matrix = median_corr_flatfield(requested_data, self.settings_dict)
 
             broke_signal = np.array(np.where(draw_coeff_matrix == 0)).T
             print("BROKEN_DETECTION:", broke_signal)
