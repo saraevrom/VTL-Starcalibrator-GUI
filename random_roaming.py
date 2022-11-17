@@ -1,5 +1,6 @@
 import numpy as np
 import numpy.random as rng
+from scipy.optimize import minimize
 
 class RandomRoaming(object):
     def __init__(self, params_getter, params_setter, score_func, delta_getter):
@@ -30,3 +31,11 @@ class RandomRoaming(object):
             print("FOUND BETTER VALUES", self.params)
             self.params_setter(*self.params)
         print("Score:",self.score)
+
+
+def maximize(score, initial_params):
+    def antiscore(params):
+        return -score(*params)
+
+    res = minimize(antiscore, initial_params, method="nelder-mead")
+    return res.x, res.success

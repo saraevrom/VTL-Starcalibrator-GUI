@@ -22,6 +22,7 @@ class MatPlayer(tk.Toplevel):
             with open("flat_fielding.npy", "rb") as fp:
                 self.divider = np.load(fp)
                 self.displacement = np.load(fp)
+                self.plotter.set_broken(np.array(np.where(self.divider == 0)).T)
 
     def on_frame_draw(self, frame_num):
         if self.file:

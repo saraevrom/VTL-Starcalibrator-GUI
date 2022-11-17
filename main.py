@@ -15,7 +15,7 @@ from numpy.lib.stride_tricks import sliding_window_view
 from astropy.time import Time
 from astronomy import range_calculate
 import json
-from random_roaming import RandomRoaming
+from random_roaming import RandomRoaming, maximize
 from mat_converter import MatConverter
 from flatfielder import FlatFielder
 from mat_player import MatPlayer
@@ -218,10 +218,16 @@ class App(tk.Tk):
     def on_settings_change(self):
         self.refresh()
         if self.settings_dict["optimizer_run"]:
-            self.roamer.sync_params()
-            for i in range(self.settings_dict["optimizer_steps"]):
-                print(f"Step {i}/{self.settings_dict['optimizer_steps']}")
-                self.roamer.step()
+            if self.settings_dict["optimizer_descent"]:
+                params = self.get_parameters()
+                new_params, success = maximize(self.calculate_score,params)
+                if success:
+                    self.set_parameters(*new_params)
+            else:
+                self.roamer.sync_params()
+                for i in range(self.settings_dict["optimizer_steps"]):
+                    print(f"Step {i}/{self.settings_dict['optimizer_steps']}")
+                    self.roamer.step()
         self.data_cache = None
 
     def on_star_sample_change(self):
