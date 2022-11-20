@@ -75,8 +75,8 @@ def range_calculate(params:dict, t1: Time, t2:Time):
 
     print(era1, era2)
     print(ra0)
-    ra_low = era1 + ra0 - half_fov
-    ra_high = era2 + ra0 + half_fov
+    ra_low = era1 + ra0 - half_fov*2
+    ra_high = era2 + ra0 + half_fov*2
     dec_low = dec0 - half_fov
     dec_high = dec0 + half_fov
     return ra_low, ra_high, dec_low, dec_high

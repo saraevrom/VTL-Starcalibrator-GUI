@@ -12,6 +12,8 @@ import numpy as np
 from robustats import weighted_median
 from .flat_fielding_methods import median_corr_flatfield, isotropic_lsq_corr_flatfield
 from .flat_fielding_methods import isotropic_lsq_corr_flatfield_parallel
+import numpy.random as rng
+import matplotlib.pyplot as plt
 
 def line_fit_robust(xs, ys):
     k = np.float(weighted_median(ys/xs, xs))
@@ -65,6 +67,8 @@ class FlatFielder(tk.Toplevel):
         btn.grid(row=2, column=0, sticky="ew")
         btn = ttk.Button(self, text="Сохранить данные", command=self.on_save_press)
         btn.grid(row=3, column=0, sticky="ew")
+        btn = ttk.Button(self, text="Отрисовать случайную пару пикселей", command=self.on_random_draw)
+        btn.grid(row=4, column=0, sticky="ew")
         self.on_apply_settings()
 
     def sync_settings(self):
@@ -155,3 +159,36 @@ class FlatFielder(tk.Toplevel):
         top = np.max(self.drawn_data)
         self.signal_plotter.view_y(bottom, top)
         self.signal_plotter.set_yrange(0, top)
+
+    def on_random_draw(self):
+        if self.remembered_coeffs is not None:
+            t1 = self.settings_dict["time_1"]
+            t2 = self.settings_dict["time_2"]
+            if t1 > t2:
+                t1, t2 = t2, t1
+            requested_data = self.drawn_data[t1:t2]
+            draw_coeff_matrix = self.remembered_coeffs
+            draw_bg_matrix = self.remembered_bg
+            tim_len, x_len, y_len = requested_data.shape
+
+            i1 = rng.randint(x_len)
+            j1 = rng.randint(y_len)
+            while draw_coeff_matrix[i1, j1] == 0:
+                i1 = rng.randint(x_len)
+                j1 = rng.randint(y_len)
+            i2 = rng.randint(x_len)
+            j2 = rng.randint(y_len)
+            while draw_coeff_matrix[i2, j2] == 0 or (i1 == i2 and j1 == j2):
+                i2 = rng.randint(x_len)
+                j2 = rng.randint(y_len)
+            S_1 = requested_data[:, i1, j1]
+            S_2 = requested_data[:, i2, j2]
+            fig, ax = plt.subplots()
+            ax.set_xlabel(f"S[{i1}, {j1}]")
+            ax.set_ylabel(f"S[{i2}, {j2}]")
+            ax.scatter(S_1, S_2)
+            xs_test = np.array([min(S_1), max(S_1)])
+            ys_test = draw_coeff_matrix[i2, j2] * (xs_test - draw_bg_matrix[i1, j1]) / draw_coeff_matrix[i1, j1] + \
+                      draw_bg_matrix[i2, j2]
+            ax.plot(xs_test, ys_test)
+            fig.show()
