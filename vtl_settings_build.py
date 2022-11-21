@@ -1,4 +1,5 @@
 from settings_frame import SettingMenu, RangeDoubleValue, SliderRangeDoubleValue, RangeIntValue, CheckboxValue
+from settings_frame import ComboboxValue
 from math import pi
 
 
@@ -17,6 +18,10 @@ def build_menu(menu: SettingMenu):
                      step=1e-2, fmt="%.2f")
     menu.add_separator("Параметры оптимизатора (амлитуды изменения)")
     menu.add_setting(CheckboxValue, "optimizer_descent", "Градиентный спуск", False)
+    menu.add_setting(ComboboxValue, "optimizer_descent_mode", "Метод", "nelder-mead", options=[
+        "nelder-mead",
+        "powell"
+    ])
     menu.add_setting(RangeDoubleValue, "d_dec0", "Склонение прибора, °", 1., start=0., end=1., step=1e-3, fmt="%.6f")
     menu.add_setting(RangeDoubleValue, "d_ra0", "П. в. прибора (при ERA=0), °", 1., start=0., end=10.,
                      step=1e-3, fmt="%.3f")

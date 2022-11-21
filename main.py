@@ -220,7 +220,8 @@ class App(tk.Tk):
         if self.settings_dict["optimizer_run"]:
             if self.settings_dict["optimizer_descent"]:
                 params = self.get_parameters()
-                new_params, success = maximize(self.calculate_score,params)
+                new_params, success = maximize(self.calculate_score, params,
+                                               method=self.settings_dict["optimizer_descent_mode"])
                 if success:
                     self.set_parameters(*new_params)
             else:

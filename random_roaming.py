@@ -33,9 +33,9 @@ class RandomRoaming(object):
         print("Score:",self.score)
 
 
-def maximize(score, initial_params):
+def maximize(score, initial_params, method="nelder-mead"):
     def antiscore(params):
         return -score(*params)
 
-    res = minimize(antiscore, initial_params, method="nelder-mead")
+    res = minimize(antiscore, initial_params, method=method)
     return res.x, res.success

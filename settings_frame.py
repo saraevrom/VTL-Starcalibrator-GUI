@@ -183,7 +183,7 @@ class SliderRangeDoubleValue(Setting):
 
     def build_setting(self, frame):
         self.srcvar = tk.DoubleVar(self)
-        self.srcvar.trace("w",self.propagate)
+        self.srcvar.trace("w", self.propagate)
         self.displayvar = tk.StringVar(self)
         self.entry_field = ttk.Scale(frame, from_=self.start, to=self.end, orient=tk.HORIZONTAL,variable=self.srcvar)
         self.entry_field.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
@@ -197,6 +197,22 @@ class SliderRangeDoubleValue(Setting):
 
     def set_value(self, value):
         self.entry_field.set(value)
+
+class ComboboxValue(Setting):
+    def __init__(self, master, setting_key, initial_value, options):
+        initial_value = options[0]
+        self.listbox_options = options
+        super(ComboboxValue, self).__init__(master, setting_key, initial_value)
+
+    def build_setting(self, frame):
+        self.combobox = ttk.Combobox(frame, state="readonly", values=self.listbox_options)
+        self.combobox.pack(fill=tk.BOTH, expand=True)
+
+    def get_value(self):
+        return self.combobox.get()
+
+    def set_value(self, value):
+        self.combobox.set(value)
 
 class SettingMenu(ScrollableFrame):
     def __init__(self, master, *args, **kwargs):
