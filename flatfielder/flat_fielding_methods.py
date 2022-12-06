@@ -1,6 +1,8 @@
+import matplotlib.pyplot as plt
 import numpy as np
 from robustats import weighted_median
-from .isotropic_lsq import isotropic_lad_line, phir0_to_kb, phir0_to_kb_inv
+from .isotropic_lsq import isotropic_lad_line, phir0_to_kb, phir0_to_kb_inv, isotropic_lad_multidim
+from .isotropic_lsq import isotropic_lad_multidim_no_bg
 from multiprocessing import Pool
 from parameters import NPROC
 
@@ -102,13 +104,13 @@ class PoolWorker(object):
 
     def __call__(self, index_pair):
         i, j = index_pair
-        if j > i:
-            i_data = self.requested_data[:, i]
-            j_data = self.requested_data[:, j]
-            phi_ij, r0_ij = isotropic_lad_line(i_data, j_data)
-            return phi_ij, r0_ij
-        else:
-            return 0, 0
+        # if j > i:
+        i_data = self.requested_data[:, i]
+        j_data = self.requested_data[:, j]
+        phi_ij, r0_ij = isotropic_lad_line(i_data, j_data)
+        return phi_ij, r0_ij
+        #else:
+        #    return 0, 0
 def isotropic_lsq_corr_flatfield_parallel(requested_data_0, params):
     tim_len, x_len, y_len = requested_data_0.shape
     requested_data = requested_data_0.reshape((tim_len, x_len * y_len))
@@ -125,26 +127,51 @@ def isotropic_lsq_corr_flatfield_parallel(requested_data_0, params):
         flat_angles, flat_distances = np.array(parallel_result).T
         angle_matrix = flat_angles.reshape(x_len * y_len, x_len * y_len)
         distance_matrix = flat_distances.reshape(x_len * y_len, x_len * y_len)
-        upper_coeffs, upper_bg = phir0_to_kb(angle_matrix, distance_matrix)
-        lower_coeffs, lower_bg = phir0_to_kb_inv(angle_matrix.T, distance_matrix.T)
-        upper_coeffs[angle_matrix == 0] = 0
-        upper_coeffs[np.abs(angle_matrix) == np.pi/2] = 0
-        lower_coeffs[(angle_matrix == 0).T] = 0
-        lower_coeffs[(np.abs(angle_matrix) == np.pi/2).T] = 0
-        coeff_matrix = upper_coeffs + lower_coeffs + np.identity(x_len * y_len)
-        bg_matrix = upper_bg + lower_bg
+        coeff_matrix, bg_matrix = phir0_to_kb(angle_matrix, distance_matrix)
+        coeff_matrix[angle_matrix == 0] = 0
+        # upper_coeffs, upper_bg = phir0_to_kb(angle_matrix, distance_matrix)
+        # lower_coeffs, lower_bg = phir0_to_kb_inv(angle_matrix.T, distance_matrix.T)
+        # upper_coeffs[angle_matrix == 0] = 0
+        # upper_coeffs[np.abs(angle_matrix) == np.pi/2] = 0
+        # lower_coeffs[(angle_matrix == 0).T] = 0
+        # lower_coeffs[(np.abs(angle_matrix) == np.pi/2).T] = 0
+        # coeff_matrix = upper_coeffs + lower_coeffs + np.identity(x_len * y_len)
+        # bg_matrix = upper_bg + lower_bg
     coeff_matrix = np.nan_to_num(coeff_matrix, nan=0)
     bg_matrix = np.nan_to_num(bg_matrix, nan=0)
+    plt.matshow(coeff_matrix)
+    plt.show()
+    plt.matshow(bg_matrix)
+    plt.show()
     good_indices = get_working_pixels(coeff_matrix, x_len, y_len)
     coeff_matrix_reduced = coeff_matrix[good_indices]
     bg_matrix_reduced = bg_matrix[good_indices]
+
     pivot = get_pivot(coeff_matrix_reduced)
-    coeff_matrix_normalized = (coeff_matrix_reduced.T / coeff_matrix_reduced[:, pivot]).T
-    coeff_matrix_normalized = np.nan_to_num(coeff_matrix_normalized)
-    bg_matrix_normalized = ((bg_matrix_reduced.T - bg_matrix_reduced[:, pivot]) / coeff_matrix_reduced[:, pivot]).T
-    bg_matrix_normalized = np.nan_to_num(bg_matrix_normalized)
-    coeff_array = np.median(coeff_matrix_normalized, axis=0)
-    bg_array = np.median(bg_matrix_normalized, axis=0)
+    #coeff_matrix_normalized = (coeff_matrix_reduced.T / coeff_matrix_reduced[:, pivot]).T
+    #coeff_matrix_normalized = np.nan_to_num(coeff_matrix_normalized)
+    #bg_matrix_normalized = ((bg_matrix_reduced.T - bg_matrix_reduced[:, pivot]) / coeff_matrix_reduced[:, pivot]).T
+    #bg_matrix_normalized = np.nan_to_num(bg_matrix_normalized)
+    #coeff_array = np.median(coeff_matrix_normalized, axis=0)
+    #bg_array = np.median(bg_matrix_normalized, axis=0)
+    coeff_array = coeff_matrix_reduced[pivot]
+    bg_array = bg_matrix_reduced[pivot]
     draw_coeff_matrix = coeff_array.reshape(x_len, y_len)
     draw_bg_matrix = bg_array.reshape(x_len, y_len)
+    return draw_coeff_matrix, draw_bg_matrix
+
+def multidim_lad_corr_flatfield(requested_data_0, params):
+    tim_len, x_len, y_len = requested_data_0.shape
+    requested_data = requested_data_0.reshape((tim_len, x_len * y_len))
+    coeff_vector, bg_vector = isotropic_lad_multidim(requested_data)
+    draw_coeff_matrix = coeff_vector.reshape(x_len, y_len)
+    draw_bg_matrix = bg_vector.reshape(x_len, y_len)
+    return draw_coeff_matrix, draw_bg_matrix
+
+def multidim_lad_corr_flatfield_no_bg(requested_data_0, params):
+    tim_len, x_len, y_len = requested_data_0.shape
+    requested_data = requested_data_0.reshape((tim_len, x_len * y_len))
+    coeff_vector = isotropic_lad_multidim_no_bg(requested_data)
+    draw_coeff_matrix = coeff_vector.reshape(x_len, y_len)
+    draw_bg_matrix = np.zeros((x_len,y_len))
     return draw_coeff_matrix, draw_bg_matrix

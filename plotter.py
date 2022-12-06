@@ -89,9 +89,11 @@ class GridPlotter(Plotter):
             if low >= high:
                 high += 1e-6
 
+            #self.norm = Normalize(low, high)
             if self.norm is None:
                 self.norm = Normalize(low, high)
             else:
+                self.norm.autoscale(alive_data)
                 self.norm.autoscale(alive_data)
             # if self.colorbar:
             #     self.colorbar.set_clim(low, high)

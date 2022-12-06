@@ -11,9 +11,12 @@ from .signal_plotter import SignalPlotter
 import numpy as np
 from robustats import weighted_median
 from .flat_fielding_methods import median_corr_flatfield, isotropic_lsq_corr_flatfield
-from .flat_fielding_methods import isotropic_lsq_corr_flatfield_parallel
+from .flat_fielding_methods import isotropic_lsq_corr_flatfield_parallel, multidim_lad_corr_flatfield
+from .flat_fielding_methods import  multidim_lad_corr_flatfield_no_bg
 import numpy.random as rng
 import matplotlib.pyplot as plt
+
+from tool_base import ToolBase
 
 def line_fit_robust(xs, ys):
     k = np.float(weighted_median(ys/xs, xs))
@@ -31,7 +34,7 @@ class LineFitter(object):
             return 0
         return line_fit_robust(i_data, j_data)
 
-class FlatFielder(tk.Toplevel):
+class FlatFielder(ToolBase):
     def __init__(self, master):
         self.file = None
         self.remembered_coeffs = None
@@ -60,7 +63,10 @@ class FlatFielder(tk.Toplevel):
         self.settings_menu.commit_action = self.on_apply_settings
         self.t1_setting = self.settings_menu.lookup_setting("time_1")
         self.t2_setting = self.settings_menu.lookup_setting("time_2")
+
+        self.sync_settings()
         self.get_mat_file()
+        self.signal_plotter.draw()
         self.drawn_data = None
 
         btn = ttk.Button(self, text="Расчёт коэффициентов", command=self.on_calculate)
@@ -97,10 +103,17 @@ class FlatFielder(tk.Toplevel):
                 t1, t2 = t2, t1
             requested_data = self.drawn_data[t1:t2]
 
-            if self.settings_dict["use_alt_algo"]:
-                draw_coeff_matrix, draw_bg_matrix = isotropic_lsq_corr_flatfield_parallel(requested_data, self.settings_dict)
-            else:
+            used_algo = self.settings_dict["used_algo"]
+            if used_algo == "median_corr":
                 draw_coeff_matrix, draw_bg_matrix = median_corr_flatfield(requested_data, self.settings_dict)
+            elif used_algo == "isotropic_lsq_corr_parallel":
+                draw_coeff_matrix, draw_bg_matrix = isotropic_lsq_corr_flatfield_parallel(requested_data, self.settings_dict)
+            elif used_algo == "isotropic_lad_multidim":
+                draw_coeff_matrix, draw_bg_matrix = multidim_lad_corr_flatfield(requested_data, self.settings_dict)
+            elif used_algo == "isotropic_lad_multidim_no_bg":
+                draw_coeff_matrix, draw_bg_matrix = multidim_lad_corr_flatfield_no_bg(requested_data, self.settings_dict)
+            else:
+                return
 
             broke_signal = np.array(np.where(draw_coeff_matrix == 0)).T
             print("BROKEN_DETECTION:", broke_signal)
@@ -131,14 +144,10 @@ class FlatFielder(tk.Toplevel):
                 np.save(fp, coeffs)
                 np.save(fp, bg)
 
-    def get_mat_file(self):
-        self.sync_settings()
-        if hasattr(self.master, "file"):
-            self.file = self.master.file
-            if self.file:
-                self.propagate_limits()
-                self.draw_plot()
-        self.signal_plotter.draw()
+
+    def on_loaded_file_success(self):
+        self.propagate_limits()
+        self.draw_plot()
 
     def draw_plot(self, coefficients = None, offsets = None):
         data0 = self.file["data0"]

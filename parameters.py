@@ -8,3 +8,6 @@ PLOT_COLORMAP = plt.cm.viridis
 PLOT_BROKEN_COLOR = "black"
 
 NPROC = cpu_count()
+
+MAIN_LATITUDE = 68.607279
+MAIN_LONGITUDE = 31.803085

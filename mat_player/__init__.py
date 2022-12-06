@@ -5,8 +5,9 @@ from .player_controls import PlayerControls
 import os
 import numpy as np
 from datetime import datetime
+from tool_base import ToolBase
 
-class MatPlayer(tk.Toplevel):
+class MatPlayer(ToolBase):
     def __init__(self, master):
         super(MatPlayer, self).__init__(master)
         self.title("Воспроизведение")
@@ -35,11 +36,9 @@ class MatPlayer(tk.Toplevel):
                 frame = frame * (self.divider != 0)
             self.plotter.buffer_matrix = frame
             self.plotter.update_matrix_plot(True)
+            self.plotter.update_matrix_plot(True)
             self.plotter.axes.set_title(time_str)
             self.plotter.draw()
 
-    def get_mat_file(self):
-        if hasattr(self.master, "file"):
-            self.file = self.master.file
-            if self.file:
-                self.player_controls.set_limit(len(self.file["UT0"]))
+    def on_loaded_file_success(self):
+        self.player_controls.set_limit(len(self.file["UT0"]))

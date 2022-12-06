@@ -1,4 +1,4 @@
-from settings_frame import SettingMenu, RangeDoubleValue, SliderRangeDoubleValue, RangeIntValue, CheckboxValue
+from settings_frame import SettingMenu, RangeIntValue, CheckboxValue, ComboboxValue
 from math import pi
 
 def build_settings(menu:SettingMenu):
@@ -8,4 +8,9 @@ def build_settings(menu:SettingMenu):
     menu.add_separator("Данные")
     menu.add_setting(RangeIntValue, "samples_mean", "Усреднение", 60, start=0, end=1200)
     menu.add_separator("Алгоритм")
-    menu.add_setting(CheckboxValue, "use_alt_algo", "Изотропный алгоритм.", False)
+    menu.add_setting(ComboboxValue, "used_algo", "Алгоритм", "median_corr", options=[
+        "median_corr",
+        "isotropic_lsq_corr_parallel",
+        "isotropic_lad_multidim",
+        "isotropic_lad_multidim_no_bg"
+    ])

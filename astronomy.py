@@ -92,3 +92,35 @@ def find_index(coord: np.ndarray):
 
     return after_index * inbounds - (np.logical_not(inbounds))
 
+def to_altaz(dec0, ra0, lat, lon):
+    xs, ys, zs = 1, 0, 0
+    # eigenrotate = np.array([
+    #     [1, 0, 0],
+    #     [0, np.cos(rot), np.sin(rot)],
+    #     [0, -np.sin(rot), np.cos(rot)]
+    # ])
+    dec_rotate = np.array([
+        [np.cos(dec0), 0, -np.sin(dec0)],
+        [0, 1, 0],
+        [np.sin(dec0), 0, np.cos(dec0)]
+    ])
+    lat_rotate = np.array([
+        [np.cos(lat), 0, np.sin(lat)],
+        [0, 1, 0],
+        [-np.sin(lat), 0, np.cos(lat)]
+    ])
+    ra_rotate = np.array([
+        [np.cos(ra0 - lon), -np.sin(ra0 - lon), 0],
+        [np.sin(ra0 - lon), np.cos(ra0 - lon), 0],
+        [0, 0, 1]
+    ])
+
+    cubematr = np.vstack([xs, ys, zs])
+    #cubematr = np.matmul(eigenrotate, cubematr)
+    cubematr = np.matmul(dec_rotate, cubematr)
+    cubematr = np.matmul(ra_rotate, cubematr)
+    cubematr = np.matmul(lat_rotate, cubematr)
+    x, y, z = cubematr[0], cubematr[1], cubematr[2]
+    rev_alt = np.arccos(x / np.sqrt(x ** 2 + y ** 2 + z ** 2))
+    az = np.pi / 2 - np.arctan2(z, y)
+    return np.pi/2 - rev_alt, az

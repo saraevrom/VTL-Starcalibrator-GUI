@@ -13,14 +13,16 @@ import pandas as pd
 from numpy.lib.stride_tricks import sliding_window_view
 
 from astropy.time import Time
-from astronomy import range_calculate
+from astronomy import range_calculate, to_altaz
 import json
 from random_roaming import RandomRoaming, maximize
 from mat_converter import MatConverter
 from flatfielder import FlatFielder
 from mat_player import MatPlayer
+from track_markup import TrackMarkup
 
 import matplotlib.pyplot as plt
+from parameters import MAIN_LATITUDE, MAIN_LONGITUDE
 
 class Tool(object):
     def __init__(self,master,tool_class):
@@ -64,6 +66,7 @@ class App(tk.Tk):
         self.toolsmenu.add_command(label="Преобразовать mat файлы", command=Tool(self, MatConverter))
         self.toolsmenu.add_command(label="Выравнивание пикселей", command=Tool(self, FlatFielder))
         self.toolsmenu.add_command(label="Просмотр данных", command=Tool(self, MatPlayer))
+        self.toolsmenu.add_command(label="Разметка треков", command=Tool(self, TrackMarkup))
 
         self.topmenu.add_cascade(label="Файл", menu=self.filemenu)
         self.topmenu.add_cascade(label="Инструменты", menu=self.toolsmenu)
@@ -229,6 +232,13 @@ class App(tk.Tk):
                 for i in range(self.settings_dict["optimizer_steps"]):
                     print(f"Step {i}/{self.settings_dict['optimizer_steps']}")
                     self.roamer.step()
+
+            dec, ra0, psi, f = self.get_parameters()
+            lat = MAIN_LATITUDE*np.pi/180
+            lon = MAIN_LONGITUDE*np.pi/180
+            alt, az = to_altaz(dec, ra0, lat, lon)
+            print(f"        ALT  (°): {alt * 180 / np.pi}")
+            print(f"        AZ  (°): {az * 180 / np.pi}")
         self.data_cache = None
 
     def on_star_sample_change(self):
