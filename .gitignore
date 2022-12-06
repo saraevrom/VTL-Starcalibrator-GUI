@@ -1,6 +1,8 @@
 venv
 *.py[cod]
-settings*.json
+*.json
+!settings-newseason.json
+!localization/*.json
 __pycache__/
 *.mat
 *.npy

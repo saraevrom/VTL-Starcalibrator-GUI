@@ -15,6 +15,7 @@ from .flat_fielding_methods import isotropic_lsq_corr_flatfield_parallel, multid
 from .flat_fielding_methods import  multidim_lad_corr_flatfield_no_bg
 import numpy.random as rng
 import matplotlib.pyplot as plt
+from localization import get_locale
 
 from tool_base import ToolBase
 
@@ -41,13 +42,13 @@ class FlatFielder(ToolBase):
         self.remembered_bg = None
         self.remembered_working_pixels = None
         super(FlatFielder, self).__init__(master)
-        self.title("Выравнивание пикселей")
+        self.title(get_locale("flatfielder.title"))
         self.coeff_plotter = GridPlotter(self)
-        self.coeff_plotter.axes.set_title("Коэффициенты")
+        self.coeff_plotter.axes.set_title(get_locale("flatfielder.coefficients.title"))
         self.coeff_plotter.grid(row=0, column=0, sticky="nsew")
 
         self.bg_plotter = GridPlotter(self)
-        self.bg_plotter.axes.set_title("Фон")
+        self.bg_plotter.axes.set_title(get_locale("flatfielder.baselevel.title"))
         self.bg_plotter.grid(row=1, column=0, sticky="nsew")
         self.settings_menu = SettingMenu(self)
         build_settings(self.settings_menu)
@@ -69,11 +70,11 @@ class FlatFielder(ToolBase):
         self.signal_plotter.draw()
         self.drawn_data = None
 
-        btn = ttk.Button(self, text="Расчёт коэффициентов", command=self.on_calculate)
+        btn = ttk.Button(self, text=get_locale("flatfielder.btn.coeffs_calculate"), command=self.on_calculate)
         btn.grid(row=2, column=0, sticky="ew")
-        btn = ttk.Button(self, text="Сохранить данные", command=self.on_save_press)
+        btn = ttk.Button(self, text=get_locale("flatfielder.btn.save"), command=self.on_save_press)
         btn.grid(row=3, column=0, sticky="ew")
-        btn = ttk.Button(self, text="Отрисовать случайную пару пикселей", command=self.on_random_draw)
+        btn = ttk.Button(self, text=get_locale("flatfielder.btn.random_plot"), command=self.on_random_draw)
         btn.grid(row=4, column=0, sticky="ew")
         self.on_apply_settings()
 

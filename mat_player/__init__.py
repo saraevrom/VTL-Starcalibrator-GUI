@@ -6,11 +6,12 @@ import os
 import numpy as np
 from datetime import datetime
 from tool_base import ToolBase
+from localization import get_locale
 
 class MatPlayer(ToolBase):
     def __init__(self, master):
         super(MatPlayer, self).__init__(master)
-        self.title("Воспроизведение")
+        self.title(get_locale("matplayer.title"))
         self.file = None
         self.plotter = GridPlotter(self)
         self.plotter.pack(side=tk.TOP, expand=True, fill=tk.BOTH)

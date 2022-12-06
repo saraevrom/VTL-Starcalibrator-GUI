@@ -173,5 +173,5 @@ def multidim_lad_corr_flatfield_no_bg(requested_data_0, params):
     requested_data = requested_data_0.reshape((tim_len, x_len * y_len))
     coeff_vector = isotropic_lad_multidim_no_bg(requested_data)
     draw_coeff_matrix = coeff_vector.reshape(x_len, y_len)
-    draw_bg_matrix = np.zeros((x_len,y_len))
+    draw_bg_matrix = np.zeros((x_len, y_len))
     return draw_coeff_matrix, draw_bg_matrix

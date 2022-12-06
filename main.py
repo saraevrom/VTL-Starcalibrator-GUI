@@ -23,6 +23,7 @@ from track_markup import TrackMarkup
 
 import matplotlib.pyplot as plt
 from parameters import MAIN_LATITUDE, MAIN_LONGITUDE
+from localization import get_locale
 
 class Tool(object):
     def __init__(self,master,tool_class):
@@ -36,7 +37,7 @@ class App(tk.Tk):
     def __init__(self):
         super(App, self).__init__()
         self.flat_field_bg = None
-        self.title("Определение ориентации")
+        self.title(get_locale("app.title"))
         self.star_menu = Starlist(self)
         self.star_menu.grid(row=0, column=0, sticky="nsew")
         self.star_menu.star_callback = self.on_star_selection_change
@@ -58,18 +59,18 @@ class App(tk.Tk):
         self.topmenu = tk.Menu(self)
 
         self.filemenu = tk.Menu(self.topmenu, tearoff=0)
-        self.filemenu.add_command(label="Oткрыть mat файл", command=self.open_mat_file)
-        self.filemenu.add_command(label="Загрузить настройки", command=self.on_settings_load)
-        self.filemenu.add_command(label="Сохранить настройки", command=self.on_settings_save)
+        self.filemenu.add_command(label=get_locale("app.menu.file.open_mat"), command=self.open_mat_file)
+        self.filemenu.add_command(label=get_locale("app.menu.file.load_settings"), command=self.on_settings_load)
+        self.filemenu.add_command(label=get_locale("app.menu.file.save_settings"), command=self.on_settings_save)
 
         self.toolsmenu = tk.Menu(self.topmenu, tearoff=0)
-        self.toolsmenu.add_command(label="Преобразовать mat файлы", command=Tool(self, MatConverter))
-        self.toolsmenu.add_command(label="Выравнивание пикселей", command=Tool(self, FlatFielder))
-        self.toolsmenu.add_command(label="Просмотр данных", command=Tool(self, MatPlayer))
-        self.toolsmenu.add_command(label="Разметка треков", command=Tool(self, TrackMarkup))
+        self.toolsmenu.add_command(label=get_locale("app.menu.tools.mat_converter"), command=Tool(self, MatConverter))
+        self.toolsmenu.add_command(label=get_locale("app.menu.tools.flatfielder"), command=Tool(self, FlatFielder))
+        self.toolsmenu.add_command(label=get_locale("app.menu.tools.mat_player"), command=Tool(self, MatPlayer))
+        self.toolsmenu.add_command(label=get_locale("app.menu.tools.track_markup"), command=Tool(self, TrackMarkup))
 
-        self.topmenu.add_cascade(label="Файл", menu=self.filemenu)
-        self.topmenu.add_cascade(label="Инструменты", menu=self.toolsmenu)
+        self.topmenu.add_cascade(label=get_locale("app.menu.file"), menu=self.filemenu)
+        self.topmenu.add_cascade(label=get_locale("app.menu.tools"), menu=self.toolsmenu)
         self.config(menu=self.topmenu)
         self.rowconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
@@ -246,16 +247,16 @@ class App(tk.Tk):
         self.refresh_fg()
 
     def on_settings_load(self):
-        filename = filedialog.askopenfilename(title="Загрузка настроек",
-                                              filetypes=[("JSON файл с настройками", "*.json")])
+        filename = filedialog.askopenfilename(title=get_locale("app.filedialog.load_settings.title"),
+                                              filetypes=[(get_locale("app.filedialog_formats.settings_json"), "*.json")])
         if filename and os.path.isfile(filename):
             with open(filename, "r") as f:
                 self.settings_dict = json.load(f)
                 self.settings_push()
 
     def on_settings_save(self):
-        filename = filedialog.asksaveasfilename(title="Сохранение настроек",
-                                                filetypes=[("JSON файл с настройками", "*.json")])
+        filename = filedialog.asksaveasfilename(title=get_locale("app.filedialog.save_settings.title"),
+                                                filetypes=[(get_locale("app.filedialog_formats.settings_json"), "*.json")])
         if filename:
             with open(filename, "w") as f:
                 json.dump(self.settings_dict, f)
@@ -280,8 +281,10 @@ class App(tk.Tk):
 
 
     def open_mat_file(self):
-        filename = filedialog.askopenfilename(title="Открыть mat файл",
-                                              filetypes=[("Обработанные mat файлы", "*.mat *.hdf")])
+        filename = filedialog.askopenfilename(title=get_locale("app.filedialog.load_mat.title"),
+                                              filetypes=[
+                                                  (get_locale("app.filedialog_formats.processed_mat"), "*.mat *.hdf")
+                                              ])
         if filename and os.path.isfile(filename):
             new_file = h5py.File(filename, "r")
             if self.file:
