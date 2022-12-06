@@ -12,4 +12,4 @@ NPROC = cpu_count()
 MAIN_LATITUDE = 68.607279
 MAIN_LONGITUDE = 31.803085
 
-LOCALE = "ru_ru"
+LOCALE = "en"

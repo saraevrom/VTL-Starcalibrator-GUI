@@ -4,7 +4,7 @@
   "flatfielder.baselevel.title": "Фон",
   "flatfielder.btn.coeffs_calculate": "Расчёт коэффициентов",
   "flatfielder.btn.save": "Сохранить данные",
-  "flatfielder.btn.random_plot": "Сохранить данные",
+  "flatfielder.btn.random_plot": "Отрисовать случайную пару пикселей",
   "flatfielder.form.field.time_1": "Точка 1",
   "flatfielder.form.field.time_2": "Точка 2",
   "flatfielder.form.separator.data": "Данные",
@@ -12,7 +12,7 @@
   "flatfielder.form.separator.algo": "Алгоритм",
   "flatfielder.form.field.used_algo": "Алгоритм",
 
-  "matplayer.title": "Влспроизведение",
+  "matplayer.title": "Воспроизведение",
 
   "track_markup.title": "Разметка треков",
   "track_markup.btn.remove_selected": "Удалить выбранный элемент",
