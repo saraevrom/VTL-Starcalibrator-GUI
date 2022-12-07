@@ -14,7 +14,7 @@
 
   "matplayer.title": "Playback",
 
-  "track_markup.title": "Track markup",
+  "track_markup.title": "Background extractor",
   "track_markup.btn.remove_selected": "Remove selected",
   "track_markup.btn.reset": "Reset",
   "track_markup.btn.save": "Save selection",
@@ -87,7 +87,7 @@
   "app.menu.tools.mat_converter": "Convert mat files",
   "app.menu.tools.flatfielder": "Flat fielding",
   "app.menu.tools.mat_player": "Data playback",
-  "app.menu.tools.track_markup": "Track markup",
+  "app.menu.tools.track_markup": "Background extractor",
   "app.filedialog.save_settings.title": "Save settings",
   "app.filedialog.load_settings.title": "Load settings",
   "app.filedialog.load_mat.title": "Open mat file",

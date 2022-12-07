@@ -14,7 +14,7 @@
 
   "matplayer.title": "Воспроизведение",
 
-  "track_markup.title": "Разметка треков",
+  "track_markup.title": "Выделение фона",
   "track_markup.btn.remove_selected": "Удалить выбранный элемент",
   "track_markup.btn.reset": "Сброс",
   "track_markup.btn.save": "Сохранить выбор",
@@ -87,7 +87,7 @@
   "app.menu.tools.mat_converter": "Преобразовать mat файлы",
   "app.menu.tools.flatfielder": "Выравнивание пикселей",
   "app.menu.tools.mat_player": "Просмотр данных",
-  "app.menu.tools.track_markup": "Разметка треков",
+  "app.menu.tools.track_markup": "Выделение фона",
   "app.filedialog.save_settings.title": "Сохранение настроек",
   "app.filedialog.load_settings.title": "Загрузка настроек",
   "app.filedialog.load_mat.title": "Открыть mat файл",
