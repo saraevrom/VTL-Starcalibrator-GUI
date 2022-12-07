@@ -19,7 +19,7 @@
   "track_markup.btn.reset": "Сброс",
   "track_markup.btn.save": "Сохранить выбор",
   "track_markup.btn.load": "Загрузить выбор",
-  "track_markup.btn.track_fuzzy": "Нифига не видно! Хочу перерисовать с другими параметрами",
+  "track_markup.btn.track_fuzzy": "Изображение нечётко! Хочу перерисовать с другими параметрами",
   "track_markup.btn.track_yes": "Трек виден",
   "track_markup.btn.track_no": "Трек не виден",
   "track_markup.messagebox.reset.title": "Сброс данных",

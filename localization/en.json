@@ -19,7 +19,7 @@
   "track_markup.btn.reset": "Reset",
   "track_markup.btn.save": "Save selection",
   "track_markup.btn.load": "Load selection",
-  "track_markup.btn.track_fuzzy": "Can't see a heck! I want to redraw it with different parameters.",
+  "track_markup.btn.track_fuzzy": "Image is unclear. I want to redraw it with different parameters.",
   "track_markup.btn.track_yes": "Track visible",
   "track_markup.btn.track_no": "Track not visible",
   "track_markup.messagebox.reset.title": "Data reset",
