@@ -86,8 +86,8 @@ class TrackMarkup(ToolBase):
 
     def on_reset(self):
         if tkinter.messagebox.askokcancel(
-                get_locale("track_markup.dialog.reset.title"),
-                get_locale("track_markup.dialog.reset.content")):
+                get_locale("track_markup.messagebox.reset.title"),
+                get_locale("track_markup.messagebox.reset.content")):
             self.reset_events()
 
     def reset_events(self):

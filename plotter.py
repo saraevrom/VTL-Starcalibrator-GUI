@@ -12,7 +12,8 @@ from astronomy import find_index
 import colorsys
 matplotlib.use("TkAgg")
 from parameters import *
-
+from localization import get_locale
+import time
 
 LOWER_EDGES = np.arange(HALF_PIXELS)*PIXEL_SIZE+HALF_GAP_SIZE
 LOWER_EDGES = np.concatenate([-np.flip(LOWER_EDGES)-PIXEL_SIZE, LOWER_EDGES])
@@ -44,14 +45,18 @@ class Plotter(ttk.Frame):
         self.on_right_click_callback = None
 
     def draw(self):
-        self.figure.canvas.draw()
-        self.figure.canvas.flush_events()
+        #self.figure.canvas.draw()
+        #self.figure.canvas.flush_events()
         self.mpl_canvas.draw()
 
 
 class GridPlotter(Plotter):
     def __init__(self, master, norm=None, *args, **kwargs):
         super(GridPlotter, self).__init__(master, *args, **kwargs)
+        self.use_autoscale_var = tk.IntVar(self)
+        self.use_autoscale_var.set(1)
+        self.min_norm_entry = tk.StringVar(self)
+        self.max_norm_entry = tk.StringVar(self)
 
         self.colorbar = None
         span = HALF_PIXELS*PIXEL_SIZE+HALF_GAP_SIZE
@@ -81,33 +86,79 @@ class GridPlotter(Plotter):
         self.axes.hlines([-HALF_GAP_SIZE, span], span, HALF_GAP_SIZE, colors="black")
         self.figure.canvas.mpl_connect("button_press_event", self.on_plot_click)
 
+        norm_panel = tk.Frame(self)
+        norm_panel.pack(side=tk.BOTTOM, fill=tk.X)
+        for i in range(4):
+            norm_panel.columnconfigure(i, weight=1)
+        autoscale_check = tk.Checkbutton(norm_panel, text=get_locale("app.widgets.gridplotter.use_autoscale"),
+                                         variable=self.use_autoscale_var)
+        autoscale_check.grid(row=0, column=0, columnspan=4, sticky="ew")
+        tk.Label(norm_panel, text=get_locale("app.widgets.gridplotter.scale")).grid(row=1, column=0, sticky="ew")
+        tk.Label(norm_panel, text=get_locale("—")).grid(row=1, column=2, sticky="ew")
+        tk.Entry(norm_panel, textvariable=self.min_norm_entry).grid(row=1, column=1, sticky="ew")
+        tk.Entry(norm_panel, textvariable=self.max_norm_entry).grid(row=1, column=3, sticky="ew")
+
+    def update_norm(self, low_fallback=None, high_fallback=None):
+        if low_fallback is None:
+            if self.norm is None:
+                return
+            low_fallback = self.norm.vmin
+
+        if high_fallback is None:
+            if self.norm is None:
+                return
+            high_fallback = self.norm.vmax
+        if low_fallback > high_fallback:
+            high_fallback = low_fallback + 1e-6
+
+        if self.use_autoscale_var.get():
+            low = low_fallback
+            high = high_fallback
+            self.max_norm_entry.set(str(high_fallback))
+            self.min_norm_entry.set(str(low_fallback))
+        else:
+            try:
+                low = float(self.min_norm_entry.get())
+            except ValueError:
+                self.min_norm_entry.set(str(low_fallback))
+                low = low_fallback
+            try:
+                high = float(self.max_norm_entry.get())
+            except ValueError:
+                self.max_norm_entry.set(str(high_fallback))
+                high = high_fallback
+
+        if low > high:
+            low, high = high, low
+
+        if self.norm is None:
+            self.norm = Normalize(low, high)
+        else:
+            # M agic: pyplot requires to assign twice
+            self.norm.vmin = low
+            self.norm.vmin = low
+            self.norm.vmax = high
+            self.norm.vmax = high
+
     def update_matrix_plot(self, update_norm=False):
+        # start_time = time.time()
+        # print("Draw START")
         if update_norm or (self.norm is None):
             alive_data = self.buffer_matrix[self.alive_pixels_matrix]
-            low = np.min(alive_data)
-            high = np.max(alive_data)
-            if low >= high:
-                high += 1e-6
+            low_auto = np.min(alive_data)
+            high_auto = np.max(alive_data)
+            self.update_norm(low_auto, high_auto)
 
-            #self.norm = Normalize(low, high)
-            if self.norm is None:
-                self.norm = Normalize(low, high)
-            else:
-                self.norm.autoscale(alive_data)
-                self.norm.autoscale(alive_data)
-            # if self.colorbar:
-            #     self.colorbar.set_clim(low, high)
-            #     new_cbar_ticks = np.linspace(low, high, num=21, endpoint=True)
-            #     self.colorbar.set_ticks(new_cbar_ticks)
-            # else:
             if self.colorbar is None:
                 self.colorbar = self.figure.colorbar(plt.cm.ScalarMappable(norm=self.norm, cmap=PLOT_COLORMAP))
+        # print("Normalized:", time.time()-start_time)
         for j in range(2*HALF_PIXELS):
             for i in range(2*HALF_PIXELS):
                 if self.alive_pixels_matrix[i,j]:
                     self.patches[j][i].set_color(PLOT_COLORMAP(self.norm(self.buffer_matrix[i, j])))
                 else:
                     self.patches[j][i].set_color(PLOT_BROKEN_COLOR)
+        # print("Draw end:", time.time()-start_time)
 
     def set_broken(self, broken):
         self.alive_pixels_matrix = np.ones([2*HALF_PIXELS, 2*HALF_PIXELS]).astype(bool)

@@ -13,6 +13,8 @@
   "flatfielder.form.field.used_algo": "Алгоритм",
 
   "matplayer.title": "Воспроизведение",
+  "matplayer.form.use_filter": "Использовать фильтр",
+  "matplayer.form.filter_window": "Окно фильтра",
 
   "track_markup.title": "Выделение фона",
   "track_markup.btn.remove_selected": "Удалить выбранный элемент",
@@ -94,5 +96,8 @@
 
   "app.filedialog_formats.settings_json": "JSON файл с настройками",
   "app.filedialog_formats.processed_mat": "Обработанные mat файлы",
-  "app.filedialog_formats.raw_mat": "Файл с сырыми данными"
+  "app.filedialog_formats.raw_mat": "Файл с сырыми данными",
+
+  "app.widgets.gridplotter.use_autoscale": "Автоматическая нормировка",
+  "app.widgets.gridplotter.scale": "Нормировка"
 }

@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 
 FAST_FWD_SKIP = 1
-FRAME_DELAY = 10 #ms
+FRAME_DELAY = 1 #ms
 
 
 
@@ -79,7 +79,7 @@ class ValuedSlider(ttk.Frame):
 
 
 class PlayerControls(ttk.Frame):
-    def __init__(self, master, frame_callback):
+    def __init__(self, master, frame_callback, click_callback):
         super(PlayerControls, self).__init__(master)
         self.play_slider = ValuedSlider(self)
         self.play_slider.pack(side=tk.TOP,expand=True, fill=tk.X)
@@ -90,12 +90,14 @@ class PlayerControls(ttk.Frame):
         self.play_slider.set_slider_callback(self.on_control_update)
         self.playing = False
         self.frame_callback = frame_callback
+        self.click_callback = click_callback
 
     def set_limit(self, upper):
         self.play_slider.set_limit(upper)
         self.upper_limit = upper
 
     def on_control_update(self, *_):
+        self.click_callback()
         self.start_play_checked()
 
     def start_play_checked(self):

@@ -12,7 +12,9 @@
   "flatfielder.form.separator.algo": "Algorithm",
   "flatfielder.form.field.used_algo": "Algorithm",
 
-  "matplayer.title": "Playback",
+  "matplayer.title": "Data viewer",
+  "matplayer.form.use_filter": "Use filter",
+  "matplayer.form.filter_window": "MA filter window (frames)",
 
   "track_markup.title": "Background extractor",
   "track_markup.btn.remove_selected": "Remove selected",
@@ -94,5 +96,8 @@
 
   "app.filedialog_formats.settings_json": "JSON with settings",
   "app.filedialog_formats.processed_mat": "Converted mat files",
-  "app.filedialog_formats.raw_mat": "Raw data"
+  "app.filedialog_formats.raw_mat": "Raw data",
+
+  "app.widgets.gridplotter.use_autoscale": "Autoscale",
+  "app.widgets.gridplotter.scale": "Scale"
 }
