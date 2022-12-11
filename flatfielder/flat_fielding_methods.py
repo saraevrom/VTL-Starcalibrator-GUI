@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from robustats import weighted_median
-from .isotropic_lsq import isotropic_lad_line, phir0_to_kb, phir0_to_kb_inv, isotropic_lad_multidim
-from .isotropic_lsq import isotropic_lad_multidim_no_bg
+from flatfielder.isotropic_lsq import isotropic_lad_line, phir0_to_kb, phir0_to_kb_inv, isotropic_lad_multidim
+from flatfielder.isotropic_lsq import isotropic_lad_multidim_no_bg
 from multiprocessing import Pool
 from parameters import NPROC
 
@@ -21,7 +21,7 @@ def get_pivot(reduced_coeff_matrix):
     pivot = np.argmin(sample_distances)
     return pivot
 
-def median_corr_flatfield(requested_data_0, params):
+def median_corr_flatfield(requested_data_0):
     tim_len, x_len, y_len = requested_data_0.shape
     requested_data = requested_data_0.reshape((tim_len, x_len * y_len))
     coeff_matrix = np.zeros([x_len * y_len, x_len * y_len])
@@ -58,7 +58,7 @@ def median_corr_flatfield(requested_data_0, params):
 
 
 
-def isotropic_lsq_corr_flatfield(requested_data_0, params):
+def isotropic_lsq_corr_flatfield(requested_data_0):
     tim_len, x_len, y_len = requested_data_0.shape
     requested_data = requested_data_0.reshape((tim_len, x_len * y_len))
     coeff_matrix = np.zeros([x_len * y_len, x_len * y_len])
@@ -111,7 +111,7 @@ class PoolWorker(object):
         return phi_ij, r0_ij
         #else:
         #    return 0, 0
-def isotropic_lsq_corr_flatfield_parallel(requested_data_0, params):
+def isotropic_lsq_corr_flatfield_parallel(requested_data_0):
     tim_len, x_len, y_len = requested_data_0.shape
     requested_data = requested_data_0.reshape((tim_len, x_len * y_len))
     #coeff_matrix = np.zeros([x_len * y_len, x_len * y_len])
@@ -160,7 +160,7 @@ def isotropic_lsq_corr_flatfield_parallel(requested_data_0, params):
     draw_bg_matrix = bg_array.reshape(x_len, y_len)
     return draw_coeff_matrix, draw_bg_matrix
 
-def multidim_lad_corr_flatfield(requested_data_0, params):
+def multidim_lad_corr_flatfield(requested_data_0):
     tim_len, x_len, y_len = requested_data_0.shape
     requested_data = requested_data_0.reshape((tim_len, x_len * y_len))
     coeff_vector, bg_vector = isotropic_lad_multidim(requested_data)
@@ -168,7 +168,7 @@ def multidim_lad_corr_flatfield(requested_data_0, params):
     draw_bg_matrix = bg_vector.reshape(x_len, y_len)
     return draw_coeff_matrix, draw_bg_matrix
 
-def multidim_lad_corr_flatfield_no_bg(requested_data_0, params):
+def multidim_lad_corr_flatfield_no_bg(requested_data_0):
     tim_len, x_len, y_len = requested_data_0.shape
     requested_data = requested_data_0.reshape((tim_len, x_len * y_len))
     coeff_vector = isotropic_lad_multidim_no_bg(requested_data)

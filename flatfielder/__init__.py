@@ -1,11 +1,6 @@
-
-import tkinter as tk
 from tkinter import ttk
 from plotter import GridPlotter
 from settings_frame import SettingMenu
-import os
-import tkinter.filedialog as filedialog
-import h5py
 from .settings_build import build_settings
 from .signal_plotter import SignalPlotter
 import numpy as np
@@ -106,13 +101,13 @@ class FlatFielder(ToolBase):
 
             used_algo = self.settings_dict["used_algo"]
             if used_algo == "median_corr":
-                draw_coeff_matrix, draw_bg_matrix = median_corr_flatfield(requested_data, self.settings_dict)
+                draw_coeff_matrix, draw_bg_matrix = median_corr_flatfield(requested_data)
             elif used_algo == "isotropic_lsq_corr_parallel":
-                draw_coeff_matrix, draw_bg_matrix = isotropic_lsq_corr_flatfield_parallel(requested_data, self.settings_dict)
+                draw_coeff_matrix, draw_bg_matrix = isotropic_lsq_corr_flatfield_parallel(requested_data)
             elif used_algo == "isotropic_lad_multidim":
-                draw_coeff_matrix, draw_bg_matrix = multidim_lad_corr_flatfield(requested_data, self.settings_dict)
+                draw_coeff_matrix, draw_bg_matrix = multidim_lad_corr_flatfield(requested_data)
             elif used_algo == "isotropic_lad_multidim_no_bg":
-                draw_coeff_matrix, draw_bg_matrix = multidim_lad_corr_flatfield_no_bg(requested_data, self.settings_dict)
+                draw_coeff_matrix, draw_bg_matrix = multidim_lad_corr_flatfield_no_bg(requested_data)
             else:
                 return
 
