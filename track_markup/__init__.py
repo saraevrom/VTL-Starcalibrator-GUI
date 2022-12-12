@@ -11,6 +11,7 @@ import tkinter.messagebox
 import tkinter.filedialog
 import json
 from localization import get_locale
+from flatfielder import FlatFieldingModel
 
 FORM_CONF = {
     "filter_win":{
@@ -52,6 +53,7 @@ class TrackMarkup(ToolBase):
         left_panel.pack(side="left", fill="y")
         self.queue = []
         self.trackless_events = []
+        self.model = None
 
         self.current_event = None
 
@@ -113,12 +115,12 @@ class TrackMarkup(ToolBase):
             #self.current_event = event_start, event_end
             plot_data = self.file["data0"][event_start:event_end]
 
-            if os.path.isfile("flat_fielding.npy"):
-                with open("flat_fielding.npy", "rb") as f:
-                    coeffs = np.load(f)
-                    bg = np.load(f)
-                    plot_data = (plot_data-bg)/coeffs
-                    plot_data = np.nan_to_num(plot_data)
+            if os.path.isfile("flat_fielding.json"):
+                if self.model is None:
+                    self.model = FlatFieldingModel.load("flat_fielding.json")
+
+                plot_data = self.model.apply(plot_data)
+                plot_data = np.nan_to_num(plot_data)
             slides = np.mean(sliding_window_view(plot_data, axis=0, window_shape=win), axis=-1)
             plot_data = plot_data[win//2:win//2+slides.shape[0]] - slides
             plot_data = np.max(plot_data, axis=0)
@@ -139,7 +141,6 @@ class TrackMarkup(ToolBase):
             else:
                 real_plot_data = plot_data
 
-            real_plot_data[coeffs==0] = 0
             assert real_plot_data.shape == (16,16)
 
             #print(real_plot_data)
@@ -190,7 +191,7 @@ class TrackMarkup(ToolBase):
                 self.add_trackless_event(start, end)
                 self.show_next_event()
 
-    def add_trackless_event(self,start,end):
+    def add_trackless_event(self, start, end):
         if [start, end] not in self.trackless_events:
             self.selected_data.insert(tk.END, f"{start} - {end}")
             self.trackless_events.append([start, end])

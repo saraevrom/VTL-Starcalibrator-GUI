@@ -11,6 +11,7 @@
   "flatfielder.form.field.samples_mean": "Усреднение",
   "flatfielder.form.separator.algo": "Алгоритм",
   "flatfielder.form.field.used_algo": "Алгоритм",
+  "flatfielder.nothing": "Н/Д",
 
   "matplayer.title": "Воспроизведение",
   "matplayer.form.use_filter": "Использовать фильтр",

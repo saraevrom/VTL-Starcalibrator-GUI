@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from localization import get_locale
 
 from tool_base import ToolBase
+from .models import FlatFieldingModel
 
 def line_fit_robust(xs, ys):
     k = np.float(weighted_median(ys/xs, xs))
@@ -33,9 +34,8 @@ class LineFitter(object):
 class FlatFielder(ToolBase):
     def __init__(self, master):
         self.file = None
-        self.remembered_coeffs = None
-        self.remembered_bg = None
-        self.remembered_working_pixels = None
+        self.remembered_model = None
+        self.apparent_data = None
         super(FlatFielder, self).__init__(master)
         self.title(get_locale("flatfielder.title"))
         self.coeff_plotter = GridPlotter(self)
@@ -101,51 +101,49 @@ class FlatFielder(ToolBase):
 
             used_algo = self.settings_dict["used_algo"]
             if used_algo == "median_corr":
-                draw_coeff_matrix, draw_bg_matrix = median_corr_flatfield(requested_data)
+                model = median_corr_flatfield(requested_data)
             elif used_algo == "isotropic_lsq_corr_parallel":
-                draw_coeff_matrix, draw_bg_matrix = isotropic_lsq_corr_flatfield_parallel(requested_data)
+                model = isotropic_lsq_corr_flatfield_parallel(requested_data)
             elif used_algo == "isotropic_lad_multidim":
-                draw_coeff_matrix, draw_bg_matrix = multidim_lad_corr_flatfield(requested_data)
+                model = multidim_lad_corr_flatfield(requested_data)
             elif used_algo == "isotropic_lad_multidim_no_bg":
-                draw_coeff_matrix, draw_bg_matrix = multidim_lad_corr_flatfield_no_bg(requested_data)
+                model = multidim_lad_corr_flatfield_no_bg(requested_data)
             else:
                 return
 
-            broke_signal = np.array(np.where(draw_coeff_matrix == 0)).T
+            broke_signal = model.broken_query()
             print("BROKEN_DETECTION:", broke_signal)
-            self.coeff_plotter.buffer_matrix = draw_coeff_matrix
+            display1, param1 = model.display_parameter_1()
+            self.coeff_plotter.axes.set_title(get_locale(display1))
+            if param1 is not None:
+                self.coeff_plotter.buffer_matrix = param1
             self.coeff_plotter.set_broken(broke_signal)
             self.coeff_plotter.update_matrix_plot(update_norm=True)
             self.coeff_plotter.draw()
 
-            self.bg_plotter.buffer_matrix = draw_bg_matrix
+            display2, param2 = model.display_parameter_2()
+            self.bg_plotter.axes.set_title(get_locale(display2))
+            if param2 is not None:
+                self.bg_plotter.buffer_matrix = param2
             self.bg_plotter.set_broken(broke_signal)
             self.bg_plotter.update_matrix_plot(update_norm=True)
             self.bg_plotter.draw()
-
-            self.remembered_coeffs = draw_coeff_matrix
-            self.remembered_bg = draw_bg_matrix
-            self.remembered_working_pixels = self.coeff_plotter.alive_pixels_matrix
-            self.draw_plot(draw_coeff_matrix, draw_bg_matrix)
+            self.remembered_model = model
+            self.draw_plot(model)
             self.signal_plotter.draw()
             #np.save("flat_fielding.npy", draw_coeff_matrix)
 
     def on_save_press(self):
-        if self.remembered_coeffs is not None:
-            coeffs = self.remembered_coeffs
-            coeffs = coeffs * self.remembered_working_pixels
-            bg = self.remembered_bg
-            bg = bg * self.remembered_working_pixels
-            with open("flat_fielding.npy", "wb") as fp:
-                np.save(fp, coeffs)
-                np.save(fp, bg)
+        if self.remembered_model is not None:
+            model = self.remembered_model
+            model.save("flat_fielding.json")
 
 
     def on_loaded_file_success(self):
         self.propagate_limits()
         self.draw_plot()
 
-    def draw_plot(self, coefficients = None, offsets = None):
+    def draw_plot(self, model=None):
         data0 = self.file["data0"]
         skip = self.settings_dict["samples_mean"]
         res_array = []
@@ -155,15 +153,14 @@ class FlatFielder(ToolBase):
         print(len(res_array))
         self.drawn_data = np.array(res_array)
         apparent_data = self.drawn_data
-        if coefficients is not None:
-            apparent_data = (apparent_data - offsets)/coefficients
-            apparent_data = np.nan_to_num(apparent_data)
-            apparent_data = apparent_data*(coefficients != 0)
+        if model is not None:
+            apparent_data = model.apply(apparent_data)
         self.signal_plotter.plot_data(apparent_data)
         bottom = -10
         top = np.max(self.drawn_data)
         self.signal_plotter.view_y(bottom, top)
         self.signal_plotter.set_yrange(0, top)
+        self.apparent_data = apparent_data
 
     def on_random_draw(self):
         if self.remembered_coeffs is not None:
@@ -171,19 +168,18 @@ class FlatFielder(ToolBase):
             t2 = self.settings_dict["time_2"]
             if t1 > t2:
                 t1, t2 = t2, t1
-            requested_data = self.drawn_data[t1:t2]
-            draw_coeff_matrix = self.remembered_coeffs
-            draw_bg_matrix = self.remembered_bg
+            requested_data = self.apparent_data[t1:t2]
+            model = self.remembered_model
             tim_len, x_len, y_len = requested_data.shape
 
             i1 = rng.randint(x_len)
             j1 = rng.randint(y_len)
-            while draw_coeff_matrix[i1, j1] == 0:
+            while model.is_broken(i1, j1) == 0:
                 i1 = rng.randint(x_len)
                 j1 = rng.randint(y_len)
             i2 = rng.randint(x_len)
             j2 = rng.randint(y_len)
-            while draw_coeff_matrix[i2, j2] == 0 or (i1 == i2 and j1 == j2):
+            while model.is_broken(i2, j2) == 0 or (i1 == i2 and j1 == j2):
                 i2 = rng.randint(x_len)
                 j2 = rng.randint(y_len)
             S_1 = requested_data[:, i1, j1]
@@ -192,8 +188,8 @@ class FlatFielder(ToolBase):
             ax.set_xlabel(f"S[{i1}, {j1}]")
             ax.set_ylabel(f"S[{i2}, {j2}]")
             ax.scatter(S_1, S_2)
-            xs_test = np.array([min(S_1), max(S_1)])
-            ys_test = draw_coeff_matrix[i2, j2] * (xs_test - draw_bg_matrix[i1, j1]) / draw_coeff_matrix[i1, j1] + \
-                      draw_bg_matrix[i2, j2]
-            ax.plot(xs_test, ys_test)
+            # xs_test = np.array([min(S_1), max(S_1)])
+            # ys_test = draw_coeff_matrix[i2, j2] * (xs_test - draw_bg_matrix[i1, j1]) / draw_coeff_matrix[i1, j1] + \
+            #           draw_bg_matrix[i2, j2]
+            # ax.plot(xs_test, ys_test)
             fig.show()

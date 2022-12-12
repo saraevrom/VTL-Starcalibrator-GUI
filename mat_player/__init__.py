@@ -10,6 +10,7 @@ from localization import get_locale
 from tk_forms import TkDictForm
 import numexpr as ne
 import time
+from flatfielder import FlatFieldingModel
 
 FORM_CONF = {
     "use_filter": {
@@ -36,14 +37,12 @@ class MatPlayer(ToolBase):
         self.player_controls = PlayerControls(self, self.on_frame_draw, self.click_callback)
         self.player_controls.pack(side=tk.BOTTOM, expand=True, fill=tk.X)
         self.get_mat_file()
-        self.divider = None
-        self.displacement = None
         self.form_data = self.form.get_values()
-        if os.path.isfile("flat_fielding.npy"):
-            with open("flat_fielding.npy", "rb") as fp:
-                self.divider = np.load(fp)
-                self.displacement = np.load(fp)
-                self.plotter.set_broken(np.array(np.where(self.divider == 0)).T)
+        if os.path.isfile("flat_fielding.json"):
+            model: FlatFieldingModel
+            model = FlatFieldingModel.load("flat_fielding.json")
+            self.ffmodel = model
+            self.plotter.set_broken(model.broken_query())
 
     def on_frame_draw(self, frame_num):
         if self.file:
@@ -58,12 +57,10 @@ class MatPlayer(ToolBase):
                 window = self.form_data["filter_window"]
                 #print("PING!", window)
                 slide_bg = np.median(self.file["data0"][frame_num:frame_num+window],axis=0)
-                if self.divider is not None:
-                    frame = (self.file["data0"][frame_num] - slide_bg)/self.divider
-            elif self.divider is not None:
-                frame = (frame - self.displacement) / self.divider
-                frame = np.nan_to_num(frame, nan=0)
-                frame = frame * (self.divider != 0)
+                if self.ffmodel is not None:
+                    frame = self.ffmodel.apply(self.file["data0"][frame_num]) - self.ffmodel.apply(slide_bg)
+            elif self.ffmodel is not None:
+                frame = self.ffmodel.apply(frame)
             self.plotter.buffer_matrix = frame
             self.plotter.update_matrix_plot(True)
             self.plotter.axes.set_title(time_str)
