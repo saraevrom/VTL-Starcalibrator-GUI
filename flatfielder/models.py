@@ -60,7 +60,7 @@ class Linear(FlatFieldingModel):
 
 
     def get_broken(self):
-        return self.coefficients == 0
+        return np.abs(self.coefficients) <= 1e-8
 
     def apply(self, pixel_data):
         rev_coeffs = 1/self.coefficients
