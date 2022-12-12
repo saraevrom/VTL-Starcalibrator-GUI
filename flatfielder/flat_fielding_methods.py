@@ -5,6 +5,7 @@ from flatfielder.isotropic_lsq import isotropic_lad_line, phir0_to_kb, phir0_to_
 from flatfielder.isotropic_lsq import isotropic_lad_multidim_no_bg
 from multiprocessing import Pool
 from parameters import NPROC
+from .models import Linear
 
 def line_fit_robust(xs, ys):
     k = np.float(weighted_median(ys/xs, xs))
@@ -53,9 +54,7 @@ def median_corr_flatfield(requested_data_0):
     # coeff_array = coeff_matrix[correct_row]
     coeff_array = np.median(coeff_matrix_reduced, axis=0)
     draw_coeff_matrix = coeff_array.reshape(x_len, y_len)
-    return draw_coeff_matrix, np.zeros([x_len, y_len])
-
-
+    return Linear(draw_coeff_matrix, np.zeros([x_len, y_len]))
 
 
 def isotropic_lsq_corr_flatfield(requested_data_0):
@@ -95,7 +94,7 @@ def isotropic_lsq_corr_flatfield(requested_data_0):
     bg_array = np.median(bg_matrix_normalized, axis=0)
     draw_coeff_matrix = coeff_array.reshape(x_len, y_len)
     draw_bg_matrix = bg_array.reshape(x_len, y_len)
-    return draw_coeff_matrix, draw_bg_matrix
+    return Linear(draw_coeff_matrix, draw_bg_matrix)
 
 
 class PoolWorker(object):
@@ -158,7 +157,7 @@ def isotropic_lsq_corr_flatfield_parallel(requested_data_0):
     bg_array = bg_matrix_reduced[pivot]
     draw_coeff_matrix = coeff_array.reshape(x_len, y_len)
     draw_bg_matrix = bg_array.reshape(x_len, y_len)
-    return draw_coeff_matrix, draw_bg_matrix
+    return Linear(draw_coeff_matrix, draw_bg_matrix)
 
 def multidim_lad_corr_flatfield(requested_data_0):
     tim_len, x_len, y_len = requested_data_0.shape
@@ -166,7 +165,7 @@ def multidim_lad_corr_flatfield(requested_data_0):
     coeff_vector, bg_vector = isotropic_lad_multidim(requested_data)
     draw_coeff_matrix = coeff_vector.reshape(x_len, y_len)
     draw_bg_matrix = bg_vector.reshape(x_len, y_len)
-    return draw_coeff_matrix, draw_bg_matrix
+    return Linear(draw_coeff_matrix, draw_bg_matrix)
 
 def multidim_lad_corr_flatfield_no_bg(requested_data_0):
     tim_len, x_len, y_len = requested_data_0.shape
@@ -174,4 +173,5 @@ def multidim_lad_corr_flatfield_no_bg(requested_data_0):
     coeff_vector = isotropic_lad_multidim_no_bg(requested_data)
     draw_coeff_matrix = coeff_vector.reshape(x_len, y_len)
     draw_bg_matrix = np.zeros((x_len, y_len))
-    return draw_coeff_matrix, draw_bg_matrix
+    return Linear(draw_coeff_matrix, draw_bg_matrix)
+

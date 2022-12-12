@@ -11,6 +11,7 @@
   "flatfielder.form.field.samples_mean": "Averaging",
   "flatfielder.form.separator.algo": "Algorithm",
   "flatfielder.form.field.used_algo": "Algorithm",
+  "flatfielder.nothing": "None",
 
   "matplayer.title": "Data viewer",
   "matplayer.form.use_filter": "Use filter",

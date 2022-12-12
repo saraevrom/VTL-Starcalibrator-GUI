@@ -17,7 +17,7 @@ from astronomy import range_calculate, to_altaz
 import json
 from random_roaming import RandomRoaming, maximize
 from mat_converter import MatConverter
-from flatfielder import FlatFielder
+from flatfielder import FlatFielder, FlatFieldingModel
 from mat_player import MatPlayer
 from track_markup import TrackMarkup
 
@@ -36,7 +36,7 @@ class Tool(object):
 class App(tk.Tk):
     def __init__(self):
         super(App, self).__init__()
-        self.flat_field_bg = None
+        self.flat_field_model = None
         self.title(get_locale("app.title"))
         self.star_menu = Starlist(self)
         self.star_menu.grid(row=0, column=0, sticky="nsew")
@@ -77,7 +77,6 @@ class App(tk.Tk):
         self.file = None
         self.data_cache = None
         self.settings_dict = dict()
-        self.flat_field_coeff = None
 
         self.t1_setting = self.settings.lookup_setting("time_1")
         self.t2_setting = self.settings.lookup_setting("time_2")
@@ -154,23 +153,17 @@ class App(tk.Tk):
         return self.flat_field_opt(subframes)
 
     def flat_field_opt(self, data_array):
-        FILENAME = "flat_fielding.npy"
+        FILENAME = "flat_fielding.json"
         if not self.settings_dict["flatfielding"]:
             return data_array
         if os.path.isfile(FILENAME):
-            if self.flat_field_coeff is None:
-                with open(FILENAME,"rb") as fp:
-                    flat_field = np.load(fp)
-                    background = np.load(fp)
-                broke = np.array(np.where(flat_field == 0)).T
+            if self.flat_field_model is None:
+                self.flat_field_model = FlatFieldingModel.load(FILENAME)
+                broke = self.flat_field_model.broken_query()
                 # print("BROKEN:", broke)
                 self.plot.set_broken(broke)
                 self.broken = broke.T
-                self.flat_field_coeff = flat_field
-                self.flat_field_bg = background
-            retdata = (data_array - self.flat_field_bg) / self.flat_field_coeff
-            retdata = np.nan_to_num(retdata, nan=0)
-            retdata = retdata * (self.flat_field_coeff != 0).astype(int)
+            retdata = self.flat_field_model.apply(data_array)
             return retdata
         else:
             return data_array
@@ -271,11 +264,11 @@ class App(tk.Tk):
         if self.file:
             t1, t2 = self.cut_frames()
             signal = self.file["data0"][t1:t2, i, j]
-            if self.flat_field_coeff is not None:
-                signal = (signal - self.flat_field_bg[i, j]) / self.flat_field_coeff[i, j]
+            if self.flat_field_model is not None:
+                signal = self.flat_field_model.apply_single(signal, i, j)
             fig, ax = plt.subplots()
-            xs = np.arange(t1,t2)
-            ax.plot(xs,signal)
+            xs = np.arange(t1, t2)
+            ax.plot(xs, signal)
             ax.set_title(f"[{i}, {j}]")
             fig.show()
 
@@ -290,8 +283,7 @@ class App(tk.Tk):
             if self.file:
                 self.file.close()
             self.file = new_file
-            self.flat_field_coeff = None
-            self.flat_field_bg = None
+            self.flat_field_model = None
             self.t1_setting.set_limits(0, len(self.file["data0"])-1)
             self.t2_setting.set_limits(0, len(self.file["data0"])-1)
             self.refresh()
