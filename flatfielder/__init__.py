@@ -155,35 +155,39 @@ class FlatFielder(ToolBase):
         apparent_data = self.drawn_data
         if model is not None:
             apparent_data = model.apply(apparent_data)
+        self.apparent_data = apparent_data
         self.signal_plotter.plot_data(apparent_data)
         bottom = -10
         top = np.max(self.drawn_data)
         self.signal_plotter.view_y(bottom, top)
         self.signal_plotter.set_yrange(0, top)
-        self.apparent_data = apparent_data
 
     def on_random_draw(self):
-        if self.remembered_coeffs is not None:
+        if self.remembered_model is not None:
             t1 = self.settings_dict["time_1"]
             t2 = self.settings_dict["time_2"]
             if t1 > t2:
                 t1, t2 = t2, t1
-            requested_data = self.apparent_data[t1:t2]
+            requested_data = self.apparent_data[t1:t2,:,:]
+            print("REQ_SHAPE", requested_data.shape)
+            assert (requested_data!=0).any()
             model = self.remembered_model
             tim_len, x_len, y_len = requested_data.shape
 
             i1 = rng.randint(x_len)
             j1 = rng.randint(y_len)
-            while model.is_broken(i1, j1) == 0:
+            while model.is_broken(i1, j1):
                 i1 = rng.randint(x_len)
                 j1 = rng.randint(y_len)
             i2 = rng.randint(x_len)
             j2 = rng.randint(y_len)
-            while model.is_broken(i2, j2) == 0 or (i1 == i2 and j1 == j2):
+            while model.is_broken(i2, j2) or (i1 == i2 and j1 == j2):
                 i2 = rng.randint(x_len)
                 j2 = rng.randint(y_len)
             S_1 = requested_data[:, i1, j1]
             S_2 = requested_data[:, i2, j2]
+            print("S1", S_1)
+            print("req_data", requested_data[:, i1, j1])
             fig, ax = plt.subplots()
             ax.set_xlabel(f"S[{i1}, {j1}]")
             ax.set_ylabel(f"S[{i2}, {j2}]")
