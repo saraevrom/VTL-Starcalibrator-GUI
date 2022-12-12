@@ -155,6 +155,8 @@ class FlatFielder(ToolBase):
         apparent_data = self.drawn_data
         if model is not None:
             apparent_data = model.apply(apparent_data)
+            broke = model.get_broken()
+            apparent_data[:, broke] = 0
         self.apparent_data = apparent_data
         self.signal_plotter.plot_data(apparent_data)
         bottom = -10
