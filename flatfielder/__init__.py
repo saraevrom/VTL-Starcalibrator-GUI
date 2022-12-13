@@ -5,9 +5,7 @@ from .settings_build import build_settings
 from .signal_plotter import SignalPlotter
 import numpy as np
 from robustats import weighted_median
-from .flat_fielding_methods import median_corr_flatfield, isotropic_lsq_corr_flatfield
-from .flat_fielding_methods import isotropic_lsq_corr_flatfield_parallel, multidim_lad_corr_flatfield
-from .flat_fielding_methods import  multidim_lad_corr_flatfield_no_bg
+from .flat_fielding_methods import ALGO_MAP
 import numpy.random as rng
 import matplotlib.pyplot as plt
 from localization import get_locale
@@ -100,14 +98,8 @@ class FlatFielder(ToolBase):
             requested_data = self.drawn_data[t1:t2]
 
             used_algo = self.settings_dict["used_algo"]
-            if used_algo == "median_corr":
-                model = median_corr_flatfield(requested_data)
-            elif used_algo == "isotropic_lsq_corr_parallel":
-                model = isotropic_lsq_corr_flatfield_parallel(requested_data)
-            elif used_algo == "isotropic_lad_multidim":
-                model = multidim_lad_corr_flatfield(requested_data)
-            elif used_algo == "isotropic_lad_multidim_no_bg":
-                model = multidim_lad_corr_flatfield_no_bg(requested_data)
+            if used_algo in ALGO_MAP.keys():
+                model = ALGO_MAP[used_algo](requested_data)
             else:
                 return
 

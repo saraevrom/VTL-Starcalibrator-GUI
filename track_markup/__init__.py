@@ -122,7 +122,7 @@ class TrackMarkup(ToolBase):
                 plot_data = self.model.apply(plot_data)
                 self.plotter.set_broken(self.model.broken_query())
                 plot_data = np.nan_to_num(plot_data)
-            slides = np.mean(sliding_window_view(plot_data, axis=0, window_shape=win), axis=-1)
+            slides = np.median(sliding_window_view(plot_data, axis=0, window_shape=win), axis=-1)
             plot_data = plot_data[win//2:win//2+slides.shape[0]] - slides
             plot_data = np.max(plot_data, axis=0)
             pmt = form_data["pmt_select"]

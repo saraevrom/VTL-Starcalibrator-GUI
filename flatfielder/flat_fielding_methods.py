@@ -1,11 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from robustats import weighted_median
-from flatfielder.isotropic_lsq import isotropic_lad_line, phir0_to_kb, phir0_to_kb_inv, isotropic_lad_multidim
-from flatfielder.isotropic_lsq import isotropic_lad_multidim_no_bg
+from .isotropic_lsq import isotropic_lad_line, phir0_to_kb, phir0_to_kb_inv, isotropic_lad_multidim
+from .isotropic_lsq import isotropic_lad_multidim_no_bg, multidim_sphere
 from multiprocessing import Pool
 from parameters import NPROC
-from .models import Linear
+from .models import Linear, NonlinearSaturation
+from scipy.optimize import minimize
 
 def line_fit_robust(xs, ys):
     k = np.float(weighted_median(ys/xs, xs))
@@ -57,7 +58,7 @@ def median_corr_flatfield(requested_data_0):
     return Linear(draw_coeff_matrix, np.zeros([x_len, y_len]))
 
 
-def isotropic_lsq_corr_flatfield(requested_data_0):
+def isotropic_lsq_corr_flatfield_raw(requested_data_0):
     tim_len, x_len, y_len = requested_data_0.shape
     requested_data = requested_data_0.reshape((tim_len, x_len * y_len))
     coeff_matrix = np.zeros([x_len * y_len, x_len * y_len])
@@ -94,8 +95,39 @@ def isotropic_lsq_corr_flatfield(requested_data_0):
     bg_array = np.median(bg_matrix_normalized, axis=0)
     draw_coeff_matrix = coeff_array.reshape(x_len, y_len)
     draw_bg_matrix = bg_array.reshape(x_len, y_len)
-    return Linear(draw_coeff_matrix, draw_bg_matrix)
+    return draw_coeff_matrix, draw_bg_matrix
 
+def isotropic_lsq_corr_flatfield(requested_data_0):
+    a,b = isotropic_lsq_corr_flatfield_raw(requested_data_0)
+    return Linear(a,b)
+
+
+def isotropic_lsq_corr_flatfield_nonlinear(requested_data_0):
+    sat_start = np.ones(256)*np.max(requested_data_0)
+    dir_angles_start = np.ones(255)
+    tim_len, x_len, y_len = requested_data_0.shape
+    req_data_shaped = requested_data_0.reshape((tim_len, x_len * y_len))
+    print()
+    sep = x_len*y_len
+    def fit_function(params):
+        saturation, direction_angles = params[:sep], params[sep:],
+        direction = multidim_sphere(direction_angles)
+        response = direction/saturation
+        transformed = -np.log(1-req_data_shaped/saturation)/response
+        med = np.median(transformed, axis=1)
+        disp = np.abs((transformed.T-med)).T
+        resf = np.median(disp)
+        print("\r",resf, end="")
+        return resf
+    print()
+    start = np.concatenate([sat_start,dir_angles_start])
+    res = minimize(fit_function,start,method="powell")
+    assert res.success
+    params = res.x
+    saturation, direction_angles = params[:256], params[256:]
+    direction = multidim_sphere(direction_angles)
+    response = direction / saturation
+    return NonlinearSaturation(saturation=saturation.reshape(x_len,y_len),response=response.reshape(x_len,y_len))
 
 class PoolWorker(object):
     def __init__(self,requested_data):
@@ -110,6 +142,8 @@ class PoolWorker(object):
         return phi_ij, r0_ij
         #else:
         #    return 0, 0
+
+
 def isotropic_lsq_corr_flatfield_parallel(requested_data_0):
     tim_len, x_len, y_len = requested_data_0.shape
     requested_data = requested_data_0.reshape((tim_len, x_len * y_len))
@@ -175,3 +209,10 @@ def multidim_lad_corr_flatfield_no_bg(requested_data_0):
     draw_bg_matrix = np.zeros((x_len, y_len))
     return Linear(draw_coeff_matrix, draw_bg_matrix)
 
+ALGO_MAP = {
+    "median_corr": median_corr_flatfield,
+    "isotropic_lsq_corr_parallel": isotropic_lsq_corr_flatfield_parallel,
+    "isotropic_lad_multidim": multidim_lad_corr_flatfield,
+    "isotropic_lad_multidim_no_bg": multidim_lad_corr_flatfield_no_bg,
+    #"nonlinear_cross_median": isotropic_lsq_corr_flatfield_nonlinear  #Nope!
+}

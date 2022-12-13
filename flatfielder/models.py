@@ -54,10 +54,9 @@ class FlatFieldingModel(object):
 
 
 class Linear(FlatFieldingModel):
-    def __init__(self, coefficients=None, baseline = None):
+    def __init__(self, coefficients=None, baseline=None):
         self.coefficients = coefficients
         self.baseline = baseline
-
 
     def get_broken(self):
         return np.abs(self.coefficients) <= 1e-8
@@ -91,3 +90,49 @@ class Linear(FlatFieldingModel):
 
     def display_parameter_2(self):
         return "flatfielder.baselevel.title", self.baseline
+
+
+class NonlinearSaturation(FlatFieldingModel):
+    def __init__(self, saturation=None, response=None):
+        self.saturation = saturation
+        self.response = response
+
+    def get_data(self):
+        return {
+            "saturation": self.saturation.tolist(),
+            "response": self.response.tolist()
+        }
+
+    def set_data(self, x_data):
+        self.saturation = np.array(x_data["saturation"])
+        self.response = np.array(x_data["response"])
+
+    def display_parameter_1(self):
+        return "flatfielder.saturation.title", self.saturation
+
+    def display_parameter_2(self):
+        return "flatfielder.response.title", self.response
+
+    def apply(self, pixel_data):
+        inv_A = 1/self.saturation
+        inv_A[self.saturation == 0] = 0
+        inv_B = 1/self.response
+        inv_B[self.response == 0] = 0
+        return -np.log(1-pixel_data*inv_A)*inv_B
+
+    def apply_single(self, single_data,i,j):
+        A = self.saturation[i,j]
+        B = self.response[i,j]
+        if A==0:
+            inv_A = 0
+        else:
+            inv_A = 1/A
+        if B == 0:
+            inv_B = 0
+        else:
+            inv_B = B
+        return -np.log(1-single_data*inv_A)*inv_B
+
+    def get_broken(self):
+        return np.abs(self.saturation * self.response) <= 1e-8
+

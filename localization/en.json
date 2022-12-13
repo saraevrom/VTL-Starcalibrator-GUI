@@ -2,6 +2,9 @@
   "flatfielder.title": "Flat fielding",
   "flatfielder.coefficients.title": "Coefficients",
   "flatfielder.baselevel.title": "Base Line",
+  "flatfielder.response.title": "Response",
+  "flatfielder.saturation.title": "Saturation",
+
   "flatfielder.btn.coeffs_calculate": "Calculate coefficients",
   "flatfielder.btn.save": "Save data",
   "flatfielder.btn.random_plot": "Draw random pair of pixels",
@@ -15,7 +18,7 @@
 
   "matplayer.title": "Data viewer",
   "matplayer.form.use_filter": "Use filter",
-  "matplayer.form.filter_window": "MA filter window (frames)",
+  "matplayer.form.filter_window": "MM filter window (frames)",
 
   "track_markup.title": "Background extractor",
   "track_markup.btn.remove_selected": "Remove selected",
@@ -29,7 +32,8 @@
   "track_markup.messagebox.reset.content": "Are you sure you want to erase empty intervals and start all over?",
   "track_markup.messagebox.markup_done.title": "Data markup",
   "track_markup.messagebox.markup_done.content": "There are no unmarked intervals left.",
-  "track_markup.form.filter_win": "MA filter window",
+  "track_markup.form.filter_win": "MM filter window",
+  "track_markup.form.signal_filter_win": "MM signal filter window",
   "track_markup.form.min_frame": "Min interval (frames)",
   "track_markup.form.start_skip": "Cut off first (frames)",
   "track_markup.form.end_skip": "Cut off last (frames)",
@@ -79,7 +83,7 @@
   "app.settings.field.global_filter": "Global filter",
   "app.settings.field.flatfielding": "Use flatfielding",
   "app.settings.field.display_threshold": "Threshold",
-  "app.settings.field.filter_window": "MA filter window (frames)",
+  "app.settings.field.filter_window": "MM filter window (frames)",
 
   "app.title": "Orientation determination",
   "app.menu.file": "File",
