@@ -264,6 +264,18 @@ class App(tk.Tk):
         if self.file:
             t1, t2 = self.cut_frames()
             signal = self.file["data0"][t1:t2, i, j]
+            if self.settings_dict["display_use_filter"]:
+                if self.settings_dict["global_filter"]:
+                    signal -= np.median(signal, axis=0)
+                else:
+                    win = self.settings_dict["filter_window"]
+                    slide = sliding_window_view(signal, win, axis=0)
+                    bg = slide.mean(axis=-1)
+                    signal = slide[:, win // 2]
+                    assert signal.shape == bg.shape
+                    signal = signal - bg
+                    t1 += win//2
+                    t2 = t1+signal.shape[0]
             if self.flat_field_model is not None:
                 signal = self.flat_field_model.apply_single(signal, i, j)
             fig, ax = plt.subplots()

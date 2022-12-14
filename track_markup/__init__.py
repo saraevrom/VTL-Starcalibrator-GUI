@@ -12,16 +12,17 @@ import tkinter.filedialog
 import json
 from localization import get_locale
 from flatfielder import FlatFieldingModel
+import matplotlib.pyplot as plt
 
 FORM_CONF = {
     "filter_win":{
         "type": "int",
-        "default": 40,
+        "default": 10,
         "display_name": get_locale("track_markup.form.filter_win")
     },
     "signal_filter_win":{
         "type": "int",
-        "default": 10,
+        "default": 2,
         "display_name": get_locale("track_markup.form.signal_filter_win")
     },
     "min_frame": {
@@ -88,8 +89,9 @@ class TrackMarkup(ToolBase):
         tk.Button(bottom_panel, text=get_locale("track_markup.btn.track_no"),
                   command=self.on_track_invisible_poll).pack(side="right", expand=True, fill="both")
 
-
-        self.reset_events()
+        self.just_started =  True
+        self.plotter.on_right_click_callback = self.popup_draw_signal
+        # self.reset_events()
 
     def on_reset(self):
         if tkinter.messagebox.askokcancel(
@@ -110,6 +112,7 @@ class TrackMarkup(ToolBase):
     def show_next_event(self):
         while self.show_next_event_it():
             pass
+
 
     def redraw_event(self):
         if self.file and self.current_event:
@@ -186,6 +189,9 @@ class TrackMarkup(ToolBase):
         self.on_poll(False)
 
     def on_poll(self, result):
+        if self.just_started:
+            self.reset_events()
+            self.just_started = False
         if self.current_event is None:
             self.show_next_event()
         else:
@@ -238,3 +244,31 @@ class TrackMarkup(ToolBase):
 
     def on_element_delete(self):
         pass
+
+    def popup_draw_signal(self, i, j):
+        if self.file and self.current_event:
+            t1, t2 = self.current_event
+            signal = self.file["data0"][t1:t2, i, j]
+            if os.path.isfile("flat_fielding.json"):
+                if self.model is None:
+                    self.model = FlatFieldingModel.load("flat_fielding.json")
+                signal = self.model.apply_single(signal,i,j)
+
+            form_data = self.params_form.get_values()
+            win = form_data["filter_win"]
+            win_s = form_data["signal_filter_win"]
+            if win_s < 1:
+                win_s = 1
+            if win_s > win:
+                win_s = win
+
+            filtered_fg = np.mean(sliding_window_view(signal, axis=0, window_shape=win_s), axis=-1)
+            filtered_bg = np.mean(sliding_window_view(signal, axis=0, window_shape=win), axis=-1)
+            plot_data = filtered_fg[(win - win_s) // 2:(win - win_s) // 2 + filtered_bg.shape[0]] - filtered_bg
+
+
+            fig, ax = plt.subplots()
+            xs = np.linspace(t1, t2, len(plot_data))
+            ax.plot(xs, plot_data)
+            ax.set_title(f"[{i}, {j}]")
+            fig.show()
