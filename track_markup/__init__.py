@@ -20,11 +20,11 @@ FORM_CONF = {
         "default": 10,
         "display_name": get_locale("track_markup.form.filter_win")
     },
-    "signal_filter_win":{
-        "type": "int",
-        "default": 2,
-        "display_name": get_locale("track_markup.form.signal_filter_win")
-    },
+    # "signal_filter_win":{
+    #     "type": "int",
+    #     "default": 2,
+    #     "display_name": get_locale("track_markup.form.signal_filter_win")
+    # },
     "min_frame": {
         "type": "int",
         "default": 256,
@@ -168,11 +168,11 @@ class TrackMarkup(ToolBase):
         if self.file and self.current_event:
             form_data = self.params_form.get_values()
             win = form_data["filter_win"]
-            win_s = form_data["signal_filter_win"]
-            if win_s < 1:
-                win_s = 1
-            if win_s > win:
-                win_s = win
+            #win_s = form_data["signal_filter_win"]
+            # if win_s < 1:
+            #     win_s = 1
+            # if win_s > win:
+            #     win_s = win
             print(self.queue)
             event_start, event_end = self.current_event
             #self.current_event = event_start, event_end
@@ -185,9 +185,9 @@ class TrackMarkup(ToolBase):
                 plot_data = self.model.apply(plot_data)
                 self.plotter.set_broken(self.model.broken_query())
 
-            filtered_fg = np.mean(sliding_window_view(plot_data, axis=0, window_shape=win_s), axis=-1)
+            #filtered_fg = np.mean(sliding_window_view(plot_data, axis=0, window_shape=win_s), axis=-1)
             filtered_bg = np.mean(sliding_window_view(plot_data, axis=0, window_shape=win), axis=-1)
-            plot_data = filtered_fg[(win-win_s)//2:(win-win_s)//2+filtered_bg.shape[0]] - filtered_bg
+            plot_data = plot_data[win//2:win//2+filtered_bg.shape[0]] - filtered_bg
             plot_data = np.max(plot_data, axis=0)
             pmt = form_data["pmt_select"]
             real_plot_data = np.zeros(shape=plot_data.shape)
