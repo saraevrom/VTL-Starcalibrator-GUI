@@ -34,9 +34,12 @@
   "track_markup.form.filter_win": "Окно фильтра",
   "track_markup.form.signal_filter_win": "Окно фильтра сигнала",
   "track_markup.form.min_frame": "Минимальное количество кадров",
+  "track_markup.form.max_frame": "Максимальное количество кадров",
   "track_markup.form.start_skip": "Пропуск в начале",
   "track_markup.form.end_skip": "Пропуск в конце",
   "track_markup.form.pmt_select": "ФЭУ",
+  "track_markup.label.accepted": "Интервалы без треков",
+  "track_markup.label.rejected": "Интервалы с треками",
 
   "mat_converter.title": "Преобразователь mat файлов",
   "mat_converter.btn.add":"Добавить",

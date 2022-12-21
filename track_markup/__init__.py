@@ -27,8 +27,13 @@ FORM_CONF = {
     },
     "min_frame": {
         "type": "int",
-        "default": 60,
+        "default": 256,
         "display_name": get_locale("track_markup.form.min_frame")
+    },
+    "max_frame": {
+        "type": "int",
+        "default": 0,
+        "display_name": get_locale("track_markup.form.max_frame")
     },
     "start_skip":{
         "type": "int",
@@ -49,6 +54,26 @@ FORM_CONF = {
     }
 }
 
+def try_append_event(target_list,start,end):
+    ok = True
+    for e_start,e_end in target_list:
+        if start>=e_start and end<=e_end:
+            ok = False
+            break
+    if ok:
+        target_list.append([start,end])
+    return ok
+def stitch_events(events):
+    sorted_events = list(sorted(events, key=lambda x: x[0]))
+    deflation_i = 0
+    while deflation_i < len(sorted_events) - 1:
+        if sorted_events[deflation_i][1] == sorted_events[deflation_i + 1][0]:
+            sorted_events[deflation_i][1] = sorted_events[deflation_i + 1][1]
+            sorted_events.pop(deflation_i + 1)
+        else:
+            deflation_i += 1
+    return sorted_events
+
 class TrackMarkup(ToolBase):
     def __init__(self, master):
         super(TrackMarkup, self).__init__(master)
@@ -59,14 +84,19 @@ class TrackMarkup(ToolBase):
         left_panel.pack(side="left", fill="y")
         self.queue = []
         self.trackless_events = []
+        self.tracked_events = []
         self.model = None
 
         self.current_event = None
 
         self.selected_data = tk.Listbox(left_panel, selectmode="single")
         self.selected_data.pack(side="bottom", fill="both", expand=True)
-        tk.Button(left_panel, text=get_locale("track_markup.btn.remove_selected"),
-                  command=self.on_element_delete).pack(side="top", fill="x")
+        #tk.Button(left_panel, text=get_locale("track_markup.btn.remove_selected"),
+        #          command=self.on_element_delete).pack(side="top", fill="x")
+        tk.Label(left_panel,text=get_locale("track_markup.label.accepted")).pack(side="bottom", fill="x", expand=False)
+        self.rejected_data = tk.Listbox(left_panel, selectmode="single")
+        self.rejected_data.pack(side="bottom", fill="both", expand=True)
+        tk.Label(left_panel,text=get_locale("track_markup.label.rejected")).pack(side="bottom", fill="x", expand=False)
         right_panel = tk.Frame(self)
         right_panel.pack(side="right")
         tk.Button(right_panel, text=get_locale("track_markup.btn.reset"),
@@ -95,7 +125,8 @@ class TrackMarkup(ToolBase):
         # self.reset_events()
         self.retractable_event = False
         self.event_in_queue = True, None
-        self.selected_data.bind('<<ListboxSelect>>',self.on_review_select)
+        self.selected_data.bind('<<ListboxSelect>>', self.on_review_trackless_select)
+        self.rejected_data.bind('<<ListboxSelect>>', self.on_review_tracked_select)
 
     def on_reset(self):
         if tkinter.messagebox.askokcancel(
@@ -106,12 +137,22 @@ class TrackMarkup(ToolBase):
     def reset_events(self):
         self.current_event = None
         self.selected_data.delete(0, tk.END)
+        self.rejected_data.delete(0, tk.END)
         self.trackless_events.clear()
+        self.tracked_events.clear()
         self.queue.clear()
         form_data = self.params_form.get_values()
         if self.file:
             data0 = self.file["data0"]
-            self.queue.append([form_data["start_skip"], len(data0)-form_data["end_skip"]])
+            max_frame = form_data["max_frame"]
+            if max_frame==0:
+                self.queue.append([form_data["start_skip"], len(data0)-form_data["end_skip"]])
+            else:
+                for frame_start in range(form_data["start_skip"], len(data0)-form_data["end_skip"]-max_frame, max_frame):
+                    self.queue.append([frame_start, frame_start + max_frame])
+                last = self.queue[-1][1]
+                if last<len(data0)-form_data["end_skip"]-1:
+                    self.queue.append([last,len(data0)-form_data["end_skip"]])
 
     def show_next_event(self):
         while self.show_next_event_it():
@@ -190,6 +231,7 @@ class TrackMarkup(ToolBase):
             self.retractable_event = True
             self.event_in_queue = True, None
             if (event_end-event_start) < win or (event_end-event_start)<form_data["min_frame"]:
+                self.add_tracked_event(event_start, event_end)
                 return True
             self.current_event = event_start, event_end
             return self.redraw_event()
@@ -214,24 +256,47 @@ class TrackMarkup(ToolBase):
                 print(f"{start}->{midpoint}<-{end}")
                 assert start <= midpoint
                 assert midpoint <= end
-                self.queue.append([start, midpoint])
-                self.queue.append([midpoint, end])
+                subdivide = True
                 if not self.event_in_queue[0]:
-                    self.pop_trackless_event(self.event_in_queue[1])
+                    if self.event_in_queue[1][1]:
+                        self.pop_event(self.event_in_queue[1][0], True)
+                    else:
+                        subdivide = False
+
+                if subdivide:
+                    self.queue.append([start, midpoint])
+                    self.queue.append([midpoint, end])
                 self.show_next_event()
             else:
                 if self.event_in_queue[0]:
                     self.add_trackless_event(start, end)
+                elif not self.event_in_queue[1][1]:
+                    start, end = self.pop_event(self.event_in_queue[1][0], False)
+                    print("POPPED EVENT:",start,end)
+                    self.add_trackless_event(start, end)
                 self.show_next_event()
 
     def add_trackless_event(self, start, end):
-        if [start, end] not in self.trackless_events:
-            self.selected_data.insert(tk.END, f"{start} - {end}")
-            self.trackless_events.append([start, end])
+        if try_append_event(self.trackless_events,start,end):
+            self.trackless_events = stitch_events(self.trackless_events)
+            self.selected_data.delete(0,tk.END)
+            for start, end in self.trackless_events:
+                self.selected_data.insert(tk.END, f"{start} - {end}")
 
-    def pop_trackless_event(self, index):
-        self.selected_data.delete(index)
-        return self.trackless_events.pop(index)
+    def add_tracked_event(self, start, end):
+        if try_append_event(self.tracked_events, start, end):
+            self.tracked_events = stitch_events(self.tracked_events)
+            self.rejected_data.delete(0, tk.END)
+            for start, end in self.tracked_events:
+                self.rejected_data.insert(tk.END, f"{start} - {end}")
+
+    def pop_event(self, index, use_accepted):
+        if use_accepted:
+            self.selected_data.delete(index)
+            return self.trackless_events.pop(index)
+        else:
+            self.rejected_data.delete(index)
+            return self.tracked_events.pop(index)
 
     def on_save_data(self):
         save_path = tkinter.filedialog.asksaveasfilename(initialdir=".",filetypes=(("JSON", "*.json"),),
@@ -244,6 +309,7 @@ class TrackMarkup(ToolBase):
             save_data = {
                 "queue": current_queue,
                 "found_event": self.trackless_events,
+                "rejected_event": self.tracked_events,
                 "configuration": self.params_form.get_values()
             }
             with open(save_path, "w") as fp:
@@ -259,19 +325,33 @@ class TrackMarkup(ToolBase):
                 self.queue = save_data["queue"]
                 for e in save_data["found_event"]:
                     self.add_trackless_event(e[0], e[1])
+                for e in save_data["rejected_event"]:
+                    self.add_tracked_event(e[0],e[1])
                 self.params_form.set_values(save_data["configuration"])
                 self.show_next_event()
 
     def on_element_delete(self):
         pass
 
-    def on_review_select(self,evt):
+
+    def on_review_trackless_select(self, evt):
+        return self.on_review_select_universal(evt, True)
+
+    def on_review_tracked_select(self, evt):
+        return self.on_review_select_universal(evt, False)
+
+    def on_review_select_universal(self, evt, use_accepted):
         # Note here that Tkinter passes an event object to onselect()
         w = evt.widget
+        if not w.curselection():
+            return
         event_index = int(w.curselection()[0])
         self.retract_event()
-        self.current_event = self.trackless_events[event_index]
-        self.event_in_queue = False, event_index
+        if use_accepted:
+            self.current_event = self.trackless_events[event_index]
+        else:
+            self.current_event = self.tracked_events[event_index]
+        self.event_in_queue = False, (event_index, use_accepted)
         self.redraw_event()
 
         #value = w.get(index)
