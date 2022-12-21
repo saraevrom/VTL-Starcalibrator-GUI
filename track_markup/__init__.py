@@ -360,15 +360,14 @@ class TrackMarkup(ToolBase):
     def apply_filter(self,signal):
         form_data = self.params_form.get_values()
         win = form_data["filter_win"]
-        win_s = form_data["signal_filter_win"]
-        if win_s < 1:
-            win_s = 1
-        if win_s > win:
-            win_s = win
+        # win_s = form_data["signal_filter_win"]
+        # if win_s < 1:
+        #     win_s = 1
+        # if win_s > win:
+        #     win_s = win
 
-        filtered_fg = np.mean(sliding_window_view(signal, axis=0, window_shape=win_s), axis=-1)
         filtered_bg = np.mean(sliding_window_view(signal, axis=0, window_shape=win), axis=-1)
-        plot_data = filtered_fg[(win - win_s) // 2:(win - win_s) // 2 + filtered_bg.shape[0]] - filtered_bg
+        plot_data = signal[win // 2: win // 2 + filtered_bg.shape[0]] - filtered_bg
         return plot_data
 
     def popup_draw_all(self):
