@@ -42,7 +42,6 @@ class Plotter(ttk.Frame):
         self.mpl_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         self.toolbar = NavigationToolbar2Tk(self.mpl_canvas, self)
         self.toolbar.update()
-        self.on_right_click_callback = None
 
     def draw(self):
         #self.figure.canvas.draw()
@@ -57,6 +56,8 @@ class GridPlotter(Plotter):
         self.use_autoscale_var.set(1)
         self.min_norm_entry = tk.StringVar(self)
         self.max_norm_entry = tk.StringVar(self)
+        self.on_right_click_callback = None
+        self.on_right_click_callback_outofbounds = None
 
         self.colorbar = None
         span = HALF_PIXELS*PIXEL_SIZE+HALF_GAP_SIZE
@@ -180,6 +181,9 @@ class GridPlotter(Plotter):
                 elif event.button == 3:  #RMB
                     if self.on_right_click_callback:
                         self.on_right_click_callback(i, j)
+            elif event.button == 3:
+                if self.on_right_click_callback_outofbounds:
+                    self.on_right_click_callback_outofbounds()
 
         # self.on_right_click_callback
 

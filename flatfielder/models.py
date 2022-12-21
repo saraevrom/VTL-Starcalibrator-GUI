@@ -41,6 +41,19 @@ class FlatFieldingModel(object):
         with open(file_path, "w") as fp:
             json.dump(save_data, fp, indent=4, sort_keys=True)
 
+    def apply_nobreak(self, pixel_data):
+        pre_res = self.apply(pixel_data)
+        broken = self.get_broken()
+        pre_res[:, broken] = 0
+        return pre_res
+
+    def apply_single_nobreak(self, pixel_data, i, j):
+        if self.is_broken(i, j):
+            return np.zeros(pixel_data.shape[0])
+        else:
+            return self.apply_single(pixel_data, i, j)
+
+
     @staticmethod
     def load(file_path):
         if FlatFieldingModel.subclass_dict is None:

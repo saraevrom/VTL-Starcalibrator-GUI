@@ -91,7 +91,11 @@ class TrackMarkup(ToolBase):
 
         self.just_started =  True
         self.plotter.on_right_click_callback = self.popup_draw_signal
+        self.plotter.on_right_click_callback_outofbounds = self.popup_draw_all
         # self.reset_events()
+        self.retractable_event = False
+        self.event_in_queue = True, None
+        self.selected_data.bind('<<ListboxSelect>>',self.on_review_select)
 
     def on_reset(self):
         if tkinter.messagebox.askokcancel(
@@ -113,6 +117,11 @@ class TrackMarkup(ToolBase):
         while self.show_next_event_it():
             pass
 
+
+    def retract_event(self):
+        if self.retractable_event:
+            self.queue.insert(0, list(self.current_event))
+            self.retractable_event = False
 
     def redraw_event(self):
         if self.file and self.current_event:
@@ -172,11 +181,14 @@ class TrackMarkup(ToolBase):
                     get_locale("track_markup.messagebox.markup_done.title"),
                     get_locale("track_markup.messagebox.markup_done.content")
                 )
+                self.retractable_event = False
                 return False
             form_data = self.params_form.get_values()
             win = form_data["filter_win"]
             print(self.queue)
             event_start, event_end = self.queue.pop(0)
+            self.retractable_event = True
+            self.event_in_queue = True, None
             if (event_end-event_start) < win or (event_end-event_start)<form_data["min_frame"]:
                 return True
             self.current_event = event_start, event_end
@@ -204,9 +216,12 @@ class TrackMarkup(ToolBase):
                 assert midpoint <= end
                 self.queue.append([start, midpoint])
                 self.queue.append([midpoint, end])
+                if not self.event_in_queue[0]:
+                    self.pop_trackless_event(self.event_in_queue[1])
                 self.show_next_event()
             else:
-                self.add_trackless_event(start, end)
+                if self.event_in_queue[0]:
+                    self.add_trackless_event(start, end)
                 self.show_next_event()
 
     def add_trackless_event(self, start, end):
@@ -214,13 +229,18 @@ class TrackMarkup(ToolBase):
             self.selected_data.insert(tk.END, f"{start} - {end}")
             self.trackless_events.append([start, end])
 
+    def pop_trackless_event(self, index):
+        self.selected_data.delete(index)
+        return self.trackless_events.pop(index)
+
     def on_save_data(self):
         save_path = tkinter.filedialog.asksaveasfilename(initialdir=".",filetypes=(("JSON", "*.json"),),
                                                          initialfile="progress.json")
         if save_path:
             current_queue = self.queue.copy()
-            if self.current_event is not None:
-                current_queue = [self.current_event] + current_queue
+            if self.current_event is not None and self.retractable_event:
+                current_queue.insert(0, self.current_event)
+                #current_queue = [self.current_event] + current_queue
             save_data = {
                 "queue": current_queue,
                 "found_event": self.trackless_events,
@@ -245,6 +265,50 @@ class TrackMarkup(ToolBase):
     def on_element_delete(self):
         pass
 
+    def on_review_select(self,evt):
+        # Note here that Tkinter passes an event object to onselect()
+        w = evt.widget
+        event_index = int(w.curselection()[0])
+        self.retract_event()
+        self.current_event = self.trackless_events[event_index]
+        self.event_in_queue = False, event_index
+        self.redraw_event()
+
+        #value = w.get(index)
+        #print('You selected item %d: "%s"' % (index, value))
+
+    def apply_filter(self,signal):
+        form_data = self.params_form.get_values()
+        win = form_data["filter_win"]
+        win_s = form_data["signal_filter_win"]
+        if win_s < 1:
+            win_s = 1
+        if win_s > win:
+            win_s = win
+
+        filtered_fg = np.mean(sliding_window_view(signal, axis=0, window_shape=win_s), axis=-1)
+        filtered_bg = np.mean(sliding_window_view(signal, axis=0, window_shape=win), axis=-1)
+        plot_data = filtered_fg[(win - win_s) // 2:(win - win_s) // 2 + filtered_bg.shape[0]] - filtered_bg
+        return plot_data
+
+    def popup_draw_all(self):
+        if self.file and self.current_event:
+            t1, t2 = self.current_event
+            signal = self.file["data0"][t1:t2]
+            if os.path.isfile("flat_fielding.json"):
+                if self.model is None:
+                    self.model = FlatFieldingModel.load("flat_fielding.json")
+                signal = self.model.apply(signal)
+                signal[:, np.logical_not(self.plotter.alive_pixels_matrix)] = 0
+
+            plot_data = self.apply_filter(signal)
+            fig, ax = plt.subplots()
+            xs = np.linspace(t1, t2, len(plot_data))
+            for i in range(16):
+                for j in range(16):
+                    ax.plot(xs, plot_data[:,i,j])
+            fig.show()
+
     def popup_draw_signal(self, i, j):
         if self.file and self.current_event:
             t1, t2 = self.current_event
@@ -252,19 +316,9 @@ class TrackMarkup(ToolBase):
             if os.path.isfile("flat_fielding.json"):
                 if self.model is None:
                     self.model = FlatFieldingModel.load("flat_fielding.json")
-                signal = self.model.apply_single(signal,i,j)
+                signal = self.model.apply_single_nobreak(signal,i,j)
 
-            form_data = self.params_form.get_values()
-            win = form_data["filter_win"]
-            win_s = form_data["signal_filter_win"]
-            if win_s < 1:
-                win_s = 1
-            if win_s > win:
-                win_s = win
-
-            filtered_fg = np.mean(sliding_window_view(signal, axis=0, window_shape=win_s), axis=-1)
-            filtered_bg = np.mean(sliding_window_view(signal, axis=0, window_shape=win), axis=-1)
-            plot_data = filtered_fg[(win - win_s) // 2:(win - win_s) // 2 + filtered_bg.shape[0]] - filtered_bg
+            plot_data = self.apply_filter(signal)
 
 
             fig, ax = plt.subplots()
