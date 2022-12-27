@@ -19,6 +19,7 @@
   "matplayer.title": "Data viewer",
   "matplayer.form.use_filter": "Use filter",
   "matplayer.form.filter_window": "MA filter window (frames)",
+  "matplayer.form.use_flatfielding": "Use flat fielding",
 
   "track_markup.title": "Background extractor",
   "track_markup.btn.remove_selected": "Remove selected",

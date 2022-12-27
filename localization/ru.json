@@ -18,6 +18,7 @@
   "matplayer.title": "Воспроизведение",
   "matplayer.form.use_filter": "Использовать фильтр",
   "matplayer.form.filter_window": "Окно фильтра",
+  "matplayer.form.use_flatfielding": "Выравнивание пикселей",
 
   "track_markup.title": "Выделение фона",
   "track_markup.btn.remove_selected": "Удалить выбранный элемент",

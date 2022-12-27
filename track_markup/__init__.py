@@ -389,7 +389,7 @@ class TrackMarkup(ToolBase):
         plot_data = signal[win // 2: win // 2 + filtered_bg.shape[0]] - filtered_bg
         if form_data["use_noise_suppression"]:
             plot_data = reduce_noise(plot_data, form_data["noise_suppression_window"])
-        if form_data["use_flash_suppression"] and len(plot_data.shape):
+        if form_data["use_flash_suppression"] and len(plot_data.shape)>1:
             plot_data = antiflash(plot_data)
         return plot_data
 

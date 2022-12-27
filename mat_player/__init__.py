@@ -22,6 +22,11 @@ FORM_CONF = {
         "type": "int",
         "default": 60,
         "display_name": get_locale("matplayer.form.filter_window")
+    },
+    "use_flatfielding": {
+        "type": "bool",
+        "default": True,
+        "display_name": get_locale("matplayer.form.use_flatfielding")
     }
 }
 
@@ -57,9 +62,9 @@ class MatPlayer(ToolBase):
                 window = self.form_data["filter_window"]
                 #print("PING!", window)
                 slide_bg = np.median(self.file["data0"][frame_num:frame_num+window],axis=0)
-                if self.ffmodel is not None:
+                if (self.ffmodel is not None) and self.form_data["use_flatfielding"]:
                     frame = self.ffmodel.apply(self.file["data0"][frame_num]) - self.ffmodel.apply(slide_bg)
-            elif self.ffmodel is not None:
+            elif (self.ffmodel is not None) and self.form_data["use_flatfielding"]:
                 frame = self.ffmodel.apply(frame)
             self.plotter.buffer_matrix = frame
             self.plotter.update_matrix_plot(True)

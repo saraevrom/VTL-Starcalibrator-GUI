@@ -12,7 +12,9 @@ class ControlButtons(ttk.Frame):
     PLAYING_INV = 2
     FAST_FWD = 3
     REWIND = 4
-    MUL_TABLE = [0, 1, -1, FAST_FWD_SKIP, -FAST_FWD_SKIP]
+    STEP_R = 5
+    STEP_L = 6
+    MUL_TABLE = [0, 1, -1, FAST_FWD_SKIP, -FAST_FWD_SKIP, 1, -1]
     def __init__(self, master):
         super(ControlButtons, self).__init__(master)
         self.playing_state = self.PAUSE
@@ -21,12 +23,16 @@ class ControlButtons(ttk.Frame):
             .grid(row=0, column=0, sticky="nsew")
         tk.Button(self, text="<", command=lambda: self.on_button_press(self.PLAYING_INV))\
             .grid(row=0, column=1, sticky="nsew")
-        tk.Button(self, text="||", command=lambda: self.on_button_press(self.PAUSE))\
+        tk.Button(self, text="<|", command=lambda: self.on_button_press(self.STEP_L)) \
             .grid(row=0, column=2, sticky="nsew")
-        tk.Button(self, text=">", command=lambda: self.on_button_press(self.PLAYING))\
+        tk.Button(self, text="||", command=lambda: self.on_button_press(self.PAUSE))\
             .grid(row=0, column=3, sticky="nsew")
-        tk.Button(self, text=">>", command=lambda: self.on_button_press(self.FAST_FWD))\
+        tk.Button(self, text="|>", command=lambda: self.on_button_press(self.STEP_R)) \
             .grid(row=0, column=4, sticky="nsew")
+        tk.Button(self, text=">", command=lambda: self.on_button_press(self.PLAYING))\
+            .grid(row=0, column=5, sticky="nsew")
+        tk.Button(self, text=">>", command=lambda: self.on_button_press(self.FAST_FWD))\
+            .grid(row=0, column=6, sticky="nsew")
         self.button_callback = None
 
     def on_button_press(self, btn):
@@ -45,6 +51,10 @@ class ControlButtons(ttk.Frame):
 
     def stop_playing(self):
         self.playing_state = self.PAUSE
+
+    def step_single_check(self):
+        if self.playing_state==self.STEP_L or self.playing_state==self.STEP_R:
+            self.stop_playing()
 
 
 class ValuedSlider(ttk.Frame):
@@ -107,6 +117,7 @@ class PlayerControls(ttk.Frame):
 
     def draw_frame(self):
         frame_step = self.control_btns.get_frame_step()
+
         frame_num = self.play_slider.get_value() + frame_step
         if frame_num >= self.upper_limit:
             frame_num = self.upper_limit - 1
@@ -116,6 +127,7 @@ class PlayerControls(ttk.Frame):
             self.control_btns.stop_playing()
         self.frame_callback(frame_num)
         self.play_slider.set_value(frame_num)
+        self.control_btns.step_single_check()
 
     def playcycle(self):
         self.draw_frame()
