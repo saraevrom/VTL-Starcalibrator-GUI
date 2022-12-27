@@ -40,6 +40,9 @@
   "track_markup.form.pmt_select": "ФЭУ",
   "track_markup.label.accepted": "Интервалы без треков",
   "track_markup.label.rejected": "Интервалы с треками",
+  "track_markup.form.noise_suppress_use": "Использовать подавление шума",
+  "track_markup.form.flash_suppress_use": "Использовать подавление вспышек",
+  "track_markup.form.noise_suppress_window": "Окно для шумоподавления",
 
   "mat_converter.title": "Преобразователь mat файлов",
   "mat_converter.btn.add":"Добавить",

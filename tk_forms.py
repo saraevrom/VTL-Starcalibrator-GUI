@@ -387,7 +387,10 @@ class AlternatingEntry(ConfigEntry):
         subconf =self.subconfs[index]
         name = "{}[{}]".format(self.name, index)
 
-        field = create_field(name,self.subframe,subconf, self.color_index+1)
+        if subconf is None:
+            field = None
+        else:
+            field = create_field(name,self.subframe,subconf, self.color_index+1)
 
         self.subfield=field
         self.last_index=index
@@ -398,15 +401,15 @@ class AlternatingEntry(ConfigEntry):
         sel = newval["selection_type"]
         self.combobox.set(sel)
         self.select_field(self.valnames.index(sel))
-        if "value"in newval.keys():
+        if "value"in newval.keys() and (self.subfield is not None):
             self.subfield.set_value(newval["value"])
 
     def get_value(self):
+        stype = self.combobox.get()
         if self.subfield:
-            stype = self.combobox.get()
             return {"selection_type":stype,"value":self.subfield.get_value()}
         else:
-            raise EntryInvalidException(self.name,"Field is not selected correctly")
+            return {"selection_type":stype,"value": None}
 
 FIELDTYPES["alter"] = [AlternatingEntry,True]
 

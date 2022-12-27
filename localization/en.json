@@ -41,6 +41,9 @@
   "track_markup.form.pmt_select": "Select PMT",
   "track_markup.label.accepted": "Accepted intervals (without tracks)",
   "track_markup.label.rejected": "Rejected intervals (with tracks)",
+  "track_markup.form.noise_suppress_use": "Use noise suppression",
+  "track_markup.form.flash_suppress_use": "Use flash suppression",
+  "track_markup.form.noise_suppress_window": "Noise suppression MSTD window",
 
   "mat_converter.title": "Mat convertor",
   "mat_converter.btn.add":"Add",

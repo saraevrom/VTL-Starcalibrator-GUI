@@ -128,6 +128,9 @@ class FlatFielder(ToolBase):
     def on_save_press(self):
         if self.remembered_model is not None:
             model = self.remembered_model
+            dead1 = np.logical_not(self.coeff_plotter.alive_pixels_matrix)
+            dead2 = np.logical_not(self.bg_plotter.alive_pixels_matrix)
+            model.set_broken(np.logical_or(dead1,dead2))
             model.save("flat_fielding.json")
 
 

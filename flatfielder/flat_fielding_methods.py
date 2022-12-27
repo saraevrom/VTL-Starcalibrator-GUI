@@ -6,7 +6,8 @@ from .isotropic_lsq import isotropic_lad_multidim_no_bg, multidim_sphere
 from multiprocessing import Pool
 from parameters import NPROC
 from .models import Linear, NonlinearSaturation
-from scipy.optimize import minimize
+from scipy.optimize import minimize, Bounds, LinearConstraint
+import numpy.random as rng
 
 def line_fit_robust(xs, ys):
     k = np.float(weighted_median(ys/xs, xs))
@@ -103,31 +104,47 @@ def isotropic_lsq_corr_flatfield(requested_data_0):
 
 
 def isotropic_lsq_corr_flatfield_nonlinear(requested_data_0):
-    sat_start = np.ones(256)*np.max(requested_data_0)
-    dir_angles_start = np.ones(255)
+    dir_start = np.ones(256)
+    offset_start = np.zeros(256)
     tim_len, x_len, y_len = requested_data_0.shape
     req_data_shaped = requested_data_0.reshape((tim_len, x_len * y_len))
+    sat_start = np.max(req_data_shaped, axis=0)
+    sat_start[sat_start==0] = 1e-6
     print()
     sep = x_len*y_len
+    broken_pixels = np.median(req_data_shaped, axis=0)<1e-6
+
     def fit_function(params):
-        saturation, direction_angles = params[:sep], params[sep:],
-        direction = multidim_sphere(direction_angles)
-        response = direction/saturation
-        transformed = -np.log(1-req_data_shaped/saturation)/response
+        saturation, response_raw, offset = params[:sep], params[sep:2*sep], params[2*sep:]
+        response = response_raw/saturation
+
+        transformed = offset-np.log(1-(req_data_shaped)/saturation)/response
         med = np.median(transformed, axis=1)
-        disp = np.abs((transformed.T-med)).T
-        resf = np.median(disp)
-        print("\r",resf, end="")
+        disp = np.abs(transformed.T-med).T
+        disp[:,broken_pixels] = 0
+        #resf = np.mean(np.median(disp,axis=0))
+        resf = np.mean(disp)
+        print("\r", resf, end="")
         return resf
     print()
-    start = np.concatenate([sat_start,dir_angles_start])
-    res = minimize(fit_function,start,method="powell")
+    aux_bound = np.infty*np.ones(offset_start.shape[0]-1)
+    aux_bound[broken_pixels[1:]] = 0
+    start = np.concatenate([sat_start, dir_start, offset_start])
+    lower_bound_diag = np.concatenate([sat_start, np.zeros(dir_start.shape),
+                                       [0], -aux_bound])
+    upper_bound_diag = np.concatenate([np.ones(sat_start.shape)*np.infty, 10*np.ones(dir_start.shape),
+                                       [0], aux_bound])
+
+    res = minimize(fit_function, start, bounds=Bounds(lb=lower_bound_diag, ub=upper_bound_diag),
+                   method="powell",options={"ftol":1e-1})
+    print("\n",res.message)
     assert res.success
     params = res.x
-    saturation, direction_angles = params[:256], params[256:]
-    direction = multidim_sphere(direction_angles)
-    response = direction / saturation
-    return NonlinearSaturation(saturation=saturation.reshape(x_len,y_len),response=response.reshape(x_len,y_len))
+    saturation, response, offset = params[:sep], params[sep:2*sep], params[2*sep:]
+    #response = response_raw/saturation
+    #response = 1/response
+    return NonlinearSaturation(offset=offset.reshape(16,16), saturation=saturation.reshape(x_len, y_len),response=response.reshape(x_len,y_len))
+
 
 class PoolWorker(object):
     def __init__(self,requested_data):
@@ -214,5 +231,5 @@ ALGO_MAP = {
     "isotropic_lsq_corr_parallel": isotropic_lsq_corr_flatfield_parallel,
     "isotropic_lad_multidim": multidim_lad_corr_flatfield,
     "isotropic_lad_multidim_no_bg": multidim_lad_corr_flatfield_no_bg,
-    #"nonlinear_cross_median": isotropic_lsq_corr_flatfield_nonlinear  #Nope!
+    "nonlinear_cross_median": isotropic_lsq_corr_flatfield_nonlinear  #Nope!
 }

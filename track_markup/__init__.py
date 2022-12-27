@@ -13,6 +13,10 @@ import json
 from localization import get_locale
 from flatfielder import FlatFieldingModel
 import matplotlib.pyplot as plt
+from .denoising import reduce_noise, antiflash
+
+OFF = get_locale("app.state_off")
+ON = get_locale("app.state_on")
 
 FORM_CONF = {
     "filter_win":{
@@ -51,7 +55,22 @@ FORM_CONF = {
         "display_name": get_locale("track_markup.form.pmt_select"),
         "values": ["full", "topright", "topleft", "bottomright", "bottomleft"],
         "readonly": True
-    }
+    },
+    "use_noise_suppression":{
+        "type":"bool",
+        "default":False,
+        "display_name": get_locale("track_markup.form.noise_suppress_use")
+    },
+    "noise_suppression_window":{
+        "type":"int",
+        "default":1000,
+        "display_name": get_locale("track_markup.form.noise_suppress_window")
+    },
+    "use_flash_suppression":{
+        "type":"bool",
+        "default":False,
+        "display_name": get_locale("track_markup.form.flash_suppress_use")
+    },
 }
 
 def try_append_event(target_list,start,end):
@@ -128,6 +147,7 @@ class TrackMarkup(ToolBase):
         self.selected_data.bind('<<ListboxSelect>>', self.on_review_trackless_select)
         self.rejected_data.bind('<<ListboxSelect>>', self.on_review_tracked_select)
 
+
     def on_reset(self):
         if tkinter.messagebox.askokcancel(
                 get_locale("track_markup.messagebox.reset.title"),
@@ -186,8 +206,9 @@ class TrackMarkup(ToolBase):
                 self.plotter.set_broken(self.model.broken_query())
 
             #filtered_fg = np.mean(sliding_window_view(plot_data, axis=0, window_shape=win_s), axis=-1)
-            filtered_bg = np.mean(sliding_window_view(plot_data, axis=0, window_shape=win), axis=-1)
-            plot_data = plot_data[win//2:win//2+filtered_bg.shape[0]] - filtered_bg
+            # filtered_bg = np.mean(sliding_window_view(plot_data, axis=0, window_shape=win), axis=-1)
+            # plot_data = plot_data[win//2:win//2+filtered_bg.shape[0]] - filtered_bg
+            plot_data = self.apply_filter(plot_data)
             plot_data = np.max(plot_data, axis=0)
             pmt = form_data["pmt_select"]
             real_plot_data = np.zeros(shape=plot_data.shape)
@@ -330,8 +351,6 @@ class TrackMarkup(ToolBase):
                 self.params_form.set_values(save_data["configuration"])
                 self.show_next_event()
 
-    def on_element_delete(self):
-        pass
 
 
     def on_review_trackless_select(self, evt):
@@ -368,6 +387,10 @@ class TrackMarkup(ToolBase):
 
         filtered_bg = np.mean(sliding_window_view(signal, axis=0, window_shape=win), axis=-1)
         plot_data = signal[win // 2: win // 2 + filtered_bg.shape[0]] - filtered_bg
+        if form_data["use_noise_suppression"]:
+            plot_data = reduce_noise(plot_data, form_data["noise_suppression_window"])
+        if form_data["use_flash_suppression"] and len(plot_data.shape):
+            plot_data = antiflash(plot_data)
         return plot_data
 
     def popup_draw_all(self):

@@ -5,14 +5,27 @@ import json
 class FlatFieldingModel(object):
     subclass_dict = None
 
+    def __init__(self):
+        self.broken_pixels = None
+
     def apply(self, pixel_data):
         raise NotImplementedError("How do I apply parameters?")
 
     def apply_single(self, pixel_data, i, j):
         raise NotImplementedError("How do I apply parameter?")
 
-    def get_broken(self):
+    def get_broken_auto(self):
         raise NotImplementedError("How do I detect broken pixels?")
+
+
+    def set_broken(self, broken):
+        self.broken_pixels = broken
+
+    def get_broken(self):
+        if self.broken_pixels is None:
+            print("Generated auto")
+            self.broken_pixels = self.get_broken_auto()
+        return self.broken_pixels
 
     def broken_query(self):
         return np.array(np.where(self.get_broken())).T
@@ -68,10 +81,12 @@ class FlatFieldingModel(object):
 
 class Linear(FlatFieldingModel):
     def __init__(self, coefficients=None, baseline=None):
+        super().__init__()
         self.coefficients = coefficients
         self.baseline = baseline
 
-    def get_broken(self):
+
+    def get_broken_auto(self):
         return np.abs(self.coefficients) <= 1e-8
 
     def apply(self, pixel_data):
@@ -91,12 +106,14 @@ class Linear(FlatFieldingModel):
     def get_data(self):
         return {
             "coefficients": self.coefficients.tolist(),
-            "baseline": self.baseline.tolist()
+            "baseline": self.baseline.tolist(),
+            "broken": self.broken_pixels.tolist()
         }
 
     def set_data(self, x_data):
         self.coefficients = np.array(x_data["coefficients"])
         self.baseline = np.array(x_data["baseline"])
+        self.set_broken(np.array(x_data["broken"]))
 
     def display_parameter_1(self):
         return "flatfielder.coefficients.title", self.coefficients
@@ -106,19 +123,25 @@ class Linear(FlatFieldingModel):
 
 
 class NonlinearSaturation(FlatFieldingModel):
-    def __init__(self, saturation=None, response=None):
+    def __init__(self, saturation=None, response=None, offset=None):
+        super().__init__()
         self.saturation = saturation
         self.response = response
+        self.offset = offset
 
     def get_data(self):
         return {
             "saturation": self.saturation.tolist(),
-            "response": self.response.tolist()
+            "response": self.response.tolist(),
+            "offset": self.offset.tolist(),
+            "broken": self.broken_pixels.tolist()
         }
 
     def set_data(self, x_data):
         self.saturation = np.array(x_data["saturation"])
         self.response = np.array(x_data["response"])
+        self.broken_pixels = np.array(x_data["broken"])
+        self.offset = np.array(x_data["offset"])
 
     def display_parameter_1(self):
         return "flatfielder.saturation.title", self.saturation
@@ -129,13 +152,16 @@ class NonlinearSaturation(FlatFieldingModel):
     def apply(self, pixel_data):
         inv_A = 1/self.saturation
         inv_A[self.saturation == 0] = 0
-        inv_B = 1/self.response
+        inv_B = self.saturation/self.response
         inv_B[self.response == 0] = 0
-        return -np.log(1-pixel_data*inv_A)*inv_B
+        inv_B[self.saturation == 0] = 0
+        ret = self.offset-np.log(1-(pixel_data)*inv_A)*inv_B
+        ret[(1-(pixel_data)*inv_A)<=0] = 0
+        return ret
 
     def apply_single(self, single_data,i,j):
         A = self.saturation[i,j]
-        B = self.response[i,j]
+        B = self.response[i,j]/self.saturation[i,j]
         if A==0:
             inv_A = 0
         else:
@@ -144,8 +170,10 @@ class NonlinearSaturation(FlatFieldingModel):
             inv_B = 0
         else:
             inv_B = B
-        return -np.log(1-single_data*inv_A)*inv_B
+        ret = -np.log(1-single_data*inv_A)*inv_B
+        ret[(1-single_data*inv_A)<=0] = 0
+        return ret
 
-    def get_broken(self):
-        return np.abs(self.saturation * self.response) <= 1e-8
+    def get_broken_auto(self):
+        return np.logical_or(np.abs(self.saturation) <= 1e-8, np.abs(self.saturation/self.response)<=1e-8)
 
