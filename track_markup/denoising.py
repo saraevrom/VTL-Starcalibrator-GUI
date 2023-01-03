@@ -7,8 +7,8 @@ import numba as nb
 BATCH = 1000
 
 def divide_multidim(a,b):
-    print("Incoming data shape", a.shape)
-    print("Incoming divider shape", b.shape)
+    #print("Incoming data shape", a.shape)
+    #print("Incoming divider shape", b.shape)
     if len(a.shape)>1:
         res = a/b
         if a.shape != b.shape:
