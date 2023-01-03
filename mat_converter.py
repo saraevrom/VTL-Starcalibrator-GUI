@@ -40,7 +40,8 @@ class MatConverter(tk.Toplevel):
 
     def on_add_file(self):
         filenames = filedialog.askopenfilenames(title=get_locale("mat_converter.filedialog.import.title"),
-                                                filetypes=[(get_locale("app.filedialog_formats.raw_mat"), "*.mat *.hdf")])
+                                                filetypes=[(get_locale("app.filedialog_formats.raw_mat"), "*.mat *.hdf")],
+                                                parent=self)
         if filenames:
             for filename in filenames:
                 if filename not in self.file_listbox.get(0, tk.END):
@@ -48,7 +49,8 @@ class MatConverter(tk.Toplevel):
                 else:
                     messagebox.showwarning(title="Добавка файла", message=format_locale(
                                                "mat_converter.messagebox.file_in_list", filename=filename
-                                           ))
+                                           ),
+                                            parent=self)
 
     def on_remove_file(self):
         cursel = self.file_listbox.curselection()
@@ -59,7 +61,8 @@ class MatConverter(tk.Toplevel):
     def on_output_file_select(self):
         filename = filedialog.asksaveasfilename(title="mat_converter.filedialog.export.title",
                                                 filetypes=[(get_locale("app.filedialog_formats.processed_mat"), "*.mat *.hdf")],
-                                                initialdir=".")
+                                                initialdir=".",
+                                                 parent=self)
         if filename:
             self.output_file.set(filename)
 
@@ -69,11 +72,13 @@ class MatConverter(tk.Toplevel):
         #Average window test
         except ValueError:
             messagebox.showerror(title=get_locale("mat_converter.messagebox.input_error.title"),
-                                 message=get_locale("mat_converter.messagebox.input_error.msg_average"))
+                                 message=get_locale("mat_converter.messagebox.input_error.msg_average"),
+                                 parent=self)
             return
         if average_window <= 0:
             messagebox.showerror(title=get_locale("mat_converter.messagebox.input_error.title"),
-                                 message=get_locale("mat_converter.messagebox.input_error.msg_average_negative"))
+                                 message=get_locale("mat_converter.messagebox.input_error.msg_average_negative"),
+                                 parent=self)
             return
         #Filename tests
         output_filename = self.output_file.get()
@@ -81,12 +86,14 @@ class MatConverter(tk.Toplevel):
         print(input_filenames)
         if not output_filename:
             messagebox.showerror(title=get_locale("mat_converter.messagebox.input_error.title"),
-                                 message=get_locale("mat_converter.messagebox.input_error.missing_export_filename"))
+                                 message=get_locale("mat_converter.messagebox.input_error.missing_export_filename"),
+                                 parent=self)
             return
 
         if output_filename in input_filenames:
             messagebox.showerror(title=get_locale("mat_converter.messagebox.input_error.title"),
-                                 message=get_locale("mat_converter.messagebox.input_error.overwrite_attempt"))
+                                 message=get_locale("mat_converter.messagebox.input_error.overwrite_attempt"),
+                                 parent=self)
             return
 
         frames = 0
@@ -99,18 +106,21 @@ class MatConverter(tk.Toplevel):
                         messagebox.showerror(
                             title=get_locale("mat_converter.messagebox.data_error.title"),
                             message=format_locale("mat_converter.messagebox.data_error.damaged_file",
-                                                  input_filename=input_filename)
+                                                  input_filename=input_filename),
+                            parent=self
                         )
                         return
                     subframe = int(np.ceil(file_len / average_window))
                     frames += subframe
         except KeyError:
             messagebox.showerror(title=get_locale("mat_converter.messagebox.input_error.title"),
-                        message=get_locale("mat_converter.messagebox.input_error.missing_fields"))
+                        message=get_locale("mat_converter.messagebox.input_error.missing_fields"),
+                        parent=self)
             return
 
         if messagebox.askyesno(title="Преобразование",
-                               message=format_locale("mat_converter.messagebox.conversion.msg", frames=frames)):
+                               message=format_locale("mat_converter.messagebox.conversion.msg", frames=frames),
+                              parent=self):
             if hasattr(self.master, "close_mat_file"):
                 self.master.close_mat_file()
             with h5py.File(output_filename, "w") as output_file:

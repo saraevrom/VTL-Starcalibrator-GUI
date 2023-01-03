@@ -163,7 +163,8 @@ class TrackMarkup(ToolBase):
     def on_reset(self):
         if tkinter.messagebox.askokcancel(
                 get_locale("track_markup.messagebox.reset.title"),
-                get_locale("track_markup.messagebox.reset.content")):
+                get_locale("track_markup.messagebox.reset.content"),
+                parent=self):
             self.reset_events()
 
     def reset_events(self):
@@ -253,7 +254,8 @@ class TrackMarkup(ToolBase):
             if not self.queue:
                 tk.messagebox.showinfo(
                     get_locale("track_markup.messagebox.markup_done.title"),
-                    get_locale("track_markup.messagebox.markup_done.content")
+                    get_locale("track_markup.messagebox.markup_done.content"),
+                    parent=self
                 )
                 self.retractable_event = False
                 return False
@@ -333,7 +335,7 @@ class TrackMarkup(ToolBase):
 
     def on_save_data(self):
         save_path = tkinter.filedialog.asksaveasfilename(initialdir=".",filetypes=(("JSON", "*.json"),),
-                                                         initialfile="progress.json")
+                                                         initialfile="progress.json", parent=self)
         if save_path:
             current_queue = self.queue.copy()
             if self.current_event is not None and self.retractable_event:
@@ -350,7 +352,7 @@ class TrackMarkup(ToolBase):
 
     def on_load_data(self):
         load_path = tkinter.filedialog.askopenfilename(initialdir=".", filetypes=(("JSON", "*.json"),),
-                                                         initialfile="progress.json")
+                                                         initialfile="progress.json", parent=self)
         if load_path:
             self.reset_events()
             with open(load_path, "r") as fp:
