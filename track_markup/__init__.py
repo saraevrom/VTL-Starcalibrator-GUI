@@ -63,7 +63,7 @@ FORM_CONF = {
     },
     "noise_suppression_window":{
         "type":"int",
-        "default":1000,
+        "default":100,
         "display_name": get_locale("track_markup.form.noise_suppress_window")
     },
     "use_flash_suppression":{
