@@ -385,8 +385,12 @@ class TrackMarkup(ToolBase):
         # if win_s > win:
         #     win_s = win
 
-        filtered_bg = np.mean(sliding_window_view(signal, axis=0, window_shape=win), axis=-1)
-        plot_data = signal[win // 2: win // 2 + filtered_bg.shape[0]] - filtered_bg
+        if signal.shape[0]>=win:
+            filtered_bg = np.mean(sliding_window_view(signal, axis=0, window_shape=win), axis=-1)
+            plot_data = signal[win // 2: win // 2 + filtered_bg.shape[0]] - filtered_bg
+        else:
+            plot_data = signal - np.mean(signal, axis=0)
+
         if form_data["use_noise_suppression"]:
             plot_data = reduce_noise(plot_data, form_data["noise_suppression_window"])
         if form_data["use_flash_suppression"] and len(plot_data.shape)>1:
