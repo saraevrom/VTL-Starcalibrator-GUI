@@ -71,6 +71,12 @@ FORM_CONF = {
         "default":False,
         "display_name": get_locale("track_markup.form.flash_suppress_use")
     },
+    # "single_plot_append": {
+    #     "type": "bool",
+    #     "default": False,
+    #     "display_name": get_locale("track_markup.form.single_plot_append")
+    # },
+
 }
 
 def try_append_event(target_list,start,end):
@@ -105,6 +111,7 @@ class TrackMarkup(ToolBase):
         self.trackless_events = []
         self.tracked_events = []
         self.model = None
+        self.last_single_plot_data = None
 
         self.current_event = None
 
@@ -128,6 +135,11 @@ class TrackMarkup(ToolBase):
         self.params_form = TkDictForm(right_panel, FORM_CONF)
         self.params_form.grid(row=3, column=0, sticky="ew", columnspan=2)
 
+        self.append_check = tk.IntVar(self)
+        append_checkbox = tk.Checkbutton(self,
+                                         text=get_locale("track_markup.form.single_plot_append"),
+                                         variable=self.append_check)
+        append_checkbox.pack(side="top", fill="x")
         self.plotter.pack(side="top", expand=True, fill="both")
         bottom_panel = tk.Frame(self)
         bottom_panel.pack(side="bottom", fill="x")
@@ -415,6 +427,13 @@ class TrackMarkup(ToolBase):
                     ax.plot(xs, plot_data[:,i,j])
             fig.show()
 
+    def handle_mpl_close(self, mpl_event):
+        if self.last_single_plot_data is None:
+            return
+        if mpl_event.canvas.figure == self.last_single_plot_data[0]:
+            print("Closed last figure. Figure resetting.")
+            self.last_single_plot_data = None
+
     def popup_draw_signal(self, i, j):
         if self.file and self.current_event:
             t1, t2 = self.current_event
@@ -426,9 +445,17 @@ class TrackMarkup(ToolBase):
 
             plot_data = self.apply_filter(signal)
 
-
-            fig, ax = plt.subplots()
+            if self.append_check.get() and (self.last_single_plot_data is not None):
+                fig, ax = self.last_single_plot_data
+            else:
+                fig, ax = plt.subplots()
+                fig.canvas.mpl_connect('close_event', self.handle_mpl_close)
             xs = np.linspace(t1, t2, len(plot_data))
-            ax.plot(xs, plot_data)
-            ax.set_title(f"[{i}, {j}]")
+            ax.plot(xs, plot_data, label=f"[{i}, {j}]")
+            if self.append_check.get():
+                ax.set_title("Pixels")
+                ax.legend()
+            else:
+                ax.set_title(f"[{i}, {j}]")
             fig.show()
+            self.last_single_plot_data = fig, ax

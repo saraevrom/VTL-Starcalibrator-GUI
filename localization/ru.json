@@ -44,6 +44,7 @@
   "track_markup.form.noise_suppress_use": "Использовать подавление шума",
   "track_markup.form.flash_suppress_use": "Использовать подавление вспышек",
   "track_markup.form.noise_suppress_window": "Окно для шумоподавления",
+  "track_markup.form.single_plot_append": "Добавить сигнал пикселя в последнее окно",
 
   "mat_converter.title": "Преобразователь mat файлов",
   "mat_converter.btn.add":"Добавить",
