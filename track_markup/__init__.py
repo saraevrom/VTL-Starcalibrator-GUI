@@ -24,11 +24,6 @@ FORM_CONF = {
         "default": 10,
         "display_name": get_locale("track_markup.form.filter_win")
     },
-    # "signal_filter_win":{
-    #     "type": "int",
-    #     "default": 2,
-    #     "display_name": get_locale("track_markup.form.signal_filter_win")
-    # },
     "min_frame": {
         "type": "int",
         "default": 256,
@@ -71,11 +66,6 @@ FORM_CONF = {
         "default":False,
         "display_name": get_locale("track_markup.form.flash_suppress_use")
     },
-    # "single_plot_append": {
-    #     "type": "bool",
-    #     "default": False,
-    #     "display_name": get_locale("track_markup.form.single_plot_append")
-    # },
 
 }
 
@@ -117,8 +107,6 @@ class TrackMarkup(ToolBase):
 
         self.selected_data = tk.Listbox(left_panel, selectmode="single")
         self.selected_data.pack(side="bottom", fill="both", expand=True)
-        #tk.Button(left_panel, text=get_locale("track_markup.btn.remove_selected"),
-        #          command=self.on_element_delete).pack(side="top", fill="x")
         tk.Label(left_panel,text=get_locale("track_markup.label.accepted")).pack(side="bottom", fill="x", expand=False)
         self.rejected_data = tk.Listbox(left_panel, selectmode="single")
         self.rejected_data.pack(side="bottom", fill="both", expand=True)
@@ -135,11 +123,6 @@ class TrackMarkup(ToolBase):
         self.params_form = TkDictForm(right_panel, FORM_CONF)
         self.params_form.grid(row=3, column=0, sticky="ew", columnspan=2)
 
-        # self.append_check = tk.IntVar(self)
-        # append_checkbox = tk.Checkbutton(self,
-        #                                  text=get_locale("track_markup.form.single_plot_append"),
-        #                                  variable=self.append_check)
-        # append_checkbox.pack(side="top", fill="x")
         self.plotter.pack(side="top", expand=True, fill="both")
         bottom_panel = tk.Frame(self)
         bottom_panel.pack(side="bottom", fill="x")
@@ -176,6 +159,15 @@ class TrackMarkup(ToolBase):
             ax.set_title("Pixels")
         return self.last_single_plot_data
 
+    def ensure_model_ifpresent(self):
+        if self.model:
+            return True
+        if os.path.isfile("flat_fielding.json"):
+            if self.model is None:
+                self.model = FlatFieldingModel.load("flat_fielding.json")
+            return True
+        else:
+            return False
 
     def on_reset(self):
         if tkinter.messagebox.askokcancel(
@@ -217,27 +209,14 @@ class TrackMarkup(ToolBase):
     def redraw_event(self):
         if self.file and self.current_event:
             form_data = self.params_form.get_values()
-            win = form_data["filter_win"]
-            #win_s = form_data["signal_filter_win"]
-            # if win_s < 1:
-            #     win_s = 1
-            # if win_s > win:
-            #     win_s = win
             print(self.queue)
             event_start, event_end = self.current_event
-            #self.current_event = event_start, event_end
             plot_data = self.file["data0"][event_start:event_end]
 
-            if os.path.isfile("flat_fielding.json"):
-                if self.model is None:
-                    self.model = FlatFieldingModel.load("flat_fielding.json")
-
+            if self.ensure_model_ifpresent():
                 plot_data = self.model.apply(plot_data)
                 self.plotter.set_broken(self.model.broken_query())
 
-            #filtered_fg = np.mean(sliding_window_view(plot_data, axis=0, window_shape=win_s), axis=-1)
-            # filtered_bg = np.mean(sliding_window_view(plot_data, axis=0, window_shape=win), axis=-1)
-            # plot_data = plot_data[win//2:win//2+filtered_bg.shape[0]] - filtered_bg
             plot_data = self.apply_filter(plot_data)
             plot_data = np.max(plot_data, axis=0)
             pmt = form_data["pmt_select"]
@@ -259,7 +238,6 @@ class TrackMarkup(ToolBase):
 
             assert real_plot_data.shape == (16,16)
 
-            #print(real_plot_data)
             self.plotter.buffer_matrix = real_plot_data
             self.plotter.update_matrix_plot(True)
             self.plotter.axes.set_title(f"{event_start} - {event_end} ({event_end - event_start})")
@@ -382,8 +360,6 @@ class TrackMarkup(ToolBase):
                 self.params_form.set_values(save_data["configuration"])
                 self.show_next_event()
 
-
-
     def on_review_trackless_select(self, evt):
         return self.on_review_select_universal(evt, True)
 
@@ -425,9 +401,7 @@ class TrackMarkup(ToolBase):
         if self.file and self.current_event:
             t1, t2 = self.current_event
             signal = self.file["data0"][t1:t2]
-            if os.path.isfile("flat_fielding.json"):
-                if self.model is None:
-                    self.model = FlatFieldingModel.load("flat_fielding.json")
+            if self.ensure_model_ifpresent():
                 signal = self.model.apply(signal)
                 signal[:, np.logical_not(self.plotter.alive_pixels_matrix)] = 0
 
@@ -450,18 +424,14 @@ class TrackMarkup(ToolBase):
         if self.file and self.current_event:
             t1, t2 = self.current_event
             signal = self.file["data0"][t1:t2, i, j]
-            if os.path.isfile("flat_fielding.json"):
-                if self.model is None:
-                    self.model = FlatFieldingModel.load("flat_fielding.json")
-                signal = self.model.apply_single_nobreak(signal,i,j)
+            if self.ensure_model_ifpresent():
+                signal = self.model.apply_single_nobreak(signal, i, j)
 
             plot_data = self.apply_filter(signal)
 
             fig, ax = self.ensure_figure(False)
             xs = np.linspace(t1, t2, len(plot_data))
             ax.plot(xs, plot_data, label=f"[{i}, {j}]")
-            #if self.append_check.get():
             ax.legend()
-            #else:
             fig.show()
             self.last_single_plot_data = fig, ax
