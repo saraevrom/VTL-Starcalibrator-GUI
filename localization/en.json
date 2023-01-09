@@ -45,7 +45,7 @@
   "track_markup.form.noise_suppress_use": "Use noise suppression",
   "track_markup.form.flash_suppress_use": "Use flash suppression",
   "track_markup.form.noise_suppress_window": "Noise suppression MSTD window",
-  "track_markup.form.single_plot_append": "Append single plot to last figure",
+  "track_markup.btn.spawn_window": "Create new figure for tracks",
 
   "mat_converter.title": "Mat convertor",
   "mat_converter.btn.add":"Add",

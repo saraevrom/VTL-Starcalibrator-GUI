@@ -135,14 +135,18 @@ class TrackMarkup(ToolBase):
         self.params_form = TkDictForm(right_panel, FORM_CONF)
         self.params_form.grid(row=3, column=0, sticky="ew", columnspan=2)
 
-        self.append_check = tk.IntVar(self)
-        append_checkbox = tk.Checkbutton(self,
-                                         text=get_locale("track_markup.form.single_plot_append"),
-                                         variable=self.append_check)
-        append_checkbox.pack(side="top", fill="x")
+        # self.append_check = tk.IntVar(self)
+        # append_checkbox = tk.Checkbutton(self,
+        #                                  text=get_locale("track_markup.form.single_plot_append"),
+        #                                  variable=self.append_check)
+        # append_checkbox.pack(side="top", fill="x")
         self.plotter.pack(side="top", expand=True, fill="both")
         bottom_panel = tk.Frame(self)
         bottom_panel.pack(side="bottom", fill="x")
+        spawn_button = tk.Button(bottom_panel,
+                                         text=get_locale("track_markup.btn.spawn_window"),
+                                         command=self.on_spawn_figure_press)
+        spawn_button.pack(side="bottom", expand=True, fill="both")
         tk.Button(bottom_panel, text=get_locale("track_markup.btn.track_fuzzy"),
                   command=self.redraw_event).pack(side="bottom", expand=True, fill="both")
         tk.Button(bottom_panel, text=get_locale("track_markup.btn.track_yes"),
@@ -158,6 +162,19 @@ class TrackMarkup(ToolBase):
         self.event_in_queue = True, None
         self.selected_data.bind('<<ListboxSelect>>', self.on_review_trackless_select)
         self.rejected_data.bind('<<ListboxSelect>>', self.on_review_tracked_select)
+
+
+    def on_spawn_figure_press(self):
+        self.ensure_figure(True)
+
+    def ensure_figure(self, spawnnew):
+        if self.last_single_plot_data is None or spawnnew:
+            fig, ax = plt.subplots()
+            fig.show()
+            fig.canvas.mpl_connect('close_event', self.handle_mpl_close)
+            self.last_single_plot_data = fig, ax
+            ax.set_title("Pixels")
+        return self.last_single_plot_data
 
 
     def on_reset(self):
@@ -387,17 +404,10 @@ class TrackMarkup(ToolBase):
         self.event_in_queue = False, (event_index, use_accepted)
         self.redraw_event()
 
-        #value = w.get(index)
-        #print('You selected item %d: "%s"' % (index, value))
 
     def apply_filter(self,signal):
         form_data = self.params_form.get_values()
         win = form_data["filter_win"]
-        # win_s = form_data["signal_filter_win"]
-        # if win_s < 1:
-        #     win_s = 1
-        # if win_s > win:
-        #     win_s = win
 
         if signal.shape[0]>=win:
             filtered_bg = np.mean(sliding_window_view(signal, axis=0, window_shape=win), axis=-1)
@@ -447,17 +457,11 @@ class TrackMarkup(ToolBase):
 
             plot_data = self.apply_filter(signal)
 
-            if self.append_check.get() and (self.last_single_plot_data is not None):
-                fig, ax = self.last_single_plot_data
-            else:
-                fig, ax = plt.subplots()
-                fig.canvas.mpl_connect('close_event', self.handle_mpl_close)
+            fig, ax = self.ensure_figure(False)
             xs = np.linspace(t1, t2, len(plot_data))
             ax.plot(xs, plot_data, label=f"[{i}, {j}]")
-            if self.append_check.get():
-                ax.set_title("Pixels")
-                ax.legend()
-            else:
-                ax.set_title(f"[{i}, {j}]")
+            #if self.append_check.get():
+            ax.legend()
+            #else:
             fig.show()
             self.last_single_plot_data = fig, ax
