@@ -248,8 +248,8 @@ class TrackMarkup(ToolBase):
         if self.file:
             if not self.queue:
                 tk.messagebox.showinfo(
-                    get_locale("tool_track_markup.messagebox.markup_done.title"),
-                    get_locale("tool_track_markup.messagebox.markup_done.content"),
+                    get_locale("track_markup.messagebox.markup_done.title"),
+                    get_locale("track_markup.messagebox.markup_done.content"),
                     parent=self
                 )
                 self.retractable_event = False
@@ -359,6 +359,7 @@ class TrackMarkup(ToolBase):
                     self.add_tracked_event(e[0],e[1])
                 self.params_form.set_values(save_data["configuration"])
                 self.show_next_event()
+                self.just_started = False
 
     def on_review_trackless_select(self, evt):
         return self.on_review_select_universal(evt, True)

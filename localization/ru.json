@@ -92,7 +92,7 @@
   "app.settings.field.display_threshold": "Порог",
   "app.settings.field.filter_window": "Окно фильтра",
 
-  "app.title": "Определение ориентации",
+  "app.title": "Обработка данных верхнетуломской обсерватории",
   "app.menu.file": "Файл",
   "app.menu.file.open_mat": "Oткрыть mat файл",
   "app.menu.file.load_settings": "Загрузить настройки",
@@ -102,6 +102,7 @@
   "app.menu.tools.flatfielder": "Выравнивание пикселей",
   "app.menu.tools.mat_player": "Просмотр данных",
   "app.menu.tools.track_markup": "Выделение фона",
+  "app.menu.tools.starcalibrator": "Определение ориентации",
   "app.filedialog.save_settings.title": "Сохранение настроек",
   "app.filedialog.load_settings.title": "Загрузка настроек",
   "app.filedialog.load_mat.title": "Открыть mat файл",

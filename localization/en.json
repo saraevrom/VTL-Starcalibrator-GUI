@@ -93,7 +93,7 @@
   "app.settings.field.display_threshold": "Threshold",
   "app.settings.field.filter_window": "MA filter window (frames)",
 
-  "app.title": "Orientation determination",
+  "app.title": "VTL observatory data processing",
   "app.menu.file": "File",
   "app.menu.file.open_mat": "Open mat file",
   "app.menu.file.load_settings": "Load settings",
@@ -103,6 +103,7 @@
   "app.menu.tools.flatfielder": "Flat fielding",
   "app.menu.tools.mat_player": "Data playback",
   "app.menu.tools.track_markup": "Background extractor",
+  "app.menu.tools.starcalibrator": "Orientation determination",
   "app.filedialog.save_settings.title": "Save settings",
   "app.filedialog.load_settings.title": "Load settings",
   "app.filedialog.load_mat.title": "Open mat file",

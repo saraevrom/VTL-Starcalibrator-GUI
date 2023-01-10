@@ -1,12 +1,10 @@
 import os
 import tkinter as tk
-from tkinter import ttk
-from plotter import StarGridPlotter
 from settings_frame import SettingMenu
-from vtl_settings_build import build_menu
-from starlist import Starlist
+from .vtl_settings_build import build_menu
+from .starlist import Starlist
+from .starplotter import StarGridPlotter
 import tkinter.filedialog as filedialog
-import h5py
 import numpy as np
 import pandas as pd
 from numpy.lib.stride_tricks import sliding_window_view
@@ -14,11 +12,9 @@ from numpy.lib.stride_tricks import sliding_window_view
 from astropy.time import Time
 from astronomy import range_calculate, to_altaz
 import json
-from random_roaming import RandomRoaming, maximize
+from .random_roaming import RandomRoaming, maximize
 from tool_mat_converter import MatConverter
-from tool_flatfielder import FlatFielder, FlatFieldingModel
-from tool_mat_player import MatPlayer
-from tool_track_markup import TrackMarkup
+from tool_flatfielder import FlatFieldingModel
 
 import matplotlib.pyplot as plt
 from parameters import MAIN_LATITUDE, MAIN_LONGITUDE
@@ -40,6 +36,7 @@ class StarCalibrator(ToolBase):
         save_settings_btn = tk.Button(leftpanel, text=get_locale("app.menu.file.save_settings"),
                                       command=self.on_settings_save)
         save_settings_btn.grid(row=1, column=0, sticky="ew")
+        leftpanel.columnconfigure(0,weight=1)
 
         self.star_menu = Starlist(leftpanel)
         self.star_menu.grid(row=2, column=0, sticky="nsew")
@@ -145,7 +142,7 @@ class StarCalibrator(ToolBase):
         return self.flat_field_opt(subframes)
 
     def flat_field_opt(self, data_array):
-        FILENAME = "flat_fielding.json"
+        FILENAME = "../flat_fielding.json"
         if not self.settings_dict["flatfielding"]:
             return data_array
         if os.path.isfile(FILENAME):

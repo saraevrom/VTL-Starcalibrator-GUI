@@ -2,27 +2,13 @@
 import os
 import tkinter as tk
 from tkinter import ttk
-from plotter import StarGridPlotter
-from settings_frame import SettingMenu
-from vtl_settings_build import build_menu
-from starlist import Starlist
 import tkinter.filedialog as filedialog
 import h5py
-import numpy as np
-import pandas as pd
-from numpy.lib.stride_tricks import sliding_window_view
-
-from astropy.time import Time
-from astronomy import range_calculate, to_altaz
-import json
-from random_roaming import RandomRoaming, maximize
 from tool_mat_converter import MatConverter
 from tool_flatfielder import FlatFielder, FlatFieldingModel
 from tool_mat_player import MatPlayer
 from tool_track_markup import TrackMarkup
 
-import matplotlib.pyplot as plt
-from parameters import MAIN_LATITUDE, MAIN_LONGITUDE
 from localization import get_locale
 from tool_starcalibrator import StarCalibrator
 
@@ -38,7 +24,7 @@ class App(tk.Tk):
 
     def __init__(self):
         super(App, self).__init__()
-
+        self.title(get_locale("app.title"))
 
         self.topmenu = tk.Menu(self)
 
