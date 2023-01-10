@@ -1,6 +1,7 @@
 import tkinter as tk
+import warnings
 
-class ToolBase(tk.Toplevel):
+class ToolBase(tk.Frame):
 
     def __init__(self, master):
         super(ToolBase, self).__init__(master)
@@ -9,12 +10,16 @@ class ToolBase(tk.Toplevel):
         pass
 
 
+    def title(self,*args,**kwargs):
+        warnings.warn("Now all tools are frames, not toplevels")
+
+
     def get_mat_file(self):
         if hasattr(self, "master") and hasattr(self.master, "file"):
             self.file = self.master.file
             if self.file:
                 self.on_loaded_file_success()
 
-    def push_mat_file(self, file):
+    def propagate_mat_file(self, file):
         self.file = file
         self.on_loaded_file_success()

@@ -7,13 +7,11 @@ import numpy as np
 import tqdm
 import scipy.io as scipio
 from localization import get_locale, format_locale
+from tool_base import ToolBase
 
-class MatConverter(tk.Toplevel):
+class MatConverter(ToolBase):
     def __init__(self, master):
         super(MatConverter, self).__init__(master)
-        if hasattr(self.master, "close_mat_file"):
-            self.master.close_mat_file()
-        self.title(get_locale("mat_converter.title"))
         self.file_listbox = tk.Listbox(self, selectmode=tk.MULTIPLE)
         self.file_listbox.grid(row=0, column=0, sticky="nsew", columnspan=2)
         tk.Button(self, command=self.on_add_file, text=get_locale("mat_converter.btn.add")).grid(row=1, column=0, sticky="nsew")
@@ -123,6 +121,8 @@ class MatConverter(tk.Toplevel):
                               parent=self):
             if hasattr(self.master, "close_mat_file"):
                 self.master.close_mat_file()
+
+            self.master.close_mat_file()  # In case we overwrite it
             with h5py.File(output_filename, "w") as output_file:
                 data0 = output_file.create_dataset("data0", (frames, 16, 16), dtype="f8")
                 utc_time = output_file.create_dataset("UT0", (frames,), dtype="f8")
