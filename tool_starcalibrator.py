@@ -30,9 +30,24 @@ class StarCalibrator(ToolBase):
         super(StarCalibrator, self).__init__(master)
         self.flat_field_model = None
         self.title(get_locale("app.title"))
-        self.star_menu = Starlist(self)
-        self.star_menu.grid(row=0, column=0, sticky="nsew")
+
+        leftpanel = tk.Frame(self)
+        leftpanel.grid(row=0, column=0, sticky="nsew")
+
+        load_settings_btn = tk.Button(leftpanel, text=get_locale("app.menu.file.load_settings"),
+                                      command=self.on_settings_load)
+        load_settings_btn.grid(row=0, column=0, sticky="ew")
+        save_settings_btn = tk.Button(leftpanel, text=get_locale("app.menu.file.save_settings"),
+                                      command=self.on_settings_save)
+        save_settings_btn.grid(row=1, column=0, sticky="ew")
+
+        self.star_menu = Starlist(leftpanel)
+        self.star_menu.grid(row=2, column=0, sticky="nsew")
         self.star_menu.star_callback = self.on_star_selection_change
+
+        #leftpanel.rowconfigure(0, weight=1)
+        #leftpanel.rowconfigure(1, weight=1)
+        leftpanel.rowconfigure(2, weight=1)
 
         self.plot = StarGridPlotter(self)
         self.plot.on_right_click_callback = self.popup_draw_signal
@@ -218,7 +233,8 @@ class StarCalibrator(ToolBase):
 
     def on_settings_load(self):
         filename = filedialog.askopenfilename(title=get_locale("app.filedialog.load_settings.title"),
-                                              filetypes=[(get_locale("app.filedialog_formats.settings_json"), "*.json")])
+                                              filetypes=[(get_locale("app.filedialog_formats.settings_json"), "*.json")],
+                                              parent=self)
         if filename and os.path.isfile(filename):
             with open(filename, "r") as f:
                 self.settings_dict = json.load(f)
@@ -226,7 +242,8 @@ class StarCalibrator(ToolBase):
 
     def on_settings_save(self):
         filename = filedialog.asksaveasfilename(title=get_locale("app.filedialog.save_settings.title"),
-                                                filetypes=[(get_locale("app.filedialog_formats.settings_json"), "*.json")])
+                                                filetypes=[(get_locale("app.filedialog_formats.settings_json"), "*.json")],
+                                                parent=self)
         if filename:
             with open(filename, "w") as f:
                 json.dump(self.settings_dict, f)
