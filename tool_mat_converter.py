@@ -122,7 +122,7 @@ class MatConverter(ToolBase):
             if hasattr(self.master, "close_mat_file"):
                 self.master.close_mat_file()
 
-            self.master.close_mat_file()  # In case we overwrite it
+            self.winfo_toplevel().close_mat_file()  # In case we overwrite it
             with h5py.File(output_filename, "w") as output_file:
                 data0 = output_file.create_dataset("data0", (frames, 16, 16), dtype="f8")
                 utc_time = output_file.create_dataset("UT0", (frames,), dtype="f8")
