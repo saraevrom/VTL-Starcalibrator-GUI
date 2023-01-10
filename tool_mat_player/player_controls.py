@@ -35,6 +35,8 @@ class ControlButtons(ttk.Frame):
             .grid(row=0, column=6, sticky="nsew")
         self.button_callback = None
 
+        self.rowconfigure(0, weight=1)
+
     def on_button_press(self, btn):
         if self.playing_state == btn == self.REWIND:
             self.multiplier *= 2

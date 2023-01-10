@@ -40,7 +40,7 @@ class MatPlayer(ToolBase):
         self.plotter = GridPlotter(self)
         self.plotter.pack(side=tk.TOP, expand=True, fill=tk.BOTH)
         self.player_controls = PlayerControls(self, self.on_frame_draw, self.click_callback)
-        self.player_controls.pack(side=tk.BOTTOM, expand=True, fill=tk.X)
+        self.player_controls.pack(side=tk.BOTTOM, fill=tk.X)
         self.get_mat_file()
         self.form_data = self.form.get_values()
         if os.path.isfile("flat_fielding.json"):
