@@ -10,7 +10,7 @@ import numpy.random as rng
 import matplotlib.pyplot as plt
 from localization import get_locale
 
-from tool_base import ToolBase
+from ..tool_base import ToolBase
 from .models import FlatFieldingModel
 
 def line_fit_robust(xs, ys):

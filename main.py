@@ -4,13 +4,13 @@ import tkinter as tk
 from tkinter import ttk
 import tkinter.filedialog as filedialog
 import h5py
-from tool_mat_converter import MatConverter
-from tool_flatfielder import FlatFielder, FlatFieldingModel
-from tool_mat_player import MatPlayer
-from tool_track_markup import TrackMarkup
+from tools.tool_mat_converter import MatConverter
+from tools.tool_flatfielder import FlatFielder
+from tools.tool_mat_player import MatPlayer
+from tools.tool_track_markup import TrackMarkup
 
 from localization import get_locale
-from tool_starcalibrator import StarCalibrator
+from tools.tool_starcalibrator import StarCalibrator
 
 class Tool(object):
     def __init__(self,master,tool_class):

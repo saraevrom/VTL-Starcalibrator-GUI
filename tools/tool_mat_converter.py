@@ -7,7 +7,7 @@ import numpy as np
 import tqdm
 import scipy.io as scipio
 from localization import get_locale, format_locale
-from tool_base import ToolBase
+from .tool_base import ToolBase
 
 class MatConverter(ToolBase):
     def __init__(self, master):

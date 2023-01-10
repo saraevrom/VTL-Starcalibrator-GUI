@@ -1,6 +1,6 @@
 import tkinter as tk
 from plotter import GridPlotter
-from tool_base import ToolBase
+from ..tool_base import ToolBase
 from .sorted_queue import SortedQueue
 from numpy.lib.stride_tricks import sliding_window_view
 import os
@@ -11,7 +11,7 @@ import tkinter.messagebox
 import tkinter.filedialog
 import json
 from localization import get_locale
-from tool_flatfielder import FlatFieldingModel
+from ..tool_flatfielder import FlatFieldingModel
 import matplotlib.pyplot as plt
 from .denoising import reduce_noise, antiflash
 

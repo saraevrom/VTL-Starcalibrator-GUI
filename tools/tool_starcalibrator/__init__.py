@@ -13,13 +13,13 @@ from astropy.time import Time
 from astronomy import range_calculate, to_altaz
 import json
 from .random_roaming import RandomRoaming, maximize
-from tool_mat_converter import MatConverter
-from tool_flatfielder import FlatFieldingModel
+from ..tool_mat_converter import MatConverter
+from ..tool_flatfielder import FlatFieldingModel
 
 import matplotlib.pyplot as plt
 from parameters import MAIN_LATITUDE, MAIN_LONGITUDE
 from localization import get_locale
-from tool_base import ToolBase
+from ..tool_base import ToolBase
 
 class StarCalibrator(ToolBase):
     def __init__(self, master):
@@ -142,7 +142,7 @@ class StarCalibrator(ToolBase):
         return self.flat_field_opt(subframes)
 
     def flat_field_opt(self, data_array):
-        FILENAME = "../flat_fielding.json"
+        FILENAME = "../../flat_fielding.json"
         if not self.settings_dict["flatfielding"]:
             return data_array
         if os.path.isfile(FILENAME):
