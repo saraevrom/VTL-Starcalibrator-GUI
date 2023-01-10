@@ -132,10 +132,12 @@ class TrackMarkup(ToolBase):
         spawn_button.pack(side="bottom", expand=True, fill="both")
         tk.Button(bottom_panel, text=get_locale("track_markup.btn.track_fuzzy"),
                   command=self.redraw_event).pack(side="bottom", expand=True, fill="both")
-        tk.Button(bottom_panel, text=get_locale("track_markup.btn.track_yes"),
-                  command=self.on_track_visible_poll).pack(side="left", expand=True, fill="both")
-        tk.Button(bottom_panel, text=get_locale("track_markup.btn.track_no"),
-                  command=self.on_track_invisible_poll).pack(side="right", expand=True, fill="both")
+        self.yes_btn = tk.Button(bottom_panel, text=get_locale("track_markup.btn.track_yes"),
+                  command=self.on_track_visible_poll)
+        self.yes_btn.pack(side="left", expand=True, fill="both")
+        self.no_btn = tk.Button(bottom_panel, text=get_locale("track_markup.btn.track_no"),
+                  command=self.on_track_invisible_poll)
+        self.no_btn.pack(side="right", expand=True, fill="both")
 
         self.just_started =  True
         self.plotter.on_right_click_callback = self.popup_draw_signal
@@ -145,7 +147,21 @@ class TrackMarkup(ToolBase):
         self.event_in_queue = True, None
         self.selected_data.bind('<<ListboxSelect>>', self.on_review_trackless_select)
         self.rejected_data.bind('<<ListboxSelect>>', self.on_review_tracked_select)
+        self.highlight_button_update()
 
+
+    def highlight_button_update(self):
+        if self.just_started:
+            self.yes_btn.config(fg="red")
+            self.no_btn.config(fg="red")
+        else:
+            self.yes_btn.config(fg="black")
+            self.no_btn.config(fg="black")
+
+    def on_loaded_file_success(self):
+        self.reset_events()
+        self.just_started = True
+        self.highlight_button_update()
 
     def on_spawn_figure_press(self):
         self.ensure_figure(True)
@@ -276,6 +292,7 @@ class TrackMarkup(ToolBase):
         if self.just_started:
             self.reset_events()
             self.just_started = False
+            self.highlight_button_update()
         if self.current_event is None:
             self.show_next_event()
         else:
@@ -360,6 +377,7 @@ class TrackMarkup(ToolBase):
                 self.params_form.set_values(save_data["configuration"])
                 self.show_next_event()
                 self.just_started = False
+                self.highlight_button_update()
 
     def on_review_trackless_select(self, evt):
         return self.on_review_select_universal(evt, True)
