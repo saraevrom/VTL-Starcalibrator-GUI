@@ -10,7 +10,11 @@ class ToolBase(tk.Toplevel):
 
 
     def get_mat_file(self):
-        if hasattr(self,"master") and hasattr(self.master, "file"):
+        if hasattr(self, "master") and hasattr(self.master, "file"):
             self.file = self.master.file
             if self.file:
                 self.on_loaded_file_success()
+
+    def push_mat_file(self, file):
+        self.file = file
+        self.on_loaded_file_success()

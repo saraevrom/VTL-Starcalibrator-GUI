@@ -40,10 +40,10 @@ class FlatFieldingModel(object):
         pass
 
     def display_parameter_1(self):
-        return "flatfielder.nothing", None
+        return "tool_flatfielder.nothing", None
 
     def display_parameter_2(self):
-        return "flatfielder.nothing", None
+        return "tool_flatfielder.nothing", None
 
     def save(self, file_path):
         class_name = type(self).__name__
@@ -116,10 +116,10 @@ class Linear(FlatFieldingModel):
         self.set_broken(np.array(x_data["broken"]))
 
     def display_parameter_1(self):
-        return "flatfielder.coefficients.title", self.coefficients
+        return "tool_flatfielder.coefficients.title", self.coefficients
 
     def display_parameter_2(self):
-        return "flatfielder.baselevel.title", self.baseline
+        return "tool_flatfielder.baselevel.title", self.baseline
 
 
 class NonlinearSaturation(FlatFieldingModel):
@@ -144,10 +144,10 @@ class NonlinearSaturation(FlatFieldingModel):
         self.offset = np.array(x_data["offset"])
 
     def display_parameter_1(self):
-        return "flatfielder.saturation.title", self.saturation
+        return "tool_flatfielder.saturation.title", self.saturation
 
     def display_parameter_2(self):
-        return "flatfielder.response.title", self.response
+        return "tool_flatfielder.response.title", self.response
 
     def apply(self, pixel_data):
         inv_A = 1/self.saturation

@@ -10,7 +10,7 @@ from localization import get_locale
 from tk_forms import TkDictForm
 import numexpr as ne
 import time
-from flatfielder import FlatFieldingModel
+from tool_flatfielder import FlatFieldingModel
 
 FORM_CONF = {
     "use_filter": {

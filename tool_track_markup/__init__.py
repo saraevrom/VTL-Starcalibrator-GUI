@@ -11,7 +11,7 @@ import tkinter.messagebox
 import tkinter.filedialog
 import json
 from localization import get_locale
-from flatfielder import FlatFieldingModel
+from tool_flatfielder import FlatFieldingModel
 import matplotlib.pyplot as plt
 from .denoising import reduce_noise, antiflash
 
@@ -248,8 +248,8 @@ class TrackMarkup(ToolBase):
         if self.file:
             if not self.queue:
                 tk.messagebox.showinfo(
-                    get_locale("track_markup.messagebox.markup_done.title"),
-                    get_locale("track_markup.messagebox.markup_done.content"),
+                    get_locale("tool_track_markup.messagebox.markup_done.title"),
+                    get_locale("tool_track_markup.messagebox.markup_done.content"),
                     parent=self
                 )
                 self.retractable_event = False
