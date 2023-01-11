@@ -1,5 +1,6 @@
 from tkinter import ttk
 from plotter import GridPlotter
+from .dual_highlighting_plotter import DualHighlightingplotter
 from settings_frame import SettingMenu
 from .settings_build import build_settings
 from .signal_plotter import SignalPlotter
@@ -36,13 +37,15 @@ class FlatFielder(ToolBase):
         self.apparent_data = None
         super(FlatFielder, self).__init__(master)
         self.title(get_locale("flatfielder.title"))
-        self.coeff_plotter = GridPlotter(self)
+        self.coeff_plotter = DualHighlightingplotter(self)
         self.coeff_plotter.axes.set_title(get_locale("flatfielder.coefficients.title"))
         self.coeff_plotter.grid(row=0, column=0, sticky="nsew")
+        self.coeff_plotter.on_pair_click_callback = self.on_dual_draw
 
-        self.bg_plotter = GridPlotter(self)
+        self.bg_plotter = DualHighlightingplotter(self)
         self.bg_plotter.axes.set_title(get_locale("flatfielder.baselevel.title"))
         self.bg_plotter.grid(row=1, column=0, sticky="nsew")
+        self.bg_plotter.on_pair_click_callback = self.on_dual_draw
         self.settings_menu = SettingMenu(self)
         build_settings(self.settings_menu)
         self.settings_menu.grid(row=1, column=1, sticky="nsew")
@@ -67,8 +70,8 @@ class FlatFielder(ToolBase):
         btn.grid(row=2, column=0, sticky="ew")
         btn = ttk.Button(self, text=get_locale("flatfielder.btn.save"), command=self.on_save_press)
         btn.grid(row=3, column=0, sticky="ew")
-        btn = ttk.Button(self, text=get_locale("flatfielder.btn.random_plot"), command=self.on_random_draw)
-        btn.grid(row=4, column=0, sticky="ew")
+        #btn = ttk.Button(self, text=get_locale("flatfielder.btn.random_plot"), command=self.on_random_draw)
+        #btn.grid(row=4, column=0, sticky="ew")
         self.on_apply_settings()
 
     def sync_settings(self):
@@ -121,7 +124,7 @@ class FlatFielder(ToolBase):
             self.bg_plotter.update_matrix_plot(update_norm=True)
             self.bg_plotter.draw()
             self.remembered_model = model
-            self.draw_plot(model)
+            self.draw_plot()
             self.signal_plotter.draw()
             #np.save("flat_fielding.npy", draw_coeff_matrix)
 
@@ -139,7 +142,7 @@ class FlatFielder(ToolBase):
         self.propagate_limits()
         self.draw_plot()
 
-    def draw_plot(self, model=None):
+    def draw_plot(self):
         data0 = self.file["data0"]
         skip = self.settings_dict["samples_mean"]
         res_array = []
@@ -149,9 +152,9 @@ class FlatFielder(ToolBase):
         print(len(res_array))
         self.drawn_data = np.array(res_array)
         apparent_data = self.drawn_data
-        if model is not None:
-            apparent_data = model.apply(apparent_data)
-            broke = model.get_broken()
+        if (self.remembered_model is not None) and self.settings_dict["use_model"]:
+            apparent_data = self.remembered_model.apply(apparent_data)
+            broke = self.remembered_model.get_broken()
             apparent_data[:, broke] = 0
         self.apparent_data = apparent_data
         self.signal_plotter.plot_data(apparent_data)
@@ -160,38 +163,29 @@ class FlatFielder(ToolBase):
         self.signal_plotter.view_y(bottom, top)
         self.signal_plotter.set_yrange(0, top)
 
-    def on_random_draw(self):
-        if self.remembered_model is not None:
-            t1 = self.settings_dict["time_1"]
-            t2 = self.settings_dict["time_2"]
-            if t1 > t2:
-                t1, t2 = t2, t1
-            requested_data = self.apparent_data[t1:t2,:,:]
-            print("REQ_SHAPE", requested_data.shape)
-            assert (requested_data!=0).any()
-            model = self.remembered_model
-            tim_len, x_len, y_len = requested_data.shape
-
-            i1 = rng.randint(x_len)
-            j1 = rng.randint(y_len)
-            while model.is_broken(i1, j1):
-                i1 = rng.randint(x_len)
-                j1 = rng.randint(y_len)
-            i2 = rng.randint(x_len)
-            j2 = rng.randint(y_len)
-            while model.is_broken(i2, j2) or (i1 == i2 and j1 == j2):
-                i2 = rng.randint(x_len)
-                j2 = rng.randint(y_len)
-            S_1 = requested_data[:, i1, j1]
-            S_2 = requested_data[:, i2, j2]
-            print("S1", S_1)
-            print("req_data", requested_data[:, i1, j1])
-            fig, ax = plt.subplots()
-            ax.set_xlabel(f"S[{i1}, {j1}]")
-            ax.set_ylabel(f"S[{i2}, {j2}]")
-            ax.scatter(S_1, S_2)
-            # xs_test = np.array([min(S_1), max(S_1)])
-            # ys_test = draw_coeff_matrix[i2, j2] * (xs_test - draw_bg_matrix[i1, j1]) / draw_coeff_matrix[i1, j1] + \
-            #           draw_bg_matrix[i2, j2]
-            # ax.plot(xs_test, ys_test)
-            fig.show()
+    def on_dual_draw(self,p1,p2):
+        if self.apparent_data is None:
+            return
+        t1 = self.settings_dict["time_1"]
+        t2 = self.settings_dict["time_2"]
+        if t1 > t2:
+            t1, t2 = t2, t1
+        requested_data = self.apparent_data[t1:t2,:,:]
+        print("REQ_SHAPE", requested_data.shape)
+        assert (requested_data!=0).any()
+        i1, j1 = p1
+        i2, j2 = p2
+        S_1 = requested_data[:, i1, j1]
+        S_2 = requested_data[:, i2, j2]
+        print("S1", S_1)
+        print("req_data", requested_data[:, i1, j1])
+        fig, ax = plt.subplots()
+        ax.axis('equal')
+        ax.set_xlabel(f"S[{i1}, {j1}]")
+        ax.set_ylabel(f"S[{i2}, {j2}]")
+        ax.scatter(S_1, S_2)
+        # xs_test = np.array([min(S_1), max(S_1)])
+        # ys_test = draw_coeff_matrix[i2, j2] * (xs_test - draw_bg_matrix[i1, j1]) / draw_coeff_matrix[i1, j1] + \
+        #           draw_bg_matrix[i2, j2]
+        # ax.plot(xs_test, ys_test)
+        fig.show()

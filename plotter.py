@@ -58,6 +58,7 @@ class GridPlotter(Plotter):
 
         self.buffer_matrix = np.zeros((16, 16))
         self.alive_pixels_matrix = np.ones([2*HALF_PIXELS, 2*HALF_PIXELS]).astype(bool)
+        self.highlight_pixels_matrix = np.zeros([2*HALF_PIXELS, 2*HALF_PIXELS]).astype(bool)
         self.patches = []
         for y in LOWER_EDGES:
             row = []
@@ -146,7 +147,9 @@ class GridPlotter(Plotter):
         # print("Normalized:", time.time()-start_time)
         for j in range(2*HALF_PIXELS):
             for i in range(2*HALF_PIXELS):
-                if self.alive_pixels_matrix[i,j]:
+                if self.highlight_pixels_matrix[i, j]:
+                    self.patches[j][i].set_color(PLOT_HIGHLIGHT_COLOR)
+                elif self.alive_pixels_matrix[i, j]:
                     self.patches[j][i].set_color(PLOT_COLORMAP(self.norm(self.buffer_matrix[i, j])))
                 else:
                     self.patches[j][i].set_color(PLOT_BROKEN_COLOR)
@@ -159,6 +162,15 @@ class GridPlotter(Plotter):
 
     def toggle_broken(self, i, j):
         self.alive_pixels_matrix[i, j] = not self.alive_pixels_matrix[i, j]
+
+    def clear_highlight(self):
+        self.highlight_pixels_matrix = np.zeros([2*HALF_PIXELS, 2*HALF_PIXELS]).astype(bool)
+
+    def highlight_pixel(self, i, j):
+        self.highlight_pixels_matrix[i, j] = True
+
+    def highlighted_pixels_query(self):
+        return np.array(np.where(self.highlight_pixels_matrix)).T
 
     def on_plot_click(self, event):
         if (event.xdata is not None) and (event.ydata is not None):
