@@ -4,10 +4,7 @@ import tkinter as tk
 from tkinter import ttk
 import tkinter.filedialog as filedialog
 import h5py
-from tools.tool_mat_converter import MatConverter
-from tools.tool_flatfielder import FlatFielder
-from tools.tool_mat_player import MatPlayer
-from tools.tool_track_markup import TrackMarkup
+from tools import add_tools
 
 from localization import get_locale
 from tools.tool_starcalibrator import StarCalibrator
@@ -41,11 +38,7 @@ class App(tk.Tk):
         self.tool_list = []
         self.main_notebook = ttk.Notebook(self)
         self.main_notebook.pack(side="top",fill="both",expand=True)
-        self.add_tool("app.menu.tools.mat_player", MatPlayer)
-        self.add_tool("app.menu.tools.starcalibrator", StarCalibrator)
-        self.add_tool("app.menu.tools.mat_converter", MatConverter)
-        self.add_tool("app.menu.tools.flatfielder", FlatFielder)
-        self.add_tool("app.menu.tools.track_markup", TrackMarkup)
+        add_tools(self.add_tool)
 
 
 

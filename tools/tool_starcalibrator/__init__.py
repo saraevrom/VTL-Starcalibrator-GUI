@@ -142,7 +142,7 @@ class StarCalibrator(ToolBase):
         return self.flat_field_opt(subframes)
 
     def flat_field_opt(self, data_array):
-        FILENAME = "../../flat_fielding.json"
+        FILENAME = "flat_fielding.json"
         if not self.settings_dict["flatfielding"]:
             return data_array
         if os.path.isfile(FILENAME):

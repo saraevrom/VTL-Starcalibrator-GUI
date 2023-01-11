@@ -13,7 +13,7 @@ import json
 from localization import get_locale
 from ..tool_flatfielder import FlatFieldingModel
 import matplotlib.pyplot as plt
-from .denoising import reduce_noise, antiflash
+from .denoising import reduce_noise, antiflash, moving_average_subtract
 
 OFF = get_locale("app.state_off")
 ON = get_locale("app.state_on")
@@ -68,6 +68,7 @@ FORM_CONF = {
     },
 
 }
+
 
 def try_append_event(target_list,start,end):
     ok = True
@@ -404,9 +405,10 @@ class TrackMarkup(ToolBase):
         form_data = self.params_form.get_values()
         win = form_data["filter_win"]
 
-        if signal.shape[0]>=win:
-            filtered_bg = np.mean(sliding_window_view(signal, axis=0, window_shape=win), axis=-1)
-            plot_data = signal[win // 2: win // 2 + filtered_bg.shape[0]] - filtered_bg
+        if signal.shape[0] >= win:
+            plot_data = moving_average_subtract(signal, win)
+            #filtered_bg = np.mean(sliding_window_view(signal, axis=0, window_shape=win), axis=-1)
+            #plot_data = signal[win // 2: win // 2 + filtered_bg.shape[0]] - filtered_bg
         else:
             plot_data = signal - np.mean(signal, axis=0)
 

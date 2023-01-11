@@ -3,6 +3,7 @@ from numpy.lib.stride_tricks import sliding_window_view
 from parameters import NPROC
 from multiprocessing import Pool
 import numba as nb
+from numba import prange
 
 BATCH = 1000
 
@@ -26,9 +27,25 @@ def divide_multidim(a,b):
         return a/b
 
 
+@nb.njit(parallel=True)
+def sliding_std(src, win):
+    meansq_array = np.zeros(src.shape)
+    sqmean_array = np.zeros(src.shape)
+    lhalf = win//2
+    for j in range(win):
+        for i in prange(src.shape[0]):
+            ti = i*1  # Otherwise "overwrite parallel index" error will occur...
+            if ti < lhalf:
+                ti = lhalf  # ...here
+            elif ti > src.shape[0]-win+lhalf:
+                ti = src.shape[0]-win+lhalf
+            meansq_array[i] += src[ti-lhalf+j]**2
+            sqmean_array[i] += src[ti-lhalf+j]
+    return np.sqrt(meansq_array / win - (sqmean_array / win)**2)
+
 #numba aka gotta go fast
 @nb.njit()
-def sliding_std(data, window_size):
+def sliding_std_old(data, window_size):
     output_shape = data.shape
     #output_shape[0] = output_shape[0]-window_size+1
     res_array = np.zeros(output_shape)
@@ -57,24 +74,28 @@ def reduce_noise(data,sliding_win):
         std = np.std(data,axis=0)
         return divide_multidim(data, std)
     else:
-        #slider = sliding_window_view(data, window_shape=sliding_win, axis=0)
-        #slided_std = [np.std(slider[i], axis=-1) for i in range(slider.shape[0])]
-        # batches = []
-        # for i in range(0,slider.shape[0],BATCH):
-        #     batch_start = i
-        #     batch_end = min(i+BATCH, slider.shape[0])
-        #     batches.append(np.std(slider[batch_start:batch_end], axis=-1))
-        # slided_std = np.concatenate(batches)
-
-        #slided_std = np.array(slided_std)
-        #slided_std = sliding_std(slider)
-
-        #slided_std = np.std(slider, axis=-1)  #Somehow requires lot of memory
-        slided_std = sliding_std(data,sliding_win)
-        lower_bound = sliding_win//2 # sliding window can be odd
-        upper_bound = lower_bound+slided_std.shape[0]
-        ret_data = np.zeros(data.shape)
-        ret_data[lower_bound:upper_bound] = divide_multidim(data[lower_bound:upper_bound], slided_std)
-        ret_data[:lower_bound] = divide_multidim(data[:lower_bound], slided_std[0])
-        ret_data[upper_bound:] = divide_multidim(data[upper_bound:], slided_std[-1])
+        std = sliding_std(data, sliding_win)
+        ret_data = divide_multidim(data, std)
         return ret_data
+
+
+
+@nb.njit(parallel=True)
+def moving_average_edged(src, win):
+    res_array = np.zeros(src.shape)
+    lhalf = win//2
+    for j in range(win):
+        for i in prange(src.shape[0]):
+            ti = i*1  # Otherwise "overwrite parallel index" error will occur...
+            if ti < lhalf:
+                ti = lhalf  # ...here
+            elif ti > src.shape[0]-win+lhalf:
+                ti = src.shape[0]-win+lhalf
+            res_array[i] += src[ti-lhalf+j]
+    return res_array / win
+
+
+@nb.njit()
+def moving_average_subtract(src, win):
+    average = moving_average_edged(src, win)
+    return src - average
