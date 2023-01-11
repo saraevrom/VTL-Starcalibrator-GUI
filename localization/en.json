@@ -6,7 +6,7 @@
   "flatfielder.saturation.title": "Saturation",
 
   "flatfielder.btn.coeffs_calculate": "Calculate coefficients",
-  "flatfielder.btn.save": "Save data",
+  "flatfielder.btn.save": "Save coefficients",
   "flatfielder.btn.random_plot": "Draw random pair of pixels",
   "flatfielder.form.field.time_1": "Point 1",
   "flatfielder.form.field.time_2": "Point 2",

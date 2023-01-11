@@ -116,10 +116,10 @@ class Linear(FlatFieldingModel):
         self.set_broken(np.array(x_data["broken"]))
 
     def display_parameter_1(self):
-        return "tool_flatfielder.coefficients.title", self.coefficients
+        return "flatfielder.coefficients.title", self.coefficients
 
     def display_parameter_2(self):
-        return "tool_flatfielder.baselevel.title", self.baseline
+        return "flatfielder.baselevel.title", self.baseline
 
 
 class NonlinearSaturation(FlatFieldingModel):
