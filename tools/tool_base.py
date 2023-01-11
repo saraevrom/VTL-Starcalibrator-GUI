@@ -23,3 +23,9 @@ class ToolBase(tk.Frame):
     def propagate_mat_file(self, file):
         self.file = file
         self.on_loaded_file_success()
+
+    def get_ff_model(self):
+        return self.winfo_toplevel().get_ffmodel()
+
+    def trigger_ff_model_reload(self):
+        self.winfo_toplevel().reload_ffmodel()

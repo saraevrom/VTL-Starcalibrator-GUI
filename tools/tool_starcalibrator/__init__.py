@@ -14,7 +14,6 @@ from astronomy import range_calculate, to_altaz
 import json
 from .random_roaming import RandomRoaming, maximize
 from ..tool_mat_converter import MatConverter
-from ..tool_flatfielder import FlatFieldingModel
 
 import matplotlib.pyplot as plt
 from parameters import MAIN_LATITUDE, MAIN_LONGITUDE
@@ -24,7 +23,6 @@ from ..tool_base import ToolBase
 class StarCalibrator(ToolBase):
     def __init__(self, master):
         super(StarCalibrator, self).__init__(master)
-        self.flat_field_model = None
         self.title(get_locale("app.title"))
 
         leftpanel = tk.Frame(self)
@@ -122,7 +120,15 @@ class StarCalibrator(ToolBase):
                         self.plot.set_line(star.identifier, xs, ys, star.name)
                 else:
                     self.plot.remove_line(star.identifier)
+
             # print("SCORE_raw:", self.calculate_score(*self.get_parameters()))
+
+    def refresh_broken_pixels(self):
+        model = self.get_ff_model()
+        if model:
+            broke = model.broken_query()
+            self.plot.set_broken(broke)
+            self.broken = broke.T
 
     def read_segment(self):
         f1, f2 = self.cut_frames()
@@ -142,20 +148,14 @@ class StarCalibrator(ToolBase):
         return self.flat_field_opt(subframes)
 
     def flat_field_opt(self, data_array):
-        FILENAME = "flat_fielding.json"
         if not self.settings_dict["flatfielding"]:
             return data_array
-        if os.path.isfile(FILENAME):
-            if self.flat_field_model is None:
-                self.flat_field_model = FlatFieldingModel.load(FILENAME)
-                broke = self.flat_field_model.broken_query()
-                # print("BROKEN:", broke)
-                self.plot.set_broken(broke)
-                self.broken = broke.T
-            retdata = self.flat_field_model.apply(data_array)
-            return retdata
-        else:
+        flat_field_model = self.get_ff_model()
+        if flat_field_model is None:
             return data_array
+        # print("BROKEN:", broke)
+        retdata = flat_field_model.apply(data_array)
+        return retdata
 
     def refresh_bg(self):
         if self.file:
@@ -169,6 +169,7 @@ class StarCalibrator(ToolBase):
 
             self.plot.buffer_matrix = frame
             self.plot.update_matrix_plot(True)
+            self.refresh_broken_pixels()
             self.plot.draw()
 
     def read_stars(self):
@@ -267,8 +268,9 @@ class StarCalibrator(ToolBase):
                     signal = signal - bg
                     t1 += win//2
                     t2 = t1+signal.shape[0]
-            if self.flat_field_model is not None:
-                signal = self.flat_field_model.apply_single(signal, i, j)
+            flat_field_model = self.get_ff_model()
+            if flat_field_model is not None:
+                signal = flat_field_model.apply_single(signal, i, j)
             fig, ax = plt.subplots()
             xs = np.arange(t1, t2)
             ax.plot(xs, signal)
@@ -277,7 +279,6 @@ class StarCalibrator(ToolBase):
 
 
     def on_loaded_file_success(self):
-            self.flat_field_model = None
             self.t1_setting.set_limits(0, len(self.file["data0"])-1)
             self.t2_setting.set_limits(0, len(self.file["data0"])-1)
             self.refresh()

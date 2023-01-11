@@ -32,7 +32,6 @@ class MatPlayer(ToolBase):
         super(MatPlayer, self).__init__(master)
         self.title(get_locale("matplayer.title"))
         self.file = None
-        self.ffmodel = None
         self.form = TkDictForm(self,FORM_CONF)
         self.form.pack(side=tk.RIGHT, fill=tk.Y)
         self.plotter = GridPlotter(self)
@@ -41,11 +40,6 @@ class MatPlayer(ToolBase):
         self.player_controls.pack(side=tk.BOTTOM, fill=tk.X)
         self.get_mat_file()
         self.form_data = self.form.get_values()
-        if os.path.isfile("flat_fielding.json"):
-            model: FlatFieldingModel
-            model = FlatFieldingModel.load("flat_fielding.json")
-            self.ffmodel = model
-            self.plotter.set_broken(model.broken_query())
 
     def on_frame_draw(self, frame_num):
         if self.file:
@@ -56,14 +50,15 @@ class MatPlayer(ToolBase):
             ut0 = self.ut0_s[frame_num]
             #ut0 = self.file["UT0"][frame_num]
             time_str = datetime.utcfromtimestamp(ut0).strftime('%Y-%m-%d %H:%M:%S')
+            ffmodel = self.get_ff_model()
             if self.form_data["use_filter"]:
                 window = self.form_data["filter_window"]
                 #print("PING!", window)
                 slide_bg = np.median(self.file["data0"][frame_num:frame_num+window],axis=0)
-                if (self.ffmodel is not None) and self.form_data["use_flatfielding"]:
-                    frame = self.ffmodel.apply(self.file["data0"][frame_num]) - self.ffmodel.apply(slide_bg)
-            elif (self.ffmodel is not None) and self.form_data["use_flatfielding"]:
-                frame = self.ffmodel.apply(frame)
+                if (ffmodel is not None) and self.form_data["use_flatfielding"]:
+                    frame = ffmodel.apply(self.file["data0"][frame_num]) - ffmodel.apply(slide_bg)
+            elif (ffmodel is not None) and self.form_data["use_flatfielding"]:
+                frame = ffmodel.apply(frame)
             self.plotter.buffer_matrix = frame
             self.plotter.update_matrix_plot(True)
             self.plotter.axes.set_title(time_str)
@@ -78,3 +73,6 @@ class MatPlayer(ToolBase):
         self.player_controls.set_limit(len(self.file["UT0"]))
         self.frames = np.array(self.file["data0"])
         self.ut0_s = np.array(self.file["UT0"])
+        ffmodel = self.get_ff_model()
+        if ffmodel:
+            self.plotter.set_broken(ffmodel.broken_query())

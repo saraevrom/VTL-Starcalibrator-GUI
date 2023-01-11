@@ -132,6 +132,7 @@ class FlatFielder(ToolBase):
             dead2 = np.logical_not(self.bg_plotter.alive_pixels_matrix)
             model.set_broken(np.logical_or(dead1,dead2))
             model.save("flat_fielding.json")
+            self.trigger_ff_model_reload()
 
 
     def on_loaded_file_success(self):

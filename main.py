@@ -5,6 +5,7 @@ from tkinter import ttk
 import tkinter.filedialog as filedialog
 import h5py
 from tools import add_tools
+from tools.tool_flatfielder import FlatFieldingModel
 
 from localization import get_locale
 from tools.tool_starcalibrator import StarCalibrator
@@ -35,6 +36,7 @@ class App(tk.Tk):
         #self.topmenu.add_cascade(label=get_locale("app.menu.tools"), menu=self.toolsmenu)
         self.config(menu=self.topmenu)
         self.file = None
+        self.ffmodel = None
         self.tool_list = []
         self.main_notebook = ttk.Notebook(self)
         self.main_notebook.pack(side="top",fill="both",expand=True)
@@ -68,6 +70,16 @@ class App(tk.Tk):
             self.file.close()
             self.file = None
 
+    def reload_ffmodel(self):
+        if os.path.isfile("flat_fielding.json"):
+            model: FlatFieldingModel
+            model = FlatFieldingModel.load("flat_fielding.json")
+            self.ffmodel = model
+
+    def get_ffmodel(self):
+        if self.ffmodel == None:
+            self.reload_ffmodel()
+        return self.ffmodel
 
 
 

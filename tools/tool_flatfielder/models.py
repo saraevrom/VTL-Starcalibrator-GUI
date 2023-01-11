@@ -144,10 +144,10 @@ class NonlinearSaturation(FlatFieldingModel):
         self.offset = np.array(x_data["offset"])
 
     def display_parameter_1(self):
-        return "tool_flatfielder.saturation.title", self.saturation
+        return "flatfielder.saturation.title", self.saturation
 
     def display_parameter_2(self):
-        return "tool_flatfielder.response.title", self.response
+        return "flatfielder.response.title", self.response
 
     def apply(self, pixel_data):
         inv_A = 1/self.saturation

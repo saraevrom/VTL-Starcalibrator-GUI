@@ -101,7 +101,6 @@ class TrackMarkup(ToolBase):
         self.queue = []
         self.trackless_events = []
         self.tracked_events = []
-        self.model = None
         self.last_single_plot_data = None
 
         self.current_event = None
@@ -176,15 +175,6 @@ class TrackMarkup(ToolBase):
             ax.set_title("Pixels")
         return self.last_single_plot_data
 
-    def ensure_model_ifpresent(self):
-        if self.model:
-            return True
-        if os.path.isfile("flat_fielding.json"):
-            if self.model is None:
-                self.model = FlatFieldingModel.load("flat_fielding.json")
-            return True
-        else:
-            return False
 
     def on_reset(self):
         if tkinter.messagebox.askokcancel(
@@ -230,9 +220,10 @@ class TrackMarkup(ToolBase):
             event_start, event_end = self.current_event
             plot_data = self.file["data0"][event_start:event_end]
 
-            if self.ensure_model_ifpresent():
-                plot_data = self.model.apply(plot_data)
-                self.plotter.set_broken(self.model.broken_query())
+            model = self.get_ff_model()
+            if model:
+                plot_data = model.apply(plot_data)
+                self.plotter.set_broken(model.broken_query())
 
             plot_data = self.apply_filter(plot_data)
             plot_data = np.max(plot_data, axis=0)
@@ -422,8 +413,9 @@ class TrackMarkup(ToolBase):
         if self.file and self.current_event:
             t1, t2 = self.current_event
             signal = self.file["data0"][t1:t2]
-            if self.ensure_model_ifpresent():
-                signal = self.model.apply(signal)
+            model = self.get_ff_model()
+            if model:
+                signal = model.apply(signal)
                 signal[:, np.logical_not(self.plotter.alive_pixels_matrix)] = 0
 
             plot_data = self.apply_filter(signal)
@@ -445,8 +437,9 @@ class TrackMarkup(ToolBase):
         if self.file and self.current_event:
             t1, t2 = self.current_event
             signal = self.file["data0"][t1:t2, i, j]
-            if self.ensure_model_ifpresent():
-                signal = self.model.apply_single_nobreak(signal, i, j)
+            model = self.get_ff_model()
+            if model:
+                signal = model.apply_single_nobreak(signal, i, j)
 
             plot_data = self.apply_filter(signal)
 
