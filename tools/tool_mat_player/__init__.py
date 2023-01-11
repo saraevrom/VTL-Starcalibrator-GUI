@@ -32,6 +32,7 @@ class MatPlayer(ToolBase):
         super(MatPlayer, self).__init__(master)
         self.title(get_locale("matplayer.title"))
         self.file = None
+        self.ffmodel = None
         self.form = TkDictForm(self,FORM_CONF)
         self.form.pack(side=tk.RIGHT, fill=tk.Y)
         self.plotter = GridPlotter(self)
