@@ -81,6 +81,9 @@ class StarCalibrator(ToolBase):
         t2 = self.settings_dict["time_2"]
         if t1 > t2:
             t1, t2 = t2, t1
+            self.settings_dict["time_1"] = t1
+            self.settings_dict["time_2"] = t2
+            self.settings_push(["time_1", "time_2"])
 
         return t1, t2
 

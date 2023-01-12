@@ -12,6 +12,7 @@ from astronomy import find_index
 matplotlib.use("TkAgg")
 from parameters import *
 from localization import get_locale
+from parameters import SCALE_FLOATING_POINT_FORMAT
 import time
 
 LOWER_EDGES = np.arange(HALF_PIXELS)*PIXEL_SIZE+HALF_GAP_SIZE
@@ -107,18 +108,18 @@ class GridPlotter(Plotter):
         if self.use_autoscale_var.get():
             low = low_fallback
             high = high_fallback
-            self.max_norm_entry.set(str(high_fallback))
-            self.min_norm_entry.set(str(low_fallback))
+            self.max_norm_entry.set(SCALE_FLOATING_POINT_FORMAT.format(high_fallback))
+            self.min_norm_entry.set(SCALE_FLOATING_POINT_FORMAT.format(low_fallback))
         else:
             try:
                 low = float(self.min_norm_entry.get())
             except ValueError:
-                self.min_norm_entry.set(str(low_fallback))
+                self.min_norm_entry.set(SCALE_FLOATING_POINT_FORMAT.format(low_fallback))
                 low = low_fallback
             try:
                 high = float(self.max_norm_entry.get())
             except ValueError:
-                self.max_norm_entry.set(str(high_fallback))
+                self.max_norm_entry.set(SCALE_FLOATING_POINT_FORMAT.format(high_fallback))
                 high = high_fallback
 
         if low > high:
@@ -127,7 +128,7 @@ class GridPlotter(Plotter):
         if self.norm is None:
             self.norm = Normalize(low, high)
         else:
-            # M agic: pyplot requires to assign twice
+            # Magic: pyplot requires to assign twice
             self.norm.vmin = low
             self.norm.vmin = low
             self.norm.vmax = high

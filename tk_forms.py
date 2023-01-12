@@ -33,16 +33,19 @@ class ScrollView(ttk.Frame):
         self.v_scrollbar = tk.Scrollbar(self,orient="vertical",command = self.canvas.yview)
         self.h_scrollbar = tk.Scrollbar(self,orient="horizontal",command = self.canvas.xview)
 
-
         self.contents = tk.Frame(self.canvas)
         self.contents.bind("<Configure>", self.on_content_change)
         self.drawn_window_id = self.canvas.create_window((0,0), window=self.contents,anchor="nw")
         self.canvas.configure(yscrollcommand=self.v_scrollbar.set,xscrollcommand=self.h_scrollbar.set)
-        self.h_scrollbar.pack(side="bottom",fill="x")
-        self.v_scrollbar.pack(side="right",fill="y")
-        self.canvas.pack(side="left",fill="both",expand=True)
+        # self.h_scrollbar.pack(side="bottom", fill="x")
+        # self.v_scrollbar.pack(side="right", fill="y")
+        # self.canvas.pack(side="left", fill="both", expand=True)
+        self.canvas.grid(row=0, column=0, sticky="nsew")
+        self.h_scrollbar.grid(row=1, column=0, sticky="nsew", columnspan=2)
+        self.v_scrollbar.grid(row=0, column=1, sticky="nsew")
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
         self.canvas.bind("<Configure>", self.on_canvas_change)
-
 
     def on_content_change(self,event):
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
@@ -127,7 +130,7 @@ class IntEntry(ConfigEntry):
         super().__init__(name,master,conf,color_index)
         tk.Label(self.frame,text=conf["display_name"]).pack(side="left",fill="both")
         self.textvar = tk.StringVar(master)
-        tk.Entry(self.frame,textvar=self.textvar).pack(side="left",fill="both")
+        tk.Entry(self.frame, textvar=self.textvar).pack(side="left",fill="both")
 
     def set_value(self,newval):
         self.textvar.set(str(newval))

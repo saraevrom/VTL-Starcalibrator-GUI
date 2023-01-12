@@ -21,9 +21,9 @@ class Starlist(ScrollableFrame):
         name = name_a_star(row)
         mag = row["Mag"]
         new_var = tkinter.IntVar(self)
-        new_var.trace("w",self.on_selection_change)
-        new_entry = tkinter.Checkbutton(self.view_port, text=f"{mag} {name}", variable=new_var)
-        new_entry.grid(row=len(self.stars), column=0, sticky="ew")
+        new_var.trace("w", self.on_selection_change)
+        new_entry = tkinter.Checkbutton(self.contents, text=f"{mag} {name}", variable=new_var)
+        new_entry.grid(row=len(self.stars), column=0, sticky="w")
         self.stars.append((Star.from_row(row), new_entry, new_var))
 
     def clear_stars(self):

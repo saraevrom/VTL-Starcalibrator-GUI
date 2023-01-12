@@ -8,8 +8,8 @@ from .tool_dataset_generation import DatasetGenerator
 
 def add_tools(adder):
         adder("app.menu.tools.mat_player", MatPlayer)
-        adder("app.menu.tools.starcalibrator", StarCalibrator)
         adder("app.menu.tools.mat_converter", MatConverter)
         adder("app.menu.tools.flatfielder", FlatFielder)
+        adder("app.menu.tools.starcalibrator", StarCalibrator)
         adder("app.menu.tools.track_markup", TrackMarkup)
         adder("app.menu.tools.dataset_generator", DatasetGenerator)

@@ -46,7 +46,7 @@ class FlatFielder(ToolBase):
         self.bg_plotter.axes.set_title(get_locale("flatfielder.baselevel.title"))
         self.bg_plotter.grid(row=1, column=0, sticky="nsew")
         self.bg_plotter.on_pair_click_callback = self.on_dual_draw
-        self.settings_menu = SettingMenu(self)
+        self.settings_menu = SettingMenu(self,True)
         build_settings(self.settings_menu)
         self.settings_menu.grid(row=1, column=1, sticky="nsew")
         self.signal_plotter = SignalPlotter(self)
@@ -67,15 +67,25 @@ class FlatFielder(ToolBase):
         self.drawn_data = None
 
         btn = ttk.Button(self, text=get_locale("flatfielder.btn.coeffs_calculate"), command=self.on_calculate)
-        btn.grid(row=2, column=0, sticky="ew")
+        btn.grid(row=2, column=1, sticky="ew")
         btn = ttk.Button(self, text=get_locale("flatfielder.btn.save"), command=self.on_save_press)
-        btn.grid(row=3, column=0, sticky="ew")
+        btn.grid(row=3, column=1, sticky="ew")
         #btn = ttk.Button(self, text=get_locale("flatfielder.btn.random_plot"), command=self.on_random_draw)
         #btn.grid(row=4, column=0, sticky="ew")
         self.on_apply_settings()
 
     def sync_settings(self):
         self.settings_menu.push_settings_dict(self.settings_dict)
+        t1 = self.settings_dict["time_1"]
+        t2 = self.settings_dict["time_2"]
+        if t1 > t2:
+            t1, t2 = t2, t1
+            self.settings_dict["time_1"] = t1
+            self.settings_dict["time_2"] = t2
+            self.back_sync_settings(["time_1", "time_2"])
+
+    def back_sync_settings(self, keys=None):
+        self.settings_menu.pull_settings_dict(self.settings_dict, keys)
 
     def propagate_limits(self):
         maxlen = len(self.file["data0"]) // self.settings_dict["samples_mean"] - 1
@@ -96,8 +106,7 @@ class FlatFielder(ToolBase):
         if self.drawn_data is not None:
             t1 = self.settings_dict["time_1"]
             t2 = self.settings_dict["time_2"]
-            if t1 > t2:
-                t1, t2 = t2, t1
+            assert t2>t1
             requested_data = self.drawn_data[t1:t2]
 
             used_algo = self.settings_dict["used_algo"]
@@ -139,8 +148,9 @@ class FlatFielder(ToolBase):
 
 
     def on_loaded_file_success(self):
-        self.propagate_limits()
-        self.draw_plot()
+        self.on_apply_settings()
+        #self.propagate_limits()
+        #self.draw_plot()
 
     def draw_plot(self):
         data0 = self.file["data0"]
@@ -149,7 +159,6 @@ class FlatFielder(ToolBase):
         for i in range(0, len(data0), skip):
             layer = np.mean(data0[i:i+skip], axis=0)
             res_array.append(layer)
-        print(len(res_array))
         self.drawn_data = np.array(res_array)
         apparent_data = self.drawn_data
         if (self.remembered_model is not None) and self.settings_dict["use_model"]:
@@ -171,14 +180,11 @@ class FlatFielder(ToolBase):
         if t1 > t2:
             t1, t2 = t2, t1
         requested_data = self.apparent_data[t1:t2,:,:]
-        print("REQ_SHAPE", requested_data.shape)
         assert (requested_data!=0).any()
         i1, j1 = p1
         i2, j2 = p2
         S_1 = requested_data[:, i1, j1]
         S_2 = requested_data[:, i2, j2]
-        print("S1", S_1)
-        print("req_data", requested_data[:, i1, j1])
         fig, ax = plt.subplots()
         ax.axis('equal')
         ax.set_xlabel(f"S[{i1}, {j1}]")
