@@ -39,18 +39,25 @@ class SettingFormatError(Exception):
 
 
 class Setting(tk.Frame):
-    def __init__(self, master, setting_key, initial_value):
+    def __init__(self, master, setting_key, initial_value, sensitive=False):
         super(Setting, self).__init__(master)
         self.setting_key = setting_key
         self.initial_value = initial_value
         self.build_setting(self)
         self.reset()
+        self.sensitive = sensitive
 
     def add_tracer(self, callback):
         raise NotImplementedError("Required to trace setting")
 
-    def add_on_edit_end_callback(self, callback):
+    def add_on_edit_end_callback_nosensitive(self, callback):
         raise NotImplementedError("Required to trace editing done")
+
+    def add_on_edit_end_callback(self, callback):
+        if self.sensitive:
+            self.add_tracer(callback)
+        else:
+            self.add_on_edit_end_callback_nosensitive(callback)
 
     def build_setting(self, frame):
         raise NotImplementedError("Required to use setting")
@@ -79,8 +86,8 @@ class Setting(tk.Frame):
 
 
 class EntryValue(Setting):
-    def __init__(self, master, setting_key, initial_value, dtype=str):
-        super(EntryValue, self).__init__(master, setting_key, initial_value)
+    def __init__(self, master, setting_key, initial_value, dtype=str, sensitive=False):
+        super(EntryValue, self).__init__(master, setting_key, initial_value, sensitive=sensitive)
         self.dtype = dtype
 
     def add_tracer(self, callback):
@@ -106,8 +113,8 @@ class EntryValue(Setting):
 
 
 class CheckboxValue(Setting):
-    def __init__(self, master, setting_key, initial_value):
-        super(CheckboxValue, self).__init__(master, setting_key, initial_value)
+    def __init__(self, master, setting_key, initial_value, sensitive=False):
+        super(CheckboxValue, self).__init__(master, setting_key, initial_value,sensitive=sensitive)
 
     def add_tracer(self, callback):
         self.entryvar.trace("w",callback)
@@ -122,18 +129,18 @@ class CheckboxValue(Setting):
     def set_value(self, value):
         self.entryvar.set(int(value))
 
-    def add_on_edit_end_callback(self, callback):
+    def add_on_edit_end_callback_nosensitive(self, callback):
         self.entryvar.trace("w", callback)
 
 
 class RangeDoubleValue(Setting):
-    def __init__(self, master, setting_key, initial_value, start, end, step=0.01, fmt="%.2f"):
+    def __init__(self, master, setting_key, initial_value, start, end, step=0.01, fmt="%.2f", sensitive=False):
         self.start = start
         self.end = end
         self.step = step
         self.fmt = fmt
         self.old_value = 0.0
-        super(RangeDoubleValue, self).__init__(master, setting_key, initial_value)
+        super(RangeDoubleValue, self).__init__(master, setting_key, initial_value,sensitive=sensitive)
 
     def validate_value(self,var):
         new_value = var.get()
@@ -146,7 +153,7 @@ class RangeDoubleValue(Setting):
     def add_tracer(self, callback):
         self.entryvar.trace("w", callback)
 
-    def add_on_edit_end_callback(self, callback):
+    def add_on_edit_end_callback_nosensitive(self, callback):
         self.entry_field.bind("<FocusOut>", callback)
 
     def build_setting(self, frame):
@@ -159,17 +166,20 @@ class RangeDoubleValue(Setting):
     def get_value(self):
         strval = self.entry_field.get()
         if strval:
-            intval = float(strval)
-            if intval > self.end:
-                self.entry_field.set(str(self.end))
-                return self.end
-            elif intval < self.start:
-                self.entry_field.set(str(self.start))
-                return self.start
-            else:
-                return intval
+            try:
+                floatval = float(strval)
+                if floatval > self.end:
+                    self.entry_field.set(str(self.end))
+                    return self.end
+                elif floatval < self.start:
+                    self.entry_field.set(str(self.start))
+                    return self.start
+                else:
+                    return floatval
+            except:
+                return self.initial_value
         else:
-            return 0
+            return self.initial_value
 
     def set_value(self, value):
         self.entry_field.set(str(value))
@@ -179,11 +189,11 @@ class RangeDoubleValue(Setting):
 
 
 class RangeIntValue(Setting):
-    def __init__(self, master, setting_key, initial_value, start, end):
+    def __init__(self, master, setting_key, initial_value, start, end, sensitive=False):
         self.start = start
         self.end = end
         self.old_value = 0
-        super(RangeIntValue, self).__init__(master, setting_key, initial_value)
+        super(RangeIntValue, self).__init__(master, setting_key, initial_value, sensitive=sensitive)
 
 
     def validate_value(self,var):
@@ -197,7 +207,7 @@ class RangeIntValue(Setting):
     def add_tracer(self, callback):
         self.entryvar.trace("w", callback)
 
-    def add_on_edit_end_callback(self, callback):
+    def add_on_edit_end_callback_nosensitive(self, callback):
         self.entry_field.bind("<FocusOut>", callback)
 
     def build_setting(self, frame):
@@ -221,17 +231,20 @@ class RangeIntValue(Setting):
     def get_value(self):
         strval = self.entry_field.get()
         if strval:
-            intval = int(strval)
-            if intval>self.end:
-                self.entry_field.set(str(self.end))
-                return self.end
-            elif intval<self.start:
-                self.entry_field.set(str(self.start))
-                return self.start
-            else:
-                return intval
+            try:
+                intval = int(strval)
+                if intval>self.end:
+                    self.entry_field.set(str(self.end))
+                    return self.end
+                elif intval<self.start:
+                    self.entry_field.set(str(self.start))
+                    return self.start
+                else:
+                    return intval
+            except ValueError:
+                return self.initial_value
         else:
-            return 0
+            return self.initial_value
 
     def set_value(self, value):
         self.entry_field.set(str(value))
@@ -239,12 +252,12 @@ class RangeIntValue(Setting):
 
 
 class SliderRangeDoubleValue(Setting):
-    def __init__(self, master, setting_key, initial_value, start, end, fmt="{:.2f}"):
+    def __init__(self, master, setting_key, initial_value, start, end, fmt="{:.2f}", sensitive=False):
         self.start = start
         self.end = end
         self.fmt = fmt
         self.tracing = dict()
-        super(SliderRangeDoubleValue, self).__init__(master, setting_key, initial_value)
+        super(SliderRangeDoubleValue, self).__init__(master, setting_key, initial_value,sensitive=sensitive)
 
     def build_setting(self, frame):
         self.srcvar = tk.DoubleVar(self)
@@ -264,10 +277,10 @@ class SliderRangeDoubleValue(Setting):
         self.entry_field.set(value)
 
 class ComboboxValue(Setting):
-    def __init__(self, master, setting_key, initial_value, options):
+    def __init__(self, master, setting_key, initial_value, options, sensitive=False):
         initial_value = options[0]
         self.listbox_options = options
-        super(ComboboxValue, self).__init__(master, setting_key, initial_value)
+        super(ComboboxValue, self).__init__(master, setting_key, initial_value, sensitive=sensitive)
 
     def build_setting(self, frame):
         self.combobox_variable = tk.StringVar(frame)
@@ -283,7 +296,7 @@ class ComboboxValue(Setting):
     def add_tracer(self, callback):
         self.combobox_variable.trace("w", callback)
 
-    def add_on_edit_end_callback(self, callback):
+    def add_on_edit_end_callback_nosensitive(self, callback):
         self.combobox.bind("<FocusOut>", callback)
 
 class SettingMenu(ScrollableFrame):

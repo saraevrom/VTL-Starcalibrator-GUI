@@ -139,8 +139,9 @@ class FlatFielder(ToolBase):
 
 
     def on_loaded_file_success(self):
-        self.propagate_limits()
-        self.draw_plot()
+        self.on_apply_settings()
+        #self.propagate_limits()
+        #self.draw_plot()
 
     def draw_plot(self):
         data0 = self.file["data0"]
@@ -149,7 +150,6 @@ class FlatFielder(ToolBase):
         for i in range(0, len(data0), skip):
             layer = np.mean(data0[i:i+skip], axis=0)
             res_array.append(layer)
-        print(len(res_array))
         self.drawn_data = np.array(res_array)
         apparent_data = self.drawn_data
         if (self.remembered_model is not None) and self.settings_dict["use_model"]:
@@ -171,14 +171,11 @@ class FlatFielder(ToolBase):
         if t1 > t2:
             t1, t2 = t2, t1
         requested_data = self.apparent_data[t1:t2,:,:]
-        print("REQ_SHAPE", requested_data.shape)
         assert (requested_data!=0).any()
         i1, j1 = p1
         i2, j2 = p2
         S_1 = requested_data[:, i1, j1]
         S_2 = requested_data[:, i2, j2]
-        print("S1", S_1)
-        print("req_data", requested_data[:, i1, j1])
         fig, ax = plt.subplots()
         ax.axis('equal')
         ax.set_xlabel(f"S[{i1}, {j1}]")
