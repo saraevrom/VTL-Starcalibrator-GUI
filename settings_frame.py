@@ -358,6 +358,11 @@ class SettingMenu(ScrollableFrame):
                 return s
 
     def push_settings_dict(self, out_settings_dict: dict):
+        '''
+        Changes dict according to settings in frame
+        :param out_settings_dict:
+        :return:
+        '''
         for s in self.user_settings:
             s: Setting
             s.set_dict_value(out_settings_dict)
@@ -369,6 +374,12 @@ class SettingMenu(ScrollableFrame):
 
 
     def pull_settings_dict(self,in_settings_dict: dict, custom_keys = None):
+        '''
+        Changes settings in frame according to dict
+        :param in_settings_dict:
+        :param custom_keys:
+        :return:
+        '''
         for s in self.user_settings:
             s:Setting
             if custom_keys is not None:

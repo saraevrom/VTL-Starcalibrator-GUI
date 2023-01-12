@@ -76,6 +76,16 @@ class FlatFielder(ToolBase):
 
     def sync_settings(self):
         self.settings_menu.push_settings_dict(self.settings_dict)
+        t1 = self.settings_dict["time_1"]
+        t2 = self.settings_dict["time_2"]
+        if t1 > t2:
+            t1, t2 = t2, t1
+            self.settings_dict["time_1"] = t1
+            self.settings_dict["time_2"] = t2
+            self.back_sync_settings(["time_1", "time_2"])
+
+    def back_sync_settings(self, keys=None):
+        self.settings_menu.pull_settings_dict(self.settings_dict, keys)
 
     def propagate_limits(self):
         maxlen = len(self.file["data0"]) // self.settings_dict["samples_mean"] - 1
@@ -96,8 +106,7 @@ class FlatFielder(ToolBase):
         if self.drawn_data is not None:
             t1 = self.settings_dict["time_1"]
             t2 = self.settings_dict["time_2"]
-            if t1 > t2:
-                t1, t2 = t2, t1
+            assert t2>t1
             requested_data = self.drawn_data[t1:t2]
 
             used_algo = self.settings_dict["used_algo"]
