@@ -10,6 +10,7 @@ from tools.tool_flatfielder import FlatFieldingModel
 from localization import get_locale, format_locale
 from tools.tool_starcalibrator import StarCalibrator
 import warnings
+import os.path as ospath
 
 class Tool(object):
     def __init__(self,master,tool_class):
@@ -106,6 +107,13 @@ class App(tk.Tk):
 
     def get_ffmodel(self):
         return self.ffmodel
+
+    def get_loaded_filename(self):
+        if self.file:
+            base = ospath.basename(self.filename)
+            return base
+        else:
+            return ""
 
     def set_focus(self, event=None):
         x, y = self.winfo_pointerxy()

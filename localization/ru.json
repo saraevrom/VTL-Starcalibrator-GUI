@@ -14,6 +14,7 @@
   "flatfielder.form.field.samples_mean": "Усреднение",
   "flatfielder.form.separator.display": "Отображение",
   "flatfielder.form.field.use_model": "Применить модель",
+  "flatfielder.filedialog.save_ff_settings.title": "Сохранить параметры для выравнивания пикселей",
 
   "flatfielder.form.separator.algo": "Алгоритм",
   "flatfielder.form.field.used_algo": "Метод",

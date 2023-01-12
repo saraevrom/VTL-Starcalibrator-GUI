@@ -29,5 +29,8 @@ class ToolBase(tk.Frame):
     def get_ff_model(self):
         return self.winfo_toplevel().get_ffmodel()
 
+    def get_loaded_filename(self):
+        return self.winfo_toplevel().get_loaded_filename()
+
     def trigger_ff_model_reload(self):
         self.winfo_toplevel().reload_ffmodel()

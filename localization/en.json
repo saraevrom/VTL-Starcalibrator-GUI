@@ -18,6 +18,7 @@
   "flatfielder.form.separator.algo": "Algorithm",
   "flatfielder.form.field.used_algo": "Method",
   "flatfielder.nothing": "None",
+  "flatfielder.filedialog.save_ff_settings.title": "Save flat fielding parameters",
 
   "matplayer.title": "Data viewer",
   "matplayer.form.use_filter": "Use filter",

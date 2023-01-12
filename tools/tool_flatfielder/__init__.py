@@ -10,9 +10,11 @@ from .flat_fielding_methods import ALGO_MAP
 import numpy.random as rng
 import matplotlib.pyplot as plt
 from localization import get_locale
+import tkinter.filedialog as filedialog
 
 from ..tool_base import ToolBase
 from .models import FlatFieldingModel
+import os.path as ospath
 
 def line_fit_robust(xs, ys):
     k = np.float(weighted_median(ys/xs, xs))
@@ -35,22 +37,23 @@ class FlatFielder(ToolBase):
         self.file = None
         self.remembered_model = None
         self.apparent_data = None
+        self.remembered_settings = dict()
         super(FlatFielder, self).__init__(master)
         self.title(get_locale("flatfielder.title"))
         self.coeff_plotter = DualHighlightingplotter(self)
         self.coeff_plotter.axes.set_title(get_locale("flatfielder.coefficients.title"))
-        self.coeff_plotter.grid(row=0, column=0, sticky="nsew")
+        self.coeff_plotter.grid(row=1, column=0, sticky="nsew")
         self.coeff_plotter.on_pair_click_callback = self.on_dual_draw
 
         self.bg_plotter = DualHighlightingplotter(self)
         self.bg_plotter.axes.set_title(get_locale("flatfielder.baselevel.title"))
-        self.bg_plotter.grid(row=1, column=0, sticky="nsew")
+        self.bg_plotter.grid(row=1, column=1, sticky="nsew")
         self.bg_plotter.on_pair_click_callback = self.on_dual_draw
         self.settings_menu = SettingMenu(self,True)
         build_settings(self.settings_menu)
-        self.settings_menu.grid(row=1, column=1, sticky="nsew")
+        self.settings_menu.grid(row=0, column=1, sticky="nsew")
         self.signal_plotter = SignalPlotter(self)
-        self.signal_plotter.grid(row=0, column=1, sticky="nsew")
+        self.signal_plotter.grid(row=0, column=0, sticky="nsew")
 
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
@@ -111,7 +114,8 @@ class FlatFielder(ToolBase):
 
             used_algo = self.settings_dict["used_algo"]
             if used_algo in ALGO_MAP.keys():
-                model = ALGO_MAP[used_algo](requested_data)
+                algo, iden = ALGO_MAP[used_algo]
+                model = algo(requested_data)
             else:
                 return
 
@@ -133,18 +137,36 @@ class FlatFielder(ToolBase):
             self.bg_plotter.update_matrix_plot(update_norm=True)
             self.bg_plotter.draw()
             self.remembered_model = model
+            self.remembered_settings.update(self.settings_dict)
             self.draw_plot()
             self.signal_plotter.draw()
             #np.save("flat_fielding.npy", draw_coeff_matrix)
 
     def on_save_press(self):
         if self.remembered_model is not None:
-            model = self.remembered_model
-            dead1 = np.logical_not(self.coeff_plotter.alive_pixels_matrix)
-            dead2 = np.logical_not(self.bg_plotter.alive_pixels_matrix)
-            model.set_broken(np.logical_or(dead1,dead2))
-            model.save("flat_fielding.json")
-            self.trigger_ff_model_reload()
+            t1 = self.remembered_settings["time_1"]
+            t2 = self.remembered_settings["time_2"]
+            used_algo = self.remembered_settings["used_algo"]
+            av = self.remembered_settings["samples_mean"]
+            algo, iden = ALGO_MAP[used_algo]
+            fbase = self.get_loaded_filename()
+            fbase = ospath.splitext(fbase)[0]
+
+            initial_filename = f"flat_fielding_{av}_{t1}-{t2}_{iden}_src-{fbase}.json"
+            filename = filedialog.asksaveasfilename(parent=self,
+                                                      title=get_locale("flatfielder.filedialog.save_ff_settings.title"),
+                                                      filetypes=[
+                                                          (get_locale("app.filedialog_formats.ff_json"), "*.json")
+                                                      ],
+                                                      initialfile=initial_filename
+                                                    )
+            if filename:
+                model = self.remembered_model
+                dead1 = np.logical_not(self.coeff_plotter.alive_pixels_matrix)
+                dead2 = np.logical_not(self.bg_plotter.alive_pixels_matrix)
+                model.set_broken(np.logical_or(dead1,dead2))
+                model.save(filename)
+                #self.trigger_ff_model_reload()
 
 
     def on_loaded_file_success(self):
