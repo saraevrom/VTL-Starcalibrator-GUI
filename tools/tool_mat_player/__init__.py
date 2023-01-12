@@ -73,9 +73,14 @@ class MatPlayer(ToolBase):
         self.player_controls.set_limit(len(self.file["UT0"]))
         self.frames = np.array(self.file["data0"])
         self.ut0_s = np.array(self.file["UT0"])
-        self.plotter.draw()
+        #self.plotter.draw()
+        self.poke()
+
+    def poke(self):
+        self.player_controls.draw_frame()
 
     def on_ff_reload(self):
         ffmodel = self.get_ff_model()
         self.plotter.set_broken(ffmodel.broken_query())
         self.plotter.draw()
+        self.poke()
