@@ -50,6 +50,8 @@
   "track_markup.form.flash_suppress_use": "Use flash suppression",
   "track_markup.form.noise_suppress_window": "Noise suppression MSTD window",
   "track_markup.btn.spawn_window": "Create new figure for tracks",
+  "track_markup.btn.start": "Start",
+  "track_markup.dialog.reset": "Starting with parameters",
 
   "mat_converter.title": "Mat convertor",
   "mat_converter.btn.add":"Add",

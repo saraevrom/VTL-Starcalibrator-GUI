@@ -5,6 +5,7 @@ class ToolBase(tk.Frame):
 
     def __init__(self, master):
         super(ToolBase, self).__init__(master)
+        self.file = None
 
     def on_loaded_file_success(self):
         pass

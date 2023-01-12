@@ -202,15 +202,20 @@ class FlatFielder(ToolBase):
         if t1 > t2:
             t1, t2 = t2, t1
         requested_data = self.apparent_data[t1:t2,:,:]
+        outdata = np.concatenate([self.apparent_data[:t1,:,:], self.apparent_data[t2:,:,:]])
         assert (requested_data!=0).any()
         i1, j1 = p1
         i2, j2 = p2
         S_1 = requested_data[:, i1, j1]
         S_2 = requested_data[:, i2, j2]
+
+        S_1_o = outdata[:, i1, j1]
+        S_2_o = outdata[:, i2, j2]
         fig, ax = plt.subplots()
         ax.axis('equal')
         ax.set_xlabel(f"S[{i1}, {j1}]")
         ax.set_ylabel(f"S[{i2}, {j2}]")
+        ax.scatter(S_1_o, S_2_o)
         ax.scatter(S_1, S_2)
         # xs_test = np.array([min(S_1), max(S_1)])
         # ys_test = draw_coeff_matrix[i2, j2] * (xs_test - draw_bg_matrix[i1, j1]) / draw_coeff_matrix[i1, j1] + \

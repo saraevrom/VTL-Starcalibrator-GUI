@@ -50,6 +50,8 @@
   "track_markup.form.flash_suppress_use": "Использовать подавление вспышек",
   "track_markup.form.noise_suppress_window": "Окно для шумоподавления",
   "track_markup.btn.spawn_window": "Создать новый график для временных развёрток",
+  "track_markup.btn.start": "Старт",
+  "track_markup.dialog.reset": "Параметры для сброса",
 
   "mat_converter.title": "Преобразователь mat файлов",
   "mat_converter.btn.add":"Добавить",
