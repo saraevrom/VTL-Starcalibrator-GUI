@@ -304,6 +304,7 @@ class TrackMarkup(ToolBase):
                     parent=self
                 )
                 self.retractable_event = False
+                self.current_event = None
                 return False
             form_data = self.params_form.get_values()
             win = form_data["filter_win"]
@@ -350,7 +351,6 @@ class TrackMarkup(ToolBase):
                 if subdivide:
                     self.queue.append([start, midpoint])
                     self.queue.append([midpoint, end])
-                self.show_next_event()
             else:
                 if self.event_in_queue[0]:
                     self.add_trackless_event(start, end)
@@ -358,7 +358,8 @@ class TrackMarkup(ToolBase):
                     start, end = self.pop_event(self.event_in_queue[1][0], False)
                     print("POPPED EVENT:",start,end)
                     self.add_trackless_event(start, end)
-                self.show_next_event()
+            self.show_next_event()
+            self.update_answer_panel()
 
     def add_trackless_event(self, start, end):
         if try_append_event(self.trackless_events,start,end):
