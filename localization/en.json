@@ -104,7 +104,7 @@
   "app.menu.tools": "Tools",
   "app.menu.tools.mat_converter": "Convert mat files",
   "app.menu.tools.flatfielder": "Flat fielding",
-  "app.menu.tools.mat_player": "Data playback",
+  "app.menu.tools.mat_player": "Data viewer",
   "app.menu.tools.track_markup": "Background extractor",
   "app.menu.tools.starcalibrator": "Orientation determination",
   "app.filedialog.save_settings.title": "Save settings",
