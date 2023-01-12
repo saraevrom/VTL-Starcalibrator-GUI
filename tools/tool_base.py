@@ -9,6 +9,8 @@ class ToolBase(tk.Frame):
     def on_loaded_file_success(self):
         pass
 
+    def on_ff_reload(self):
+        pass
 
     def title(self,*args,**kwargs):
         warnings.warn("Now all tools are frames, not toplevels")

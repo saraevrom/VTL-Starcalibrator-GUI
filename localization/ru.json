@@ -16,7 +16,7 @@
   "flatfielder.form.field.use_model": "Применить модель",
 
   "flatfielder.form.separator.algo": "Алгоритм",
-  "flatfielder.form.field.used_algo": "Алгоритм",
+  "flatfielder.form.field.used_algo": "Метод",
   "flatfielder.nothing": "Н/Д",
 
   "matplayer.title": "Воспроизведение",
@@ -109,12 +109,18 @@
   "app.menu.tools.starcalibrator": "Ориентация",
   "app.filedialog.save_settings.title": "Сохранение настроек",
   "app.filedialog.load_settings.title": "Загрузка настроек",
+
+  "app.filedialog.load_ff_settings.title": "Открыть параметры для выравнивания пикселей",
   "app.filedialog.load_mat.title": "Открыть mat файл",
 
   "app.filedialog_formats.settings_json": "JSON файл с настройками",
+  "app.filedialog_formats.ff_json": "JSON с параметрами",
   "app.filedialog_formats.processed_mat": "Обработанные mat файлы",
   "app.filedialog_formats.raw_mat": "Файл с сырыми данными",
 
   "app.widgets.gridplotter.use_autoscale": "Автоматическая нормировка",
-  "app.widgets.gridplotter.scale": "Нормировка"
+  "app.widgets.gridplotter.scale": "Нормировка",
+  "app.ff_warning": "ПИКСЕЛИ НЕ ВЫРАВНИВАЮТСЯ",
+  "app.loaded_file": "Загружен файл {}"
+
 }

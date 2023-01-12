@@ -7,8 +7,9 @@ import h5py
 from tools import add_tools
 from tools.tool_flatfielder import FlatFieldingModel
 
-from localization import get_locale
+from localization import get_locale, format_locale
 from tools.tool_starcalibrator import StarCalibrator
+import warnings
 
 class Tool(object):
     def __init__(self,master,tool_class):
@@ -22,12 +23,13 @@ class App(tk.Tk):
 
     def __init__(self):
         super(App, self).__init__()
-        self.title(get_locale("app.title"))
 
         self.topmenu = tk.Menu(self)
 
         self.filemenu = tk.Menu(self.topmenu, tearoff=0)
-        self.filemenu.add_command(label=get_locale("app.menu.file.open_mat"), command=self.open_mat_file)
+        self.filemenu.add_command(label=get_locale("app.menu.file.open_mat"), command=self.on_open_mat_file)
+        self.filemenu.add_command(label=get_locale("app.filedialog.load_ff_settings.title"),
+                                  command=self.on_open_ffmodel)
         #self.filemenu.add_command(label=get_locale("app.menu.file.load_settings"), command=self.on_settings_load)
         #self.filemenu.add_command(label=get_locale("app.menu.file.save_settings"), command=self.on_settings_save)
 
@@ -36,14 +38,25 @@ class App(tk.Tk):
         #self.topmenu.add_cascade(label=get_locale("app.menu.tools"), menu=self.toolsmenu)
         self.config(menu=self.topmenu)
         self.file = None
+        self.filename = ""
         self.ffmodel = None
         self.tool_list = []
         self.main_notebook = ttk.Notebook(self)
         self.main_notebook.pack(side="top",fill="both",expand=True)
         self.bind("<1>", self.set_focus)
         add_tools(self.add_tool)
+        self.update_title()
 
 
+    def update_title(self):
+        title = get_locale("app.title")
+        warnings = []
+        if self.file:
+            warnings.append(format_locale("app.loaded_file",self.filename))
+        if not self.ffmodel:
+            warnings.append(get_locale("app.ff_warning"))
+        if warnings:
+            self.title(f"{title} ({', '.join(warnings)})")
 
     def add_tool(self, label_key, toolclass):
         tool_frame = toolclass(self.main_notebook)
@@ -53,7 +66,7 @@ class App(tk.Tk):
         #tool_inst = Tool(self, toolclass)
         #self.toolsmenu.add_command(label=get_locale(label_key), command=tool_inst)
 
-    def open_mat_file(self):
+    def on_open_mat_file(self):
         filename = filedialog.askopenfilename(title=get_locale("app.filedialog.load_mat.title"),
                                               filetypes=[
                                                   (get_locale("app.filedialog_formats.processed_mat"), "*.mat *.hdf")
@@ -62,24 +75,36 @@ class App(tk.Tk):
             new_file = h5py.File(filename, "r")
             if self.file:
                 self.file.close()
+            self.filename = filename
             self.file = new_file
             for tool in self.tool_list:
                 tool.propagate_mat_file(self.file)
+        self.update_title()
 
     def close_mat_file(self):
         if self.file:
             self.file.close()
             self.file = None
+            self.filename = ""
+        self.update_title()
+
+    def on_open_ffmodel(self):
+        filename = filedialog.askopenfilename(title=get_locale("app.filedialog.load_ff_settings.title"),
+                                              filetypes=[
+                                                  (get_locale("app.filedialog_formats.ff_json"), "*.json")
+                                              ])
+        if filename:
+            model: FlatFieldingModel
+            model = FlatFieldingModel.load(filename)
+            self.ffmodel = model
+            for tool in self.tool_list:
+                tool.on_ff_reload()
+        self.update_title()
 
     def reload_ffmodel(self):
-        if os.path.isfile("flat_fielding.json"):
-            model: FlatFieldingModel
-            model = FlatFieldingModel.load("flat_fielding.json")
-            self.ffmodel = model
+        warnings.warn("Flat fielding coefficients are now loaded manually")
 
     def get_ffmodel(self):
-        if self.ffmodel == None:
-            self.reload_ffmodel()
         return self.ffmodel
 
     def set_focus(self, event=None):

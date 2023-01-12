@@ -14,9 +14,9 @@
   "flatfielder.form.separator.data": "Data",
   "flatfielder.form.field.samples_mean": "Average [frames]",
   "flatfielder.form.separator.display": "Display",
-  "flatfielder.form.field.use_model": "Apply model",
+  "flatfielder.form.field.use_model": "Transform",
   "flatfielder.form.separator.algo": "Algorithm",
-  "flatfielder.form.field.used_algo": "Algorithm",
+  "flatfielder.form.field.used_algo": "Method",
   "flatfielder.nothing": "None",
 
   "matplayer.title": "Data viewer",
@@ -109,12 +109,16 @@
   "app.menu.tools.starcalibrator": "Orientation",
   "app.filedialog.save_settings.title": "Save settings",
   "app.filedialog.load_settings.title": "Load settings",
+  "app.filedialog.load_ff_settings.title": "Open flat fielding parameters",
   "app.filedialog.load_mat.title": "Open mat file",
 
   "app.filedialog_formats.settings_json": "JSON with settings",
+  "app.filedialog_formats.ff_json": "JSON with FF parameters",
   "app.filedialog_formats.processed_mat": "Converted mat files",
   "app.filedialog_formats.raw_mat": "Raw data",
 
   "app.widgets.gridplotter.use_autoscale": "Autoscale",
-  "app.widgets.gridplotter.scale": "Scale"
+  "app.widgets.gridplotter.scale": "Scale",
+  "app.ff_warning": "NO FLAT FIELDING USED",
+  "app.loaded_file": "Loaded File {}"
 }
