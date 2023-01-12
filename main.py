@@ -40,6 +40,7 @@ class App(tk.Tk):
         self.tool_list = []
         self.main_notebook = ttk.Notebook(self)
         self.main_notebook.pack(side="top",fill="both",expand=True)
+        self.bind("<1>", self.set_focus)
         add_tools(self.add_tool)
 
 
@@ -81,6 +82,10 @@ class App(tk.Tk):
             self.reload_ffmodel()
         return self.ffmodel
 
+    def set_focus(self, event=None):
+        x, y = self.winfo_pointerxy()
+        self.focus()
+        self.winfo_containing(x, y).focus()
 
 
 

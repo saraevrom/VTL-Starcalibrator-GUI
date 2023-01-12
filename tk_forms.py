@@ -38,11 +38,10 @@ class ScrollView(ttk.Frame):
         self.contents.bind("<Configure>", self.on_content_change)
         self.drawn_window_id = self.canvas.create_window((0,0), window=self.contents,anchor="nw")
         self.canvas.configure(yscrollcommand=self.v_scrollbar.set,xscrollcommand=self.h_scrollbar.set)
-        self.h_scrollbar.pack(side="bottom",fill="x")
-        self.v_scrollbar.pack(side="right",fill="y")
-        self.canvas.pack(side="left",fill="both",expand=True)
+        self.h_scrollbar.pack(side="bottom", fill="x")
+        self.v_scrollbar.pack(side="right", fill="y")
+        self.canvas.pack(side="left", fill="both", expand=True)
         self.canvas.bind("<Configure>", self.on_canvas_change)
-
 
     def on_content_change(self,event):
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))

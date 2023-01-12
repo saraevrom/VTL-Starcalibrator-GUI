@@ -46,7 +46,7 @@ class FlatFielder(ToolBase):
         self.bg_plotter.axes.set_title(get_locale("flatfielder.baselevel.title"))
         self.bg_plotter.grid(row=1, column=0, sticky="nsew")
         self.bg_plotter.on_pair_click_callback = self.on_dual_draw
-        self.settings_menu = SettingMenu(self)
+        self.settings_menu = SettingMenu(self,True)
         build_settings(self.settings_menu)
         self.settings_menu.grid(row=1, column=1, sticky="nsew")
         self.signal_plotter = SignalPlotter(self)
@@ -67,9 +67,9 @@ class FlatFielder(ToolBase):
         self.drawn_data = None
 
         btn = ttk.Button(self, text=get_locale("flatfielder.btn.coeffs_calculate"), command=self.on_calculate)
-        btn.grid(row=2, column=0, sticky="ew")
+        btn.grid(row=2, column=1, sticky="ew")
         btn = ttk.Button(self, text=get_locale("flatfielder.btn.save"), command=self.on_save_press)
-        btn.grid(row=3, column=0, sticky="ew")
+        btn.grid(row=3, column=1, sticky="ew")
         #btn = ttk.Button(self, text=get_locale("flatfielder.btn.random_plot"), command=self.on_random_draw)
         #btn.grid(row=4, column=0, sticky="ew")
         self.on_apply_settings()
