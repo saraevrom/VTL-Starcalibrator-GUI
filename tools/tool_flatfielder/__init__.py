@@ -1,4 +1,5 @@
 from tkinter import ttk
+import tkinter as tk
 from plotter import GridPlotter
 from .dual_highlighting_plotter import DualHighlightingplotter
 from settings_frame import SettingMenu
@@ -49,9 +50,16 @@ class FlatFielder(ToolBase):
         self.bg_plotter.axes.set_title(get_locale("flatfielder.baselevel.title"))
         self.bg_plotter.grid(row=1, column=1, sticky="nsew")
         self.bg_plotter.on_pair_click_callback = self.on_dual_draw
-        self.settings_menu = SettingMenu(self,True)
+
+        settings_menu_parent = tk.Frame(self)
+        settings_menu_parent.columnconfigure(0, weight=1)
+        settings_menu_parent.rowconfigure(0, weight=1)
+
+        self.settings_menu = SettingMenu(settings_menu_parent,True)
+        settings_menu_parent.grid(row=0, column=1, sticky="nsew")
         build_settings(self.settings_menu)
-        self.settings_menu.grid(row=0, column=1, sticky="nsew")
+        self.settings_menu.grid(row=0, column=0, sticky="nsew")
+
         self.signal_plotter = SignalPlotter(self)
         self.signal_plotter.grid(row=0, column=0, sticky="nsew")
 
@@ -69,10 +77,10 @@ class FlatFielder(ToolBase):
         self.signal_plotter.draw()
         self.drawn_data = None
 
-        btn = ttk.Button(self, text=get_locale("flatfielder.btn.coeffs_calculate"), command=self.on_calculate)
-        btn.grid(row=2, column=1, sticky="ew")
-        btn = ttk.Button(self, text=get_locale("flatfielder.btn.save"), command=self.on_save_press)
-        btn.grid(row=3, column=1, sticky="ew")
+        btn = ttk.Button(settings_menu_parent, text=get_locale("flatfielder.btn.coeffs_calculate"), command=self.on_calculate)
+        btn.grid(row=1, column=0, sticky="ew")
+        btn = ttk.Button(settings_menu_parent, text=get_locale("flatfielder.btn.save"), command=self.on_save_press)
+        btn.grid(row=2, column=0, sticky="ew")
         #btn = ttk.Button(self, text=get_locale("flatfielder.btn.random_plot"), command=self.on_random_draw)
         #btn.grid(row=4, column=0, sticky="ew")
         self.on_apply_settings()
