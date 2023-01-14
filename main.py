@@ -118,7 +118,9 @@ class App(tk.Tk):
     def set_focus(self, event=None):
         x, y = self.winfo_pointerxy()
         self.focus()
-        self.winfo_containing(x, y).focus()
+        focus_target = self.winfo_containing(x, y)
+        if focus_target:
+            focus_target.focus()
 
 
 
