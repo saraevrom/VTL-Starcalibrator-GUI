@@ -1,4 +1,4 @@
-from plotter import GridPlotter
+from common_GUI import GridPlotter
 
 class DualHighlightingplotter(GridPlotter):
     def __init__(self, master):

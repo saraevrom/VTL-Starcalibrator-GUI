@@ -1,6 +1,6 @@
 import os
 import tkinter as tk
-from settings_frame import SettingMenu
+from common_GUI import SettingMenu
 from .vtl_settings_build import build_menu
 from .starlist import Starlist
 from .starplotter import StarGridPlotter

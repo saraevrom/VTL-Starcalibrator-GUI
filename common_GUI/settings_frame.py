@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from tk_forms import ScrollView as ScrollableFrame
+from .tk_forms import ScrollView as ScrollableFrame
 
 
 # based on https://gist.github.com/mp035/9f2027c3ef9172264532fcd6262f3b01

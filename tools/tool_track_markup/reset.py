@@ -1,8 +1,7 @@
-import tkinter as tk
 import tkinter.simpledialog as simpledialog
 from localization import get_locale
 
-from tk_forms import TkDictForm
+from common_GUI import TkDictForm
 
 FORM_CONF = {
     "max_frame": {

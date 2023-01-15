@@ -1,17 +1,12 @@
 import tkinter as tk
-from plotter import GridPlotter
+from common_GUI import GridPlotter, TkDictForm
 from ..tool_base import ToolBase
 from .sorted_queue import SortedQueue
-from numpy.lib.stride_tricks import sliding_window_view
-import os
-import os.path
 import numpy as np
-from tk_forms import TkDictForm
 import tkinter.messagebox
 import tkinter.filedialog
 import json
 from localization import get_locale
-from ..tool_flatfielder import FlatFieldingModel
 import matplotlib.pyplot as plt
 from .denoising import reduce_noise, antiflash, moving_average_subtract
 from .reset import ResetAsker

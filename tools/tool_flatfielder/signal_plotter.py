@@ -1,12 +1,5 @@
-import tkinter as tk
-from tkinter import ttk
-import matplotlib.pyplot as plt
-from plotter import Plotter
+from common_GUI.plotter import Plotter
 import numpy as np
-from matplotlib.patches import Rectangle
-from matplotlib.pyplot import Normalize
-import colorsys
-from matplotlib.collections import LineCollection
 
 
 class SignalPlotter(Plotter):

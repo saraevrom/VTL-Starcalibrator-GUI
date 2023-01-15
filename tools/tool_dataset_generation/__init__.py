@@ -2,12 +2,7 @@ from ..tool_base import ToolBase
 from .bg_picking_editor import BgPickingEditor
 from .create_settings import build_menu
 import gc
-from settings_frame import SettingMenu
-from parameters import HALF_PIXELS
 import numpy as np
-import os
-from ..tool_flatfielder import FlatFieldingModel
-from numpy.lib.stride_tricks import sliding_window_view
 import numba as nb
 
 

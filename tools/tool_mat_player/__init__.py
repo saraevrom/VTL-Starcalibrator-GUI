@@ -1,13 +1,11 @@
 import tkinter as tk
-from plotter import GridPlotter
+from common_GUI.plotter import GridPlotter
 from .player_controls import PlayerControls
-import os
 import numpy as np
 from datetime import datetime
 from ..tool_base import ToolBase
 from localization import get_locale
-from tk_forms import TkDictForm
-from ..tool_flatfielder import FlatFieldingModel
+from common_GUI import TkDictForm
 
 FORM_CONF = {
     "use_filter": {

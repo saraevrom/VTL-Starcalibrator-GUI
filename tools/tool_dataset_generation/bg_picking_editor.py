@@ -1,8 +1,7 @@
-from plotter import Plotter
-import os
-from ..tool_track_markup.denoising import reduce_noise, antiflash, moving_average_subtract, sliding_std
+from common_GUI import Plotter
+from ..tool_track_markup.denoising import reduce_noise, antiflash, moving_average_subtract
 import numpy as np
-from parameters import HALF_PIXELS
+
 
 class BgPickingEditor(Plotter):
     def __init__(self, master):
