@@ -6,6 +6,14 @@ import numpy as np
 import numba as nb
 from ..tool_flatfielder import FlatFieldingModel
 from common_GUI import GridPlotter, SettingMenu
+from localization import get_locale, format_locale
+import json
+import tkinter.filedialog as filedialog
+import tkinter.messagebox as messagebox
+import h5py
+from .hdf5_utils import overwrite_with_numpy
+from datetime import datetime
+from parameters import DATETIME_FORMAT
 
 import tkinter as tk
 
@@ -47,6 +55,7 @@ class DatasetGenerator(ToolBase):
 
         self.interval_editor = BgPickingEditor(left_panel)
         self.interval_editor.pack(side="bottom", fill="x")
+        self.interval_editor.on_frame_lmb_event = self.draw_frame
 
         right_panel = tk.Frame(self)
         right_panel.pack(side="right", fill="y")
@@ -59,12 +68,72 @@ class DatasetGenerator(ToolBase):
         self.settings_dict = dict()
         self.settings_menu.commit_action = self.on_settings_commit
         self.settings_menu.add_tracer("filter_window", self.on_ma_filter_change)
+
+        delete_button = tk.Button(right_panel, text=get_locale("datasetgen.button.delete"), command=self.on_delete)
+        clear_button = tk.Button(right_panel, text=get_locale("datasetgen.button.clear"), command=self.on_clear)
+        load_button = tk.Button(right_panel, text=get_locale("datasetgen.button.load"), command=self.on_load)
+        save_button = tk.Button(right_panel, text=get_locale("datasetgen.button.save"), command=self.on_save)
+        reload_button = tk.Button(right_panel, text=get_locale("datasetgen.button.reload"),
+                                command=self.on_intervals_reload)
+
+        save_button.pack(side="bottom", fill="x")
+        load_button.pack(side="bottom", fill="x")
+        reload_button.pack(side="bottom", fill="x")
+        clear_button.pack(side="bottom", fill="x")
+        delete_button.pack(side="bottom", fill="x")
+        self.settings_menu.push_settings_dict(self.settings_dict)
+
         #self.plotter.grid(row=0, column=0, sticky="nsew", rowspan=2)
+
+    def on_clear(self):
+        if self.file:
+            if messagebox.askyesno(title=get_locale("datasetgen.messagebox.reset.title"),
+                                   message=get_locale("datasetgen.messagebox.reset.content")):
+                self.interval_editor.clear_intervals()
+                self.interval_editor.redraw(self.settings_dict)
+
+    def on_delete(self):
+        if self.file:
+            self.interval_editor.delete_interval_on_frame_pointer()
+            self.interval_editor.redraw(self.settings_dict)
+
+    def on_intervals_reload(self):
+        if self.file:
+            self.reload_stored_marked_intervals()
+            self.interval_editor.redraw(self.settings_dict)
+
+    def on_load(self):
+        if self.file:
+            load_path = filedialog.askopenfilename(initialdir=".", filetypes=(("JSON", "*.json"),),
+                                                             initialfile="progress.json", parent=self)
+            if load_path:
+                with open(load_path,"r") as fp:
+                    jsd = json.load(fp)
+                    self.interval_editor.marked_intervals = jsd["found_event"]
+                    self.interval_editor.redraw(self.settings_dict)
+
+    def on_save(self):
+        if messagebox.askokcancel(title=get_locale("datasetgen.messagebox.save.title"),
+                                   message=get_locale("datasetgen.messagebox.save.content")):
+            print("FILE SAVE PRESSED!!!")
+            remembered_filename = self.get_loaded_filepath()
+            self.close_mat_file()
+            with h5py.File(remembered_filename, "a") as rw_file:
+                overwrite_with_numpy(rw_file, "marked_intervals", self.interval_editor.marked_intervals)
+
+            self.reload_mat_file(remembered_filename)
+            messagebox.showinfo(title=get_locale("datasetgen.messagebox.save_success.title"),
+                                   message=get_locale("datasetgen.messagebox.save_success.content"))
+
+    def reload_stored_marked_intervals(self):
+        if "marked_intervals" in self.file:
+            self.interval_editor.marked_intervals = np.array(self.file["marked_intervals"]).tolist()
 
     def on_loaded_file_success(self):
         gc.collect()
-        self.settings_menu.push_settings_dict(self.settings_dict)
         self.reload_data()
+        self.interval_editor.clear_intervals()
+        self.reload_stored_marked_intervals()
         self.on_settings_commit()
         gc.collect()
 
@@ -89,5 +158,32 @@ class DatasetGenerator(ToolBase):
         self.cutoff_2_setting.set_limits(0, maxlen)
 
     def on_ff_reload(self):
+        self.plotter.set_broken(self.get_ff_model().broken_query())
         if self.file:
             self.on_loaded_file_success()
+        else:
+            self.plotter.draw()
+
+
+    def draw_frame(self,frame):
+        if self.file:
+            model = self.get_ff_model()
+            draw_frame = self.file["data0"][frame]
+            if model:
+                draw_frame = model.apply(draw_frame)
+            win = self.settings_dict["filter_window"]
+            start = frame-win//2
+            end = start + win
+            if start < 0:
+                start = 0
+            if end > self.file["data0"].shape[0]:
+                end = self.file["data0"].shape[0]
+            meaning_interval = self.file["data0"][start:end]
+            if model:
+                meaning_interval = model.apply(meaning_interval)
+            draw_frame = draw_frame - np.mean(meaning_interval, axis=0)
+            self.plotter.buffer_matrix = draw_frame
+            tim = datetime.utcfromtimestamp(self.file["UT0"][frame]).strftime(DATETIME_FORMAT)
+            self.plotter.axes.set_title(format_locale("datasetgen.plot.title",frame=frame,time=tim))
+            self.plotter.update_matrix_plot(True)
+            self.plotter.draw()

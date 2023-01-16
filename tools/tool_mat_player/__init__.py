@@ -6,6 +6,7 @@ from datetime import datetime
 from ..tool_base import ToolBase
 from localization import get_locale
 from common_GUI import TkDictForm
+from parameters import DATETIME_FORMAT
 
 FORM_CONF = {
     "use_filter": {
@@ -47,7 +48,7 @@ class MatPlayer(ToolBase):
             #frame = self.file["data0"][frame_num]
             ut0 = self.ut0_s[frame_num]
             #ut0 = self.file["UT0"][frame_num]
-            time_str = datetime.utcfromtimestamp(ut0).strftime('%Y-%m-%d %H:%M:%S')
+            time_str = datetime.utcfromtimestamp(ut0).strftime(DATETIME_FORMAT)
             ffmodel = self.get_ff_model()
             if self.form_data["use_filter"]:
                 window = self.form_data["filter_window"]

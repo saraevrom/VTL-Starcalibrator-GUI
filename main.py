@@ -72,6 +72,10 @@ class App(tk.Tk):
                                               filetypes=[
                                                   (get_locale("app.filedialog_formats.processed_mat"), "*.mat *.hdf")
                                               ])
+        self.reload_mat_file(filename)
+
+    def reload_mat_file(self, filename):
+        print("Loading file:", filename)
         if filename and os.path.isfile(filename):
             new_file = h5py.File(filename, "r")
             if self.file:
@@ -80,6 +84,7 @@ class App(tk.Tk):
             self.file = new_file
             for tool in self.tool_list:
                 tool.propagate_mat_file(self.file)
+            print("Loaded file:", filename)
         self.update_title()
 
     def close_mat_file(self):
@@ -87,6 +92,7 @@ class App(tk.Tk):
             self.file.close()
             self.file = None
             self.filename = ""
+        print("File closed")
         self.update_title()
 
     def on_open_ffmodel(self):
@@ -114,6 +120,9 @@ class App(tk.Tk):
             return base
         else:
             return ""
+
+    def get_loaded_filepath(self):
+        return self.filename
 
     def set_focus(self, event=None):
         x, y = self.winfo_pointerxy()

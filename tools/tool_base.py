@@ -33,5 +33,14 @@ class ToolBase(tk.Frame):
     def get_loaded_filename(self):
         return self.winfo_toplevel().get_loaded_filename()
 
+    def get_loaded_filepath(self):
+        return self.winfo_toplevel().get_loaded_filepath()
+
     def trigger_ff_model_reload(self):
         self.winfo_toplevel().reload_ffmodel()
+
+    def close_mat_file(self):
+        self.winfo_toplevel().close_mat_file()
+
+    def reload_mat_file(self, filename):
+        self.winfo_toplevel().reload_mat_file(filename)
