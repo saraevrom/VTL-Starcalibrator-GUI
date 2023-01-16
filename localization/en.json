@@ -1,4 +1,13 @@
 {
+
+  "datasetgen.form.separator.display": "Display",
+  "datasetgen.form.cutoff_start": "Cut off first [frames]",
+  "datasetgen.form.cutoff_end": "Cut off last [frames]",
+  "datasetgen.form.filter_window": "MA Filter window [frames]",
+  "datasetgen.form.separator.data_augmentagion": "Data augmentation",
+  "datasetgen.form.use_transpose": "Transpose data",
+  "datasetgen.form.use_reverse": "Reverse time",
+
   "flatfielder.title": "Flat fielding",
   "flatfielder.coefficients.title": "Coefficients",
   "flatfielder.baselevel.title": "Base Line",
@@ -110,6 +119,8 @@
   "app.menu.tools.mat_player": "Data viewer",
   "app.menu.tools.track_markup": "Background",
   "app.menu.tools.starcalibrator": "Orientation",
+  "app.menu.tools.dataset_generator": "Dataset generator",
+
   "app.filedialog.save_settings.title": "Save settings",
   "app.filedialog.load_settings.title": "Load settings",
   "app.filedialog.load_ff_settings.title": "Open flat fielding parameters",
