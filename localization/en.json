@@ -61,7 +61,7 @@
   "track_markup.form.filter_win": "MA filter window",
   "track_markup.form.signal_filter_win": "MA signal filter window",
   "track_markup.form.min_frame": "Min interval [frames]",
-  "track_markup.form.max_frame": "Max interval [frames]",
+  "track_markup.form.max_frame": "Block size [frames]",
   "track_markup.form.start_skip": "Cut off first [frames]",
   "track_markup.form.end_skip": "Cut off last [frames]",
   "track_markup.form.pmt_select": "Select PMT",
@@ -72,7 +72,7 @@
   "track_markup.form.noise_suppress_window": "Noise suppression MSTD window",
   "track_markup.btn.spawn_window": "Create new figure for tracks",
   "track_markup.btn.start": "Start",
-  "track_markup.dialog.reset": "Starting with parameters",
+  "track_markup.dialog.reset": "Block parameters",
 
   "mat_converter.title": "Mat converter",
   "mat_converter.btn.add":"Add",

@@ -77,10 +77,10 @@ class DatasetGenerator(ToolBase):
                                 command=self.on_intervals_reload)
 
         save_button.pack(side="bottom", fill="x")
-        load_button.pack(side="bottom", fill="x")
         reload_button.pack(side="bottom", fill="x")
         clear_button.pack(side="bottom", fill="x")
         delete_button.pack(side="bottom", fill="x")
+        load_button.pack(side="bottom", fill="x")
         self.settings_menu.push_settings_dict(self.settings_dict)
 
         #self.plotter.grid(row=0, column=0, sticky="nsew", rowspan=2)
