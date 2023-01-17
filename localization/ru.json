@@ -100,6 +100,11 @@
   "mat_converter.downloader.password": "Пароль",
   "mat_converter.downloader.button.access": "Войти",
 
+
+  "mat_converter.downloader.messagebox.login_error.title": "Доступ",
+  "mat_converter.downloader.messagebox.login_error.msg": "Не удалось соединиться с сервером {server}",
+  "mat_converter.downloader.fieldialog.title": "Выберите локальную папку для сохранения данных.",
+
   "app.settings.separator.stars_selection": "Выбор звёзд",
   "app.settings.separator.orientation_parameters": "Параметры ориентации",
   "app.settings.separator.amplitude_parameters": "Параметры оптимизатора (амлитуды изменения)",

@@ -99,6 +99,9 @@
   "mat_converter.downloader.login": "Login",
   "mat_converter.downloader.password": "Password",
   "mat_converter.downloader.button.access": "Access",
+  "mat_converter.downloader.messagebox.login_error.title": "Access",
+  "mat_converter.downloader.messagebox.login_error.msg": "Accessing {server} failed.",
+  "mat_converter.downloader.fieldialog.title": "Choose local directory",
 
   "app.settings.separator.stars_selection": "Star selection",
   "app.settings.separator.orientation_parameters": "Orientation parameters",
