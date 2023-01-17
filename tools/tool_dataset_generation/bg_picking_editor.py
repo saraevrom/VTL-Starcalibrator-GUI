@@ -119,6 +119,8 @@ class BgPickingEditor(Plotter):
             end = self.draw_y.shape[0]
         else:
             end = self.draw_y.shape[0]-cutoff_end
+        if end < cutoff_start:
+            cutoff_start, end = end, cutoff_start
         xs = np.arange(cutoff_start, end)
         ys = self.draw_y[cutoff_start:end]
         ys = ys/np.max(ys)
@@ -177,6 +179,18 @@ class BgPickingEditor(Plotter):
         found,interval_index = self.find_selected_interval()
         if found:
             self.marked_intervals.pop(interval_index)
+
+    def get_interval_weight_on_frame_pointer(self):
+        found, interval_index = self.find_selected_interval()
+        if found:
+            return self.marked_intervals[interval_index][2]
+        else:
+            return 0
+
+    def set_interval_weight_on_frame_pointer(self, target):
+        found, interval_index = self.find_selected_interval()
+        if found:
+            self.marked_intervals[interval_index][2] = target
 
     def populate_intervals(self, found_events):
         self.marked_intervals = [[start, end, 1.0] for (start, end) in found_events]

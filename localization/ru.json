@@ -7,11 +7,19 @@
   "datasetgen.form.separator.data_augmentagion": "Аугментация данных",
   "datasetgen.form.use_transpose": "Транспонировать данные",
   "datasetgen.form.use_reverse": "Обращать время",
+
+  "datasetgen.form.separator.current_interval": "Текущий интервал",
+  "datasetgen.form.weight": "Вес",
   "datasetgen.button.clear": "Очистить интервалы",
   "datasetgen.button.load": "Загрузить размеченные интервалы",
   "datasetgen.button.save": "Сохранить размеченные интервалы",
   "datasetgen.button.delete": "Удалить выбранный элемент",
   "datasetgen.button.reload": "Перезагрузить сохранённые интервалы",
+
+  "datasetgen.button.cut_left": "Обрезать слева",
+  "datasetgen.button.cut_right": "Обрезать справа",
+
+  "datasetgen.button.view_reset": "Reset view",
   "datasetgen.messagebox.reset.title": "Сброс данных",
   "datasetgen.messagebox.reset.content": "Вы точно хотите стереть пустые интервалы и начать заново?",
   "datasetgen.messagebox.save.title": "Сохранение данных для обучения",

@@ -53,9 +53,25 @@ class DatasetGenerator(ToolBase):
         self.plotter = GridPlotter(left_panel)
         self.plotter.pack(side="top", fill="both", expand=True)
 
-        self.interval_editor = BgPickingEditor(left_panel)
-        self.interval_editor.pack(side="bottom", fill="x")
+        interval_editor_panel = tk.Frame(left_panel)
+        interval_editor_panel.pack(side="bottom", fill="x")
+        interval_editor_panel.rowconfigure(0,weight=1)
+        interval_editor_panel.columnconfigure(0, weight=1)
+        interval_editor_panel.columnconfigure(1, weight=1)
+        interval_editor_panel.columnconfigure(2, weight=1)
+
+        self.interval_editor = BgPickingEditor(interval_editor_panel)
+        self.interval_editor.grid(row=0, column=0, columnspan=3, sticky="nsew")
         self.interval_editor.on_frame_lmb_event = self.draw_frame
+        button_cutleft = tk.Button(interval_editor_panel, text=get_locale("datasetgen.button.cut_left"),
+                                   command=self.on_cut_left)
+        button_cutleft.grid(row=1, column=0, sticky="nsew")
+        button_view_reset = tk.Button(interval_editor_panel, text=get_locale("datasetgen.button.view_reset"),
+                                      command=self.on_view_reset)
+        button_view_reset.grid(row=1, column=1, sticky="nsew")
+        button_cutright = tk.Button(interval_editor_panel, text=get_locale("datasetgen.button.cut_right"),
+                                   command=self.on_cut_right)
+        button_cutright.grid(row=1, column=2, sticky="nsew")
 
         right_panel = tk.Frame(self)
         right_panel.pack(side="right", fill="y")
@@ -68,6 +84,7 @@ class DatasetGenerator(ToolBase):
         self.settings_dict = dict()
         self.settings_menu.commit_action = self.on_settings_commit
         self.settings_menu.add_tracer("filter_window", self.on_ma_filter_change)
+        self.settings_menu.add_tracer("interval_weight", self.on_weight_edit)
 
         delete_button = tk.Button(right_panel, text=get_locale("datasetgen.button.delete"), command=self.on_delete)
         clear_button = tk.Button(right_panel, text=get_locale("datasetgen.button.clear"), command=self.on_clear)
@@ -84,6 +101,31 @@ class DatasetGenerator(ToolBase):
         self.settings_menu.push_settings_dict(self.settings_dict)
 
         #self.plotter.grid(row=0, column=0, sticky="nsew", rowspan=2)
+
+
+    def on_cut_left(self):
+        ptr = self.interval_editor.frame_pointer_location
+        self.set_view(left_override=ptr)
+
+    def on_cut_right(self):
+        if self.file:
+            ptr = self.interval_editor.frame_pointer_location
+            self.set_view(right_override=self.file["data0"].shape[0]-ptr)
+
+    def on_view_reset(self):
+        self.set_view(0, 0)
+
+    def set_view(self, left_override=None, right_override=None):
+        if left_override is not None:
+            self.settings_dict["cutoff_start"] = left_override
+        if right_override is not None:
+            self.settings_dict["cutoff_end"] = right_override
+        self.settings_menu.pull_settings_dict(self.settings_dict, ["cutoff_start", "cutoff_end"])
+        self.on_settings_commit()
+
+    def on_weight_edit(self):
+        selected_weight = self.settings_dict["interval_weight"]
+        self.interval_editor.set_interval_weight_on_frame_pointer(selected_weight)
 
     def on_clear(self):
         if self.file:
@@ -192,3 +234,7 @@ class DatasetGenerator(ToolBase):
             self.plotter.axes.set_title(format_locale("datasetgen.plot.title",frame=frame,time=tim))
             self.plotter.update_matrix_plot(True)
             self.plotter.draw()
+
+            selected_weight = self.interval_editor.get_interval_weight_on_frame_pointer()
+            self.settings_dict["interval_weight"] = selected_weight
+            self.settings_menu.pull_settings_dict(self.settings_dict, "interval_weight")
