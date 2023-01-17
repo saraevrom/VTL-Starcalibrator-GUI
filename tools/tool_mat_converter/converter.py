@@ -7,20 +7,32 @@ import numpy as np
 import tqdm
 import scipy.io as scipio
 from localization import get_locale, format_locale
-from .tool_base import ToolBase
+from tools.tool_base import ToolBase
+import os.path as ospath
 
-class MatConverter(ToolBase):
-    def __init__(self, master):
-        super(MatConverter, self).__init__(master)
+class Converter(tk.Frame):
+    def __init__(self, master, controller=None):
+        super(Converter, self).__init__(master, highlightthickness=1)
+        self.config(highlightbackground = "black", highlightcolor= "black")
+        if controller is None:
+            self.controller = master
+        else:
+            self.controller = controller
+
+        tk.Label(self, text=get_locale("mat_converter.title"), font='TkDefaultFont 10 bold')\
+            .grid(row=0, column=0, columnspan=3, sticky="nsew")
+
         self.file_listbox = tk.Listbox(self, selectmode=tk.MULTIPLE)
-        self.file_listbox.grid(row=0, column=0, sticky="nsew", columnspan=2)
-        tk.Button(self, command=self.on_add_file, text=get_locale("mat_converter.btn.add")).grid(row=1, column=0, sticky="nsew")
-        tk.Button(self, command=self.on_remove_file, text=get_locale("mat_converter.btn.remove")).grid(row=1, column=1, sticky="nsew")
+        self.file_list = []
+        self.file_listbox.grid(row=1, column=0, sticky="nsew", columnspan=2)
+        tk.Button(self, command=self.on_add_file, text=get_locale("mat_converter.btn.add")).grid(row=2, column=0, sticky="nsew")
+        tk.Button(self, command=self.on_remove_file, text=get_locale("mat_converter.btn.remove")).grid(row=2, column=1, sticky="nsew")
 
         right_panel = tk.Frame(self)
-        right_panel.grid(row=0, column=2, sticky="nsew", rowspan=2)
+        right_panel.grid(row=1, column=2, sticky="nsew", rowspan=2)
 
         self.output_file = tk.StringVar(right_panel)
+        self.full_output_file = ""
         tk.Label(right_panel, textvariable=self.output_file).grid(row=0, column=0, sticky="ew")
         tk.Button(right_panel, command=self.on_output_file_select, text=get_locale("mat_converter.btn.choose_export"))\
             .grid(row=0, column=1, sticky="ew")
@@ -31,7 +43,7 @@ class MatConverter(ToolBase):
         tk.Button(right_panel, command=self.on_convert, text=get_locale("mat_converter.btn.convert"))\
             .grid(row=2, column=0, sticky="ew", columnspan=2)
 
-        self.rowconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
         self.columnconfigure(0, weight=2)
         self.columnconfigure(1, weight=1)
 
@@ -42,8 +54,9 @@ class MatConverter(ToolBase):
                                                 parent=self)
         if filenames:
             for filename in filenames:
-                if filename not in self.file_listbox.get(0, tk.END):
-                    self.file_listbox.insert(tk.END, filename)
+                if filename not in self.file_list:
+                    self.file_listbox.insert(tk.END, ospath.basename(filename))
+                    self.file_list.append(filename)
                 else:
                     messagebox.showwarning(title="Добавка файла", message=format_locale(
                                                "mat_converter.messagebox.file_in_list", filename=filename
@@ -55,6 +68,7 @@ class MatConverter(ToolBase):
         print(cursel)
         for i in cursel[::-1]:
                 self.file_listbox.delete(i)
+                self.file_list.pop(i)
 
     def on_output_file_select(self):
         filename = filedialog.asksaveasfilename(title="mat_converter.filedialog.export.title",
@@ -62,7 +76,8 @@ class MatConverter(ToolBase):
                                                 initialdir=".",
                                                  parent=self)
         if filename:
-            self.output_file.set(filename)
+            self.output_file.set(ospath.basename(filename))
+            self.full_output_file = filename
 
     def on_convert(self):
         try:
@@ -79,8 +94,8 @@ class MatConverter(ToolBase):
                                  parent=self)
             return
         #Filename tests
-        output_filename = self.output_file.get()
-        input_filenames = self.file_listbox.get(0,tk.END)
+        output_filename = self.full_output_file
+        input_filenames = self.file_list[:]
         print(input_filenames)
         if not output_filename:
             messagebox.showerror(title=get_locale("mat_converter.messagebox.input_error.title"),
@@ -116,13 +131,11 @@ class MatConverter(ToolBase):
                         parent=self)
             return
 
-        if messagebox.askyesno(title="Преобразование",
+        if messagebox.askyesno(title=get_locale("mat_converter.messagebox.conversion.title"),
                                message=format_locale("mat_converter.messagebox.conversion.msg", frames=frames),
                               parent=self):
-            if hasattr(self.master, "close_mat_file"):
-                self.master.close_mat_file()
 
-            self.winfo_toplevel().close_mat_file()  # In case we overwrite it
+            self.controller.close_mat_file()  # In case we overwrite it
             with h5py.File(output_filename, "w") as output_file:
                 data0 = output_file.create_dataset("data0", (frames, 16, 16), dtype="f8")
                 utc_time = output_file.create_dataset("UT0", (frames,), dtype="f8")

@@ -13,7 +13,7 @@ from astropy.time import Time
 from astronomy import range_calculate, to_altaz
 import json
 from .random_roaming import RandomRoaming, maximize
-from ..tool_mat_converter import MatConverter
+from tools.tool_mat_converter import MatConverter
 
 import matplotlib.pyplot as plt
 from parameters import MAIN_LATITUDE, MAIN_LONGITUDE

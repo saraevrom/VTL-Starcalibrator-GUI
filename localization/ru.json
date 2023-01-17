@@ -94,6 +94,12 @@
   "mat_converter.messagebox.conversion.title": "Преобразование",
   "mat_converter.messagebox.conversion.msg": "Будет создан файл с {frames} кадрами, хотите продолжить?",
 
+  "mat_converter.downloader.title": "Скачивание данных",
+  "mat_converter.downloader.addr": "Адрес",
+  "mat_converter.downloader.login": "Логин",
+  "mat_converter.downloader.password": "Пароль",
+  "mat_converter.downloader.button.access": "Войти",
+
   "app.settings.separator.stars_selection": "Выбор звёзд",
   "app.settings.separator.orientation_parameters": "Параметры ориентации",
   "app.settings.separator.amplitude_parameters": "Параметры оптимизатора (амлитуды изменения)",

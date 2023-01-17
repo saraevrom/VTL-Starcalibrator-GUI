@@ -74,7 +74,7 @@
   "track_markup.btn.start": "Start",
   "track_markup.dialog.reset": "Starting with parameters",
 
-  "mat_converter.title": "Mat convertor",
+  "mat_converter.title": "Mat converter",
   "mat_converter.btn.add":"Add",
   "mat_converter.btn.remove":"Remove",
   "mat_converter.btn.choose_export":"Choose export file",
@@ -93,6 +93,12 @@
   "mat_converter.messagebox.input_error.missing_fields": "There are files with missing 'unixtime_dbl_global' or 'pdm_2d_rot_global' fields",
   "mat_converter.messagebox.conversion.title": "Conversion",
   "mat_converter.messagebox.conversion.msg": "A file with {frames} frames will be created. Continue?",
+
+  "mat_converter.downloader.title": "Downloader",
+  "mat_converter.downloader.addr": "Address",
+  "mat_converter.downloader.login": "Login",
+  "mat_converter.downloader.password": "Password",
+  "mat_converter.downloader.button.access": "Access",
 
   "app.settings.separator.stars_selection": "Star selection",
   "app.settings.separator.orientation_parameters": "Orientation parameters",
