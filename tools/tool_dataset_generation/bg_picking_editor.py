@@ -51,9 +51,9 @@ class BgPickingEditor(Plotter):
             self._mark_placing_patch = None
             self._mark_placing_rectangle = None
             if x > self._mark_start:
-                self.marked_intervals.append([self._mark_start, x])
+                self.marked_intervals.append([self._mark_start, x, 1.0])
             else:
-                self.marked_intervals.append([x, self._mark_start])
+                self.marked_intervals.append([x, self._mark_start, 1.0])
 
     def on_motion(self, event):
         if (event.xdata is not None):
@@ -129,7 +129,7 @@ class BgPickingEditor(Plotter):
 
     def draw_intervals(self):
         for interval in self.marked_intervals:
-            start, end = interval
+            start, end, weight = interval
             mark_placing_rectangle = Rectangle((start, -1), end-start, 2, color="gray", alpha=0.25)
             self.draw_cache.append(self.axes.add_patch(mark_placing_rectangle))
 
@@ -158,15 +158,25 @@ class BgPickingEditor(Plotter):
         self.draw_y = draw_y
         #draw_y = np.log(draw_y)
 
-    def delete_interval_on_frame_pointer(self):
+    def find_selected_interval(self):
         x = self.frame_pointer_location
         found = False
         interval_index = 0
-        for  i in range(len(self.marked_intervals)-1, -1, -1):
-            start,end = self.marked_intervals[i]
+        for i in range(len(self.marked_intervals) - 1, -1, -1):
+            start, end, weight = self.marked_intervals[i]
             if start <= x <= end:
                 found = True
                 interval_index = i
                 break
         if found:
+            return True, interval_index
+        else:
+            return False, 0
+
+    def delete_interval_on_frame_pointer(self):
+        found,interval_index = self.find_selected_interval()
+        if found:
             self.marked_intervals.pop(interval_index)
+
+    def populate_intervals(self, found_events):
+        self.marked_intervals = [[start, end, 1.0] for (start, end) in found_events]

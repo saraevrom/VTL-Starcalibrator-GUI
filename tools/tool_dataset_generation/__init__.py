@@ -109,7 +109,7 @@ class DatasetGenerator(ToolBase):
             if load_path:
                 with open(load_path,"r") as fp:
                     jsd = json.load(fp)
-                    self.interval_editor.marked_intervals = jsd["found_event"]
+                    self.interval_editor.populate_intervals(jsd["found_event"])
                     self.interval_editor.redraw(self.settings_dict)
 
     def on_save(self):
@@ -127,7 +127,12 @@ class DatasetGenerator(ToolBase):
 
     def reload_stored_marked_intervals(self):
         if "marked_intervals" in self.file:
-            self.interval_editor.marked_intervals = np.array(self.file["marked_intervals"]).tolist()
+            loaded_intervals = np.array(self.file["marked_intervals"]).tolist()
+            if loaded_intervals:
+                if len(loaded_intervals[0])<3:
+                    print("Weights are missing. They will be added.")
+                    loaded_intervals = [[start, end, 1.0] for (start, end) in loaded_intervals]
+            self.interval_editor.marked_intervals = loaded_intervals
 
     def on_loaded_file_success(self):
         gc.collect()
