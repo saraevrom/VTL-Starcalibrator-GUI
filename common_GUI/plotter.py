@@ -42,12 +42,13 @@ class Plotter(ttk.Frame):
 
 
 class GridPlotter(Plotter):
-    def __init__(self, master, norm=None, *args, **kwargs):
+    def __init__(self, master, norm=None, enable_scale_configuration=True, *args, **kwargs):
         super(GridPlotter, self).__init__(master, *args, **kwargs)
         self.use_autoscale_var = tk.IntVar(self)
         self.use_autoscale_var.set(1)
         self.min_norm_entry = tk.StringVar(self)
         self.max_norm_entry = tk.StringVar(self)
+        self.enable_scale_configuration = enable_scale_configuration
         self.on_right_click_callback = None
         self.on_right_click_callback_outofbounds = None
 
@@ -84,13 +85,14 @@ class GridPlotter(Plotter):
         norm_panel.pack(side=tk.BOTTOM, fill=tk.X)
         for i in range(4):
             norm_panel.columnconfigure(i, weight=1)
-        autoscale_check = tk.Checkbutton(norm_panel, text=get_locale("app.widgets.gridplotter.use_autoscale"),
-                                         variable=self.use_autoscale_var)
-        autoscale_check.grid(row=0, column=0, columnspan=4, sticky="ew")
-        tk.Label(norm_panel, text=get_locale("app.widgets.gridplotter.scale")).grid(row=1, column=0, sticky="ew")
-        tk.Label(norm_panel, text=get_locale("—")).grid(row=1, column=2, sticky="ew")
-        tk.Entry(norm_panel, textvariable=self.min_norm_entry).grid(row=1, column=1, sticky="ew")
-        tk.Entry(norm_panel, textvariable=self.max_norm_entry).grid(row=1, column=3, sticky="ew")
+        if enable_scale_configuration:
+            autoscale_check = tk.Checkbutton(norm_panel, text=get_locale("app.widgets.gridplotter.use_autoscale"),
+                                             variable=self.use_autoscale_var)
+            autoscale_check.grid(row=0, column=0, columnspan=4, sticky="w")
+            tk.Label(norm_panel, text=get_locale("app.widgets.gridplotter.scale")).grid(row=0, column=1, sticky="ew")
+            tk.Label(norm_panel, text=get_locale("—")).grid(row=0, column=3, sticky="ew")
+            tk.Entry(norm_panel, textvariable=self.min_norm_entry).grid(row=0, column=2, sticky="ew")
+            tk.Entry(norm_panel, textvariable=self.max_norm_entry).grid(row=0, column=4, sticky="ew")
 
     def update_norm(self, low_fallback=None, high_fallback=None):
         if low_fallback is None:
@@ -105,7 +107,7 @@ class GridPlotter(Plotter):
         if low_fallback > high_fallback:
             high_fallback = low_fallback + 1e-6
 
-        if self.use_autoscale_var.get():
+        if not self.enable_scale_configuration or self.use_autoscale_var.get():
             low = low_fallback
             high = high_fallback
             self.max_norm_entry.set(SCALE_FLOATING_POINT_FORMAT.format(high_fallback))

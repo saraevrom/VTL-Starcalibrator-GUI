@@ -1,13 +1,12 @@
 import tkinter as tk
-from plotter import GridPlotter
+from common_GUI.plotter import GridPlotter
 from .player_controls import PlayerControls
-import os
 import numpy as np
 from datetime import datetime
 from ..tool_base import ToolBase
 from localization import get_locale
-from tk_forms import TkDictForm
-from ..tool_flatfielder import FlatFieldingModel
+from common_GUI import TkDictForm
+from parameters import DATETIME_FORMAT
 
 FORM_CONF = {
     "use_filter": {
@@ -49,7 +48,7 @@ class MatPlayer(ToolBase):
             #frame = self.file["data0"][frame_num]
             ut0 = self.ut0_s[frame_num]
             #ut0 = self.file["UT0"][frame_num]
-            time_str = datetime.utcfromtimestamp(ut0).strftime('%Y-%m-%d %H:%M:%S')
+            time_str = datetime.utcfromtimestamp(ut0).strftime(DATETIME_FORMAT)
             ffmodel = self.get_ff_model()
             if self.form_data["use_filter"]:
                 window = self.form_data["filter_window"]
@@ -73,6 +72,14 @@ class MatPlayer(ToolBase):
         self.player_controls.set_limit(len(self.file["UT0"]))
         self.frames = np.array(self.file["data0"])
         self.ut0_s = np.array(self.file["UT0"])
+        #self.plotter.draw()
+        self.poke()
+
+    def poke(self):
+        self.player_controls.draw_frame()
+
+    def on_ff_reload(self):
         ffmodel = self.get_ff_model()
-        if ffmodel:
-            self.plotter.set_broken(ffmodel.broken_query())
+        self.plotter.set_broken(ffmodel.broken_query())
+        self.plotter.draw()
+        self.poke()

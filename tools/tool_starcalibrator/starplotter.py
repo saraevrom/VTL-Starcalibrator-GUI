@@ -1,4 +1,4 @@
-from plotter import GridPlotter
+from common_GUI.plotter import GridPlotter
 import numpy as np
 import colorsys
 

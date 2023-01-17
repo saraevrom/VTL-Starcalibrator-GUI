@@ -1,8 +1,8 @@
-from plotter import GridPlotter
+from common_GUI import GridPlotter
 
 class DualHighlightingplotter(GridPlotter):
     def __init__(self, master):
-        super().__init__(master)
+        super().__init__(master, enable_scale_configuration=False)
         self.firstselected = None
         self.on_right_click_callback = self.on_rmb_event
         self.on_right_click_callback_outofbounds = self.on_click_elsewhere

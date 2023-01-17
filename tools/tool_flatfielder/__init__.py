@@ -1,18 +1,19 @@
 from tkinter import ttk
-from plotter import GridPlotter
+import tkinter as tk
 from .dual_highlighting_plotter import DualHighlightingplotter
-from settings_frame import SettingMenu
+from common_GUI import SettingMenu
 from .settings_build import build_settings
 from .signal_plotter import SignalPlotter
 import numpy as np
 from robustats import weighted_median
 from .flat_fielding_methods import ALGO_MAP
-import numpy.random as rng
 import matplotlib.pyplot as plt
 from localization import get_locale
+import tkinter.filedialog as filedialog
 
 from ..tool_base import ToolBase
 from .models import FlatFieldingModel
+import os.path as ospath
 
 def line_fit_robust(xs, ys):
     k = np.float(weighted_median(ys/xs, xs))
@@ -35,22 +36,30 @@ class FlatFielder(ToolBase):
         self.file = None
         self.remembered_model = None
         self.apparent_data = None
+        self.remembered_settings = dict()
         super(FlatFielder, self).__init__(master)
         self.title(get_locale("flatfielder.title"))
         self.coeff_plotter = DualHighlightingplotter(self)
         self.coeff_plotter.axes.set_title(get_locale("flatfielder.coefficients.title"))
-        self.coeff_plotter.grid(row=0, column=0, sticky="nsew")
+        self.coeff_plotter.grid(row=1, column=0, sticky="nsew")
         self.coeff_plotter.on_pair_click_callback = self.on_dual_draw
 
         self.bg_plotter = DualHighlightingplotter(self)
         self.bg_plotter.axes.set_title(get_locale("flatfielder.baselevel.title"))
-        self.bg_plotter.grid(row=1, column=0, sticky="nsew")
+        self.bg_plotter.grid(row=1, column=1, sticky="nsew")
         self.bg_plotter.on_pair_click_callback = self.on_dual_draw
-        self.settings_menu = SettingMenu(self,True)
+
+        settings_menu_parent = tk.Frame(self)
+        settings_menu_parent.columnconfigure(0, weight=1)
+        settings_menu_parent.rowconfigure(0, weight=1)
+
+        self.settings_menu = SettingMenu(settings_menu_parent,True)
+        settings_menu_parent.grid(row=0, column=1, sticky="nsew")
         build_settings(self.settings_menu)
-        self.settings_menu.grid(row=1, column=1, sticky="nsew")
+        self.settings_menu.grid(row=0, column=0, sticky="nsew")
+
         self.signal_plotter = SignalPlotter(self)
-        self.signal_plotter.grid(row=0, column=1, sticky="nsew")
+        self.signal_plotter.grid(row=0, column=0, sticky="nsew")
 
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
@@ -66,10 +75,10 @@ class FlatFielder(ToolBase):
         self.signal_plotter.draw()
         self.drawn_data = None
 
-        btn = ttk.Button(self, text=get_locale("flatfielder.btn.coeffs_calculate"), command=self.on_calculate)
-        btn.grid(row=2, column=1, sticky="ew")
-        btn = ttk.Button(self, text=get_locale("flatfielder.btn.save"), command=self.on_save_press)
-        btn.grid(row=3, column=1, sticky="ew")
+        btn = ttk.Button(settings_menu_parent, text=get_locale("flatfielder.btn.coeffs_calculate"), command=self.on_calculate)
+        btn.grid(row=1, column=0, sticky="ew")
+        btn = ttk.Button(settings_menu_parent, text=get_locale("flatfielder.btn.save"), command=self.on_save_press)
+        btn.grid(row=2, column=0, sticky="ew")
         #btn = ttk.Button(self, text=get_locale("flatfielder.btn.random_plot"), command=self.on_random_draw)
         #btn.grid(row=4, column=0, sticky="ew")
         self.on_apply_settings()
@@ -111,7 +120,8 @@ class FlatFielder(ToolBase):
 
             used_algo = self.settings_dict["used_algo"]
             if used_algo in ALGO_MAP.keys():
-                model = ALGO_MAP[used_algo](requested_data)
+                algo, iden = ALGO_MAP[used_algo]
+                model = algo(requested_data)
             else:
                 return
 
@@ -133,18 +143,36 @@ class FlatFielder(ToolBase):
             self.bg_plotter.update_matrix_plot(update_norm=True)
             self.bg_plotter.draw()
             self.remembered_model = model
+            self.remembered_settings.update(self.settings_dict)
             self.draw_plot()
             self.signal_plotter.draw()
             #np.save("flat_fielding.npy", draw_coeff_matrix)
 
     def on_save_press(self):
         if self.remembered_model is not None:
-            model = self.remembered_model
-            dead1 = np.logical_not(self.coeff_plotter.alive_pixels_matrix)
-            dead2 = np.logical_not(self.bg_plotter.alive_pixels_matrix)
-            model.set_broken(np.logical_or(dead1,dead2))
-            model.save("flat_fielding.json")
-            self.trigger_ff_model_reload()
+            t1 = self.remembered_settings["time_1"]
+            t2 = self.remembered_settings["time_2"]
+            used_algo = self.remembered_settings["used_algo"]
+            av = self.remembered_settings["samples_mean"]
+            algo, iden = ALGO_MAP[used_algo]
+            fbase = self.get_loaded_filename()
+            fbase = ospath.splitext(fbase)[0]
+
+            initial_filename = f"flat_fielding_{av}_{t1}-{t2}_{iden}_src-{fbase}.json"
+            filename = filedialog.asksaveasfilename(parent=self,
+                                                      title=get_locale("flatfielder.filedialog.save_ff_settings.title"),
+                                                      filetypes=[
+                                                          (get_locale("app.filedialog_formats.ff_json"), "*.json")
+                                                      ],
+                                                      initialfile=initial_filename
+                                                    )
+            if filename:
+                model = self.remembered_model
+                dead1 = np.logical_not(self.coeff_plotter.alive_pixels_matrix)
+                dead2 = np.logical_not(self.bg_plotter.alive_pixels_matrix)
+                model.set_broken(np.logical_or(dead1,dead2))
+                model.save(filename)
+                #self.trigger_ff_model_reload()
 
 
     def on_loaded_file_success(self):
@@ -180,15 +208,20 @@ class FlatFielder(ToolBase):
         if t1 > t2:
             t1, t2 = t2, t1
         requested_data = self.apparent_data[t1:t2,:,:]
+        outdata = np.concatenate([self.apparent_data[:t1,:,:], self.apparent_data[t2:,:,:]])
         assert (requested_data!=0).any()
         i1, j1 = p1
         i2, j2 = p2
         S_1 = requested_data[:, i1, j1]
         S_2 = requested_data[:, i2, j2]
+
+        S_1_o = outdata[:, i1, j1]
+        S_2_o = outdata[:, i2, j2]
         fig, ax = plt.subplots()
         ax.axis('equal')
         ax.set_xlabel(f"S[{i1}, {j1}]")
         ax.set_ylabel(f"S[{i2}, {j2}]")
+        ax.scatter(S_1_o, S_2_o)
         ax.scatter(S_1, S_2)
         # xs_test = np.array([min(S_1), max(S_1)])
         # ys_test = draw_coeff_matrix[i2, j2] * (xs_test - draw_bg_matrix[i1, j1]) / draw_coeff_matrix[i1, j1] + \

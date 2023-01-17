@@ -1,4 +1,25 @@
 {
+
+  "datasetgen.form.separator.display": "Display",
+  "datasetgen.form.cutoff_start": "Cut off first [frames]",
+  "datasetgen.form.cutoff_end": "Cut off last [frames]",
+  "datasetgen.form.filter_window": "MA Filter window [frames]",
+  "datasetgen.form.separator.data_augmentagion": "Data augmentation",
+  "datasetgen.form.use_transpose": "Transpose data",
+  "datasetgen.form.use_reverse": "Reverse time",
+  "datasetgen.button.clear": "Clear intervals",
+  "datasetgen.button.load": "Load marked intervals",
+  "datasetgen.button.save": "Save marked intervals into dataset",
+  "datasetgen.button.delete": "Delete selected element",
+  "datasetgen.button.reload": "Reload marked intervals",
+  "datasetgen.messagebox.reset.title": "Intervals reset",
+  "datasetgen.messagebox.reset.content": "Are you sure you want to erase empty intervals?",
+  "datasetgen.messagebox.save.title": "Saving dataset parameters",
+  "datasetgen.messagebox.save.content": "This will add fields to main mat file. Do you want to continue?",
+  "datasetgen.messagebox.save_success.title": "Saving dataset parameters",
+  "datasetgen.messagebox.save_success.content": "Saved parameters to main mat file",
+  "datasetgen.plot.title": "Frame {frame} ({time})",
+
   "flatfielder.title": "Flat fielding",
   "flatfielder.coefficients.title": "Coefficients",
   "flatfielder.baselevel.title": "Base Line",
@@ -14,10 +35,11 @@
   "flatfielder.form.separator.data": "Data",
   "flatfielder.form.field.samples_mean": "Average [frames]",
   "flatfielder.form.separator.display": "Display",
-  "flatfielder.form.field.use_model": "Apply model",
+  "flatfielder.form.field.use_model": "Transform",
   "flatfielder.form.separator.algo": "Algorithm",
-  "flatfielder.form.field.used_algo": "Algorithm",
+  "flatfielder.form.field.used_algo": "Method",
   "flatfielder.nothing": "None",
+  "flatfielder.filedialog.save_ff_settings.title": "Save flat fielding parameters",
 
   "matplayer.title": "Data viewer",
   "matplayer.form.use_filter": "Use filter",
@@ -49,8 +71,10 @@
   "track_markup.form.flash_suppress_use": "Use flash suppression",
   "track_markup.form.noise_suppress_window": "Noise suppression MSTD window",
   "track_markup.btn.spawn_window": "Create new figure for tracks",
+  "track_markup.btn.start": "Start",
+  "track_markup.dialog.reset": "Starting with parameters",
 
-  "mat_converter.title": "Mat convertor",
+  "mat_converter.title": "Mat converter",
   "mat_converter.btn.add":"Add",
   "mat_converter.btn.remove":"Remove",
   "mat_converter.btn.choose_export":"Choose export file",
@@ -69,6 +93,15 @@
   "mat_converter.messagebox.input_error.missing_fields": "There are files with missing 'unixtime_dbl_global' or 'pdm_2d_rot_global' fields",
   "mat_converter.messagebox.conversion.title": "Conversion",
   "mat_converter.messagebox.conversion.msg": "A file with {frames} frames will be created. Continue?",
+
+  "mat_converter.downloader.title": "Downloader",
+  "mat_converter.downloader.addr": "Address",
+  "mat_converter.downloader.login": "Login",
+  "mat_converter.downloader.password": "Password",
+  "mat_converter.downloader.button.access": "Access",
+  "mat_converter.downloader.messagebox.login_error.title": "Access",
+  "mat_converter.downloader.messagebox.login_error.msg": "Accessing {server} failed.",
+  "mat_converter.downloader.fieldialog.title": "Choose local directory",
 
   "app.settings.separator.stars_selection": "Star selection",
   "app.settings.separator.orientation_parameters": "Orientation parameters",
@@ -107,14 +140,20 @@
   "app.menu.tools.mat_player": "Data viewer",
   "app.menu.tools.track_markup": "Background",
   "app.menu.tools.starcalibrator": "Orientation",
+  "app.menu.tools.dataset_generator": "Dataset generator",
+
   "app.filedialog.save_settings.title": "Save settings",
   "app.filedialog.load_settings.title": "Load settings",
+  "app.filedialog.load_ff_settings.title": "Open flat fielding parameters",
   "app.filedialog.load_mat.title": "Open mat file",
 
   "app.filedialog_formats.settings_json": "JSON with settings",
+  "app.filedialog_formats.ff_json": "JSON with FF parameters",
   "app.filedialog_formats.processed_mat": "Converted mat files",
   "app.filedialog_formats.raw_mat": "Raw data",
 
   "app.widgets.gridplotter.use_autoscale": "Autoscale",
-  "app.widgets.gridplotter.scale": "Scale"
+  "app.widgets.gridplotter.scale": "Scale",
+  "app.ff_warning": "NO FLAT FIELDING USED",
+  "app.loaded_file": "Loaded File {}"
 }

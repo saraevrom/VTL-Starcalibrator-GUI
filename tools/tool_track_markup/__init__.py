@@ -1,19 +1,15 @@
 import tkinter as tk
-from plotter import GridPlotter
+from common_GUI import GridPlotter, TkDictForm
 from ..tool_base import ToolBase
 from .sorted_queue import SortedQueue
-from numpy.lib.stride_tricks import sliding_window_view
-import os
-import os.path
 import numpy as np
-from tk_forms import TkDictForm
 import tkinter.messagebox
 import tkinter.filedialog
 import json
 from localization import get_locale
-from ..tool_flatfielder import FlatFieldingModel
 import matplotlib.pyplot as plt
 from .denoising import reduce_noise, antiflash, moving_average_subtract
+from .reset import ResetAsker
 
 OFF = get_locale("app.state_off")
 ON = get_locale("app.state_on")
@@ -29,21 +25,21 @@ FORM_CONF = {
         "default": 256,
         "display_name": get_locale("track_markup.form.min_frame")
     },
-    "max_frame": {
-        "type": "int",
-        "default": 0,
-        "display_name": get_locale("track_markup.form.max_frame")
-    },
-    "start_skip":{
-        "type": "int",
-        "default": 0,
-        "display_name": get_locale("track_markup.form.start_skip")
-    },
-    "end_skip":{
-        "type": "int",
-        "default": 0,
-        "display_name": get_locale("track_markup.form.end_skip")
-    },
+    # "max_frame": {
+    #     "type": "int",
+    #     "default": 0,
+    #     "display_name": get_locale("track_markup.form.max_frame")
+    # },
+    # "start_skip":{
+    #     "type": "int",
+    #     "default": 0,
+    #     "display_name": get_locale("track_markup.form.start_skip")
+    # },
+    # "end_skip":{
+    #     "type": "int",
+    #     "default": 0,
+    #     "display_name": get_locale("track_markup.form.end_skip")
+    # },
     "pmt_select": {
         "type": "combo",
         "default": "full",
@@ -104,6 +100,7 @@ class TrackMarkup(ToolBase):
         self.last_single_plot_data = None
 
         self.current_event = None
+        self.event_set = False
 
         self.selected_data = tk.Listbox(left_panel, selectmode="single")
         self.selected_data.pack(side="bottom", fill="both", expand=True)
@@ -134,10 +131,14 @@ class TrackMarkup(ToolBase):
                   command=self.redraw_event).pack(side="bottom", expand=True, fill="both")
         self.yes_btn = tk.Button(bottom_panel, text=get_locale("track_markup.btn.track_yes"),
                   command=self.on_track_visible_poll)
-        self.yes_btn.pack(side="left", expand=True, fill="both")
         self.no_btn = tk.Button(bottom_panel, text=get_locale("track_markup.btn.track_no"),
                   command=self.on_track_invisible_poll)
-        self.no_btn.pack(side="right", expand=True, fill="both")
+        #self.yes_btn.pack(side="left", expand=True, fill="both")
+        #self.no_btn.pack(side="right", expand=True, fill="both")
+
+        self.start_btn = tk.Button(bottom_panel, text=get_locale("track_markup.btn.start"),
+                                command=self.on_start)
+        self.start_btn.pack(expand=True, fill="both")
 
         self.just_started =  True
         self.plotter.on_right_click_callback = self.popup_draw_signal
@@ -147,21 +148,37 @@ class TrackMarkup(ToolBase):
         self.event_in_queue = True, None
         self.selected_data.bind('<<ListboxSelect>>', self.on_review_trackless_select)
         self.rejected_data.bind('<<ListboxSelect>>', self.on_review_tracked_select)
-        self.highlight_button_update()
+        self.update_highlight_button()
+        self.update_answer_panel()
 
 
-    def highlight_button_update(self):
+    def update_answer_panel(self):
+        if not self.event_set and self.current_event:
+            self.start_btn.pack_forget()
+            self.yes_btn.pack(side="left", expand=True, fill="both")
+            self.no_btn.pack(side="right", expand=True, fill="both")
+            self.event_set = True
+        elif self.event_set and not self.current_event:
+            self.yes_btn.pack_forget()
+            self.no_btn.pack_forget()
+            self.start_btn.pack(expand=True, fill="both")
+            self.event_set = False
+
+
+    def update_highlight_button(self):
         if self.just_started:
             self.yes_btn.config(fg="red")
             self.no_btn.config(fg="red")
+            self.start_btn.config(fg="red")
         else:
             self.yes_btn.config(fg="black")
             self.no_btn.config(fg="black")
+            self.start_btn.config(fg="black")
 
     def on_loaded_file_success(self):
-        self.reset_events()
         self.just_started = True
-        self.highlight_button_update()
+        self.current_event = None
+        self.clear_events()
 
     def on_spawn_figure_press(self):
         self.ensure_figure(True)
@@ -183,25 +200,46 @@ class TrackMarkup(ToolBase):
                 parent=self):
             self.reset_events()
 
-    def reset_events(self):
+
+    def clear_events(self):
         self.current_event = None
         self.selected_data.delete(0, tk.END)
         self.rejected_data.delete(0, tk.END)
         self.trackless_events.clear()
         self.tracked_events.clear()
         self.queue.clear()
-        form_data = self.params_form.get_values()
-        if self.file:
-            data0 = self.file["data0"]
-            max_frame = form_data["max_frame"]
-            if max_frame==0:
-                self.queue.append([form_data["start_skip"], len(data0)-form_data["end_skip"]])
-            else:
-                for frame_start in range(form_data["start_skip"], len(data0)-form_data["end_skip"]-max_frame, max_frame):
-                    self.queue.append([frame_start, frame_start + max_frame])
-                last = self.queue[-1][1]
-                if last<len(data0)-form_data["end_skip"]-1:
-                    self.queue.append([last,len(data0)-form_data["end_skip"]])
+        self.update_highlight_button()
+        self.update_answer_panel()
+
+    def reset_events(self):
+        newformdata = ResetAsker(self)
+        form_data = newformdata.result
+        if form_data:
+            self.current_event = None
+            self.selected_data.delete(0, tk.END)
+            self.rejected_data.delete(0, tk.END)
+            self.trackless_events.clear()
+            self.tracked_events.clear()
+            self.queue.clear()
+            #form_data = self.params_form.get_values()
+            if self.file:
+
+                data0 = self.file["data0"]
+                max_frame = form_data["max_frame"]
+                if max_frame==0:
+                    self.queue.append([form_data["start_skip"], len(data0)-form_data["end_skip"]])
+                else:
+                    for frame_start in range(form_data["start_skip"], len(data0)-form_data["end_skip"]-max_frame, max_frame):
+                        self.queue.append([frame_start, frame_start + max_frame])
+                    last = self.queue[-1][1]
+                    if last<len(data0)-form_data["end_skip"]-1:
+                        self.queue.append([last,len(data0)-form_data["end_skip"]])
+                self.just_started = False
+            self.update_highlight_button()
+            self.update_answer_panel()
+            return True
+        else:
+            return False
 
     def show_next_event(self):
         while self.show_next_event_it():
@@ -261,6 +299,7 @@ class TrackMarkup(ToolBase):
                     parent=self
                 )
                 self.retractable_event = False
+                self.current_event = None
                 return False
             form_data = self.params_form.get_values()
             win = form_data["filter_win"]
@@ -280,14 +319,16 @@ class TrackMarkup(ToolBase):
     def on_track_invisible_poll(self):
         self.on_poll(False)
 
-    def on_poll(self, result):
+    def on_start(self):
         if self.just_started:
-            self.reset_events()
-            self.just_started = False
-            self.highlight_button_update()
-        if self.current_event is None:
-            self.show_next_event()
-        else:
+            if not self.reset_events():
+                return
+        self.show_next_event()
+        self.update_answer_panel()
+        self.update_highlight_button()
+
+    def on_poll(self, result):
+        if self.current_event is not None:
             start, end = self.current_event
             assert end>=start
             if result:
@@ -305,7 +346,6 @@ class TrackMarkup(ToolBase):
                 if subdivide:
                     self.queue.append([start, midpoint])
                     self.queue.append([midpoint, end])
-                self.show_next_event()
             else:
                 if self.event_in_queue[0]:
                     self.add_trackless_event(start, end)
@@ -313,7 +353,8 @@ class TrackMarkup(ToolBase):
                     start, end = self.pop_event(self.event_in_queue[1][0], False)
                     print("POPPED EVENT:",start,end)
                     self.add_trackless_event(start, end)
-                self.show_next_event()
+            self.show_next_event()
+            self.update_answer_panel()
 
     def add_trackless_event(self, start, end):
         if try_append_event(self.trackless_events,start,end):
@@ -358,7 +399,7 @@ class TrackMarkup(ToolBase):
         load_path = tkinter.filedialog.askopenfilename(initialdir=".", filetypes=(("JSON", "*.json"),),
                                                          initialfile="progress.json", parent=self)
         if load_path:
-            self.reset_events()
+            self.clear_events()
             with open(load_path, "r") as fp:
                 save_data = json.load(fp)
                 self.queue = save_data["queue"]
@@ -369,7 +410,8 @@ class TrackMarkup(ToolBase):
                 self.params_form.set_values(save_data["configuration"])
                 self.show_next_event()
                 self.just_started = False
-                self.highlight_button_update()
+                self.update_highlight_button()
+                self.update_answer_panel()
 
     def on_review_trackless_select(self, evt):
         return self.on_review_select_universal(evt, True)
@@ -389,6 +431,7 @@ class TrackMarkup(ToolBase):
         else:
             self.current_event = self.tracked_events[event_index]
         self.event_in_queue = False, (event_index, use_accepted)
+        self.update_answer_panel()
         self.redraw_event()
 
 

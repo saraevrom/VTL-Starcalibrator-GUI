@@ -1,11 +1,10 @@
 import tkinter
 
-from settings_frame import ScrollableFrame
+from common_GUI.settings_frame import ScrollableFrame
 import pandas as pd
 import numpy as np
 from astronomy import Star, name_a_star
-from astropy.time import Time
-from astronomy import range_calculate
+
 
 class Starlist(ScrollableFrame):
     def __init__(self, master, *args, **kwargs):

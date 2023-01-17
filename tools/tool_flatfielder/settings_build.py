@@ -1,6 +1,5 @@
-from settings_frame import SettingMenu, RangeIntValue, CheckboxValue, ComboboxValue
-from math import pi
-from localization import format_locale, get_locale
+from common_GUI.settings_frame import SettingMenu, RangeIntValue, CheckboxValue, ComboboxValue
+from localization import get_locale
 from .flat_fielding_methods import ALGO_MAP
 
 def build_settings(menu:SettingMenu):

@@ -1,6 +1,5 @@
-from settings_frame import SettingMenu, RangeDoubleValue, SliderRangeDoubleValue, RangeIntValue, CheckboxValue
-from settings_frame import ComboboxValue
-from math import pi
+from common_GUI.settings_frame import SettingMenu, RangeDoubleValue, RangeIntValue, CheckboxValue
+from common_GUI.settings_frame import ComboboxValue
 from localization import get_locale
 
 def build_menu(menu: SettingMenu):
@@ -12,7 +11,7 @@ def build_menu(menu: SettingMenu):
     menu.add_setting(RangeDoubleValue, "dec0", get_locale("app.settings.field.dec0"), 53.688444, start=-90, end=90, step=1e-3, fmt="%.6f")
     menu.add_setting(RangeDoubleValue, "ra0", get_locale("app.settings.field.ra0"), 40.754414, start=0., end=360.,
                      step=1e-3, fmt="%.3f")
-    menu.add_setting(RangeDoubleValue, "psi", get_locale("app.settings.field.psi"), 0, start=180., end=180.,
+    menu.add_setting(RangeDoubleValue, "psi", get_locale("app.settings.field.psi"), 0, start=-180., end=180.,
                      step=1e-3, fmt="%.3f")
     menu.add_setting(RangeDoubleValue, "f", get_locale("app.settings.field.f"), 150, start=145., end=165.,
                      step=1e-2, fmt="%.2f")

@@ -6,6 +6,7 @@ from tkinter import ttk
 from tkinter import filedialog, messagebox
 import json
 import os.path
+from .modified_base import EntryWithEnterKey
 
 def get_kwarg(kwdict,key,defval):
     if key in kwdict.keys():
@@ -108,7 +109,7 @@ class StringEntry(ConfigEntry):
         super().__init__(name,master,conf,color_index)
         tk.Label(self.frame,text=conf["display_name"]).pack(side="left",fill="both")
         self.textvar = tk.StringVar(master)
-        tk.Entry(self.frame,textvar=self.textvar).pack(side="left",fill="both")
+        EntryWithEnterKey(self.frame,textvar=self.textvar).pack(side="left",fill="both")
 
     def set_value(self,newval):
         self.textvar.set(newval)
@@ -130,7 +131,7 @@ class IntEntry(ConfigEntry):
         super().__init__(name,master,conf,color_index)
         tk.Label(self.frame,text=conf["display_name"]).pack(side="left",fill="both")
         self.textvar = tk.StringVar(master)
-        tk.Entry(self.frame, textvar=self.textvar).pack(side="left",fill="both")
+        EntryWithEnterKey(self.frame, textvar=self.textvar).pack(side="left",fill="both")
 
     def set_value(self,newval):
         self.textvar.set(str(newval))
@@ -154,7 +155,7 @@ class FloatEntry(ConfigEntry):
         super().__init__(name,master,conf,color_index)
         tk.Label(self.frame,text=conf["display_name"]).pack(side="left",fill="both")
         self.textvar = tk.StringVar(master)
-        tk.Entry(self.frame,textvar=self.textvar).pack(side="left",fill="both")
+        EntryWithEnterKey(self.frame,textvar=self.textvar).pack(side="left",fill="both")
 
     def set_value(self,newval):
         self.textvar.set(str(newval))

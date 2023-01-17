@@ -1,4 +1,25 @@
 {
+
+  "datasetgen.form.separator.display": "Отображение",
+  "datasetgen.form.cutoff_start": "Пропуск кадров в начале",
+  "datasetgen.form.cutoff_end": "Пропуск кадров в конце",
+  "datasetgen.form.filter_window": "Окно фильтра",
+  "datasetgen.form.separator.data_augmentagion": "Аугментация данных",
+  "datasetgen.form.use_transpose": "Транспонировать данные",
+  "datasetgen.form.use_reverse": "Обращать время",
+  "datasetgen.button.clear": "Очистить интервалы",
+  "datasetgen.button.load": "Загрузить размеченные интервалы",
+  "datasetgen.button.save": "Сохранить размеченные интервалы",
+  "datasetgen.button.delete": "Удалить выбранный элемент",
+  "datasetgen.button.reload": "Перезагрузить сохранённые интервалы",
+  "datasetgen.messagebox.reset.title": "Сброс данных",
+  "datasetgen.messagebox.reset.content": "Вы точно хотите стереть пустые интервалы и начать заново?",
+  "datasetgen.messagebox.save.title": "Сохранение данных для обучения",
+  "datasetgen.messagebox.save.content": "Данная процедура запишет параметры в загруженный файл. Продолжить?",
+  "datasetgen.messagebox.save_success.title": "Сохранение данных для обучения",
+  "datasetgen.messagebox.save_success.content": "Параметры сохранены",
+  "datasetgen.plot.title": "Кадр {frame} ({time})",
+
   "flatfielder.title": "Выравнивание пикселей",
   "flatfielder.coefficients.title": "Коэффициенты",
   "flatfielder.baselevel.title": "Фон",
@@ -14,9 +35,10 @@
   "flatfielder.form.field.samples_mean": "Усреднение",
   "flatfielder.form.separator.display": "Отображение",
   "flatfielder.form.field.use_model": "Применить модель",
+  "flatfielder.filedialog.save_ff_settings.title": "Сохранить параметры для выравнивания пикселей",
 
   "flatfielder.form.separator.algo": "Алгоритм",
-  "flatfielder.form.field.used_algo": "Алгоритм",
+  "flatfielder.form.field.used_algo": "Метод",
   "flatfielder.nothing": "Н/Д",
 
   "matplayer.title": "Воспроизведение",
@@ -40,8 +62,8 @@
   "track_markup.form.signal_filter_win": "Окно фильтра сигнала",
   "track_markup.form.min_frame": "Минимальное количество кадров",
   "track_markup.form.max_frame": "Максимальное количество кадров",
-  "track_markup.form.start_skip": "Пропуск в начале",
-  "track_markup.form.end_skip": "Пропуск в конце",
+  "track_markup.form.start_skip": "Пропуск кадров в начале",
+  "track_markup.form.end_skip": "Пропуск кадров в конце",
   "track_markup.form.pmt_select": "ФЭУ",
   "track_markup.label.accepted": "Интервалы без треков",
   "track_markup.label.rejected": "Интервалы с треками",
@@ -49,6 +71,8 @@
   "track_markup.form.flash_suppress_use": "Использовать подавление вспышек",
   "track_markup.form.noise_suppress_window": "Окно для шумоподавления",
   "track_markup.btn.spawn_window": "Создать новый график для временных развёрток",
+  "track_markup.btn.start": "Старт",
+  "track_markup.dialog.reset": "Параметры для сброса",
 
   "mat_converter.title": "Преобразователь mat файлов",
   "mat_converter.btn.add":"Добавить",
@@ -69,6 +93,17 @@
   "mat_converter.messagebox.input_error.missing_fields": "Во входных файлах есть данные без полей unixtime_dbl_global или pdm_2d_rot_global",
   "mat_converter.messagebox.conversion.title": "Преобразование",
   "mat_converter.messagebox.conversion.msg": "Будет создан файл с {frames} кадрами, хотите продолжить?",
+
+  "mat_converter.downloader.title": "Скачивание данных",
+  "mat_converter.downloader.addr": "Адрес",
+  "mat_converter.downloader.login": "Логин",
+  "mat_converter.downloader.password": "Пароль",
+  "mat_converter.downloader.button.access": "Войти",
+
+
+  "mat_converter.downloader.messagebox.login_error.title": "Доступ",
+  "mat_converter.downloader.messagebox.login_error.msg": "Не удалось соединиться с сервером {server}",
+  "mat_converter.downloader.fieldialog.title": "Выберите локальную папку для сохранения данных.",
 
   "app.settings.separator.stars_selection": "Выбор звёзд",
   "app.settings.separator.orientation_parameters": "Параметры ориентации",
@@ -107,14 +142,22 @@
   "app.menu.tools.mat_player": "Просмотр данных",
   "app.menu.tools.track_markup": "Фон",
   "app.menu.tools.starcalibrator": "Ориентация",
+  "app.menu.tools.dataset_generator": "Генерация данных обучения",
+
   "app.filedialog.save_settings.title": "Сохранение настроек",
   "app.filedialog.load_settings.title": "Загрузка настроек",
+
+  "app.filedialog.load_ff_settings.title": "Открыть параметры для выравнивания пикселей",
   "app.filedialog.load_mat.title": "Открыть mat файл",
 
   "app.filedialog_formats.settings_json": "JSON файл с настройками",
+  "app.filedialog_formats.ff_json": "JSON с параметрами",
   "app.filedialog_formats.processed_mat": "Обработанные mat файлы",
   "app.filedialog_formats.raw_mat": "Файл с сырыми данными",
 
   "app.widgets.gridplotter.use_autoscale": "Автоматическая нормировка",
-  "app.widgets.gridplotter.scale": "Нормировка"
+  "app.widgets.gridplotter.scale": "Нормировка",
+  "app.ff_warning": "ПИКСЕЛИ НЕ ВЫРАВНИВАЮТСЯ",
+  "app.loaded_file": "Загружен файл {}"
+
 }

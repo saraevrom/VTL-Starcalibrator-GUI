@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
-from tk_forms import ScrollView as ScrollableFrame
-
+from .tk_forms import ScrollView as ScrollableFrame
+from .modified_base import EntryWithEnterKey, SpinboxWithEnterKey
 
 # based on https://gist.github.com/mp035/9f2027c3ef9172264532fcd6262f3b01
 # class ScrollableFrame(ttk.Frame):
@@ -93,7 +93,7 @@ class EntryValue(Setting):
     def build_setting(self, frame):
         self.entryvar = tk.StringVar(self)
         self.entryvar.set(str(self.initial_value))
-        entry = ttk.Entry(frame, textvariable=self.entryvar)
+        entry = EntryWithEnterKey(frame, textvariable=self.entryvar)
         entry.pack(fill=tk.BOTH, expand=True)
 
 
@@ -155,7 +155,7 @@ class RangeDoubleValue(Setting):
 
     def build_setting(self, frame):
         self.entryvar = tk.StringVar(self)
-        self.entry_field = ttk.Spinbox(frame, from_=self.start, to=self.end, increment=self.step, format=self.fmt,
+        self.entry_field = SpinboxWithEnterKey(frame, from_=self.start, to=self.end, increment=self.step, format=self.fmt,
                                        wrap=True, textvariable=self.entryvar)
         self.entry_field.pack(fill=tk.BOTH, expand=True)
         self.entryvar.trace('w', lambda nm, idx, mode, var=self.entryvar: self.validate_value(var))
@@ -209,7 +209,7 @@ class RangeIntValue(Setting):
 
     def build_setting(self, frame):
         self.entryvar = tk.StringVar(self)
-        self.entry_field = ttk.Spinbox(frame, from_=self.start, to=self.end,
+        self.entry_field = SpinboxWithEnterKey(frame, from_=self.start, to=self.end,
                                        wrap=True, textvariable=self.entryvar)
         self.entry_field.pack(fill=tk.BOTH, expand=True)
         self.entryvar.trace('w', lambda nm, idx, mode, var=self.entryvar: self.validate_value(var))

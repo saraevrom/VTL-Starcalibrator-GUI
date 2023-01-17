@@ -189,10 +189,10 @@ def isotropic_lsq_corr_flatfield_parallel(requested_data_0):
         # bg_matrix = upper_bg + lower_bg
     coeff_matrix = np.nan_to_num(coeff_matrix, nan=0)
     bg_matrix = np.nan_to_num(bg_matrix, nan=0)
-    plt.matshow(coeff_matrix)
-    plt.show()
-    plt.matshow(bg_matrix)
-    plt.show()
+    # plt.matshow(coeff_matrix)
+    # plt.show()
+    # plt.matshow(bg_matrix)
+    # plt.show()
     good_indices = get_working_pixels(coeff_matrix, x_len, y_len)
     coeff_matrix_reduced = coeff_matrix[good_indices]
     bg_matrix_reduced = bg_matrix[good_indices]
@@ -227,9 +227,9 @@ def multidim_lad_corr_flatfield_no_bg(requested_data_0):
     return Linear(draw_coeff_matrix, draw_bg_matrix)
 
 ALGO_MAP = {
-    "proportional_correlation": median_corr_flatfield,
-    "linear_correlation": isotropic_lsq_corr_flatfield_parallel,
-    "isotropic_lad_multidim": multidim_lad_corr_flatfield,
-    "isotropic_lad_multidim_no_bg": multidim_lad_corr_flatfield_no_bg,
-    "nonlinear_saturated_respone": isotropic_lsq_corr_flatfield_nonlinear  #Nope!
+    "proportional_correlation": (median_corr_flatfield, "PC"),
+    "linear_correlation": (isotropic_lsq_corr_flatfield_parallel, "LC"),
+    "isotropic_lad_multidim": (multidim_lad_corr_flatfield, "LMDC"),
+    "isotropic_lad_multidim_no_bg": (multidim_lad_corr_flatfield_no_bg, "LMSCNBG"),
+    "nonlinear_saturated_respone": (isotropic_lsq_corr_flatfield_nonlinear, "NSR")
 }
