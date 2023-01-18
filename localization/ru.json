@@ -1,4 +1,14 @@
 {
+  "teacher.pool_bg.title": "Источники фона",
+  "teacher.pool_fg.title": "Источники сигнала",
+  "teacher.button.select_sources": "Выбрать источники",
+  "teacher.filedialog.source": "Источник",
+  "teacher.status.msg_bg": "Фон",
+  "teacher.status.msg_fg": "Сигнал",
+  "teacher.status.msg_ok": "OK",
+  "teacher.status.msg_missing": "Не хватает полей в {file}: {fields}",
+  "teacher.status.msg_empty": "Пуст",
+  "teacher.button.start": "Начать обучение",
 
   "datasetgen.form.separator.display": "Отображение",
   "datasetgen.form.cutoff_start": "Пропуск кадров в начале",
@@ -151,6 +161,7 @@
   "app.menu.tools.track_markup": "Фон",
   "app.menu.tools.starcalibrator": "Ориентация",
   "app.menu.tools.dataset_generator": "Генерация данных обучения",
+  "app.menu.tools.teacher": "Обучение модели",
 
   "app.filedialog.save_settings.title": "Сохранение настроек",
   "app.filedialog.load_settings.title": "Загрузка настроек",

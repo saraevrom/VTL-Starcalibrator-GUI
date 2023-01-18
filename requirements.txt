@@ -9,3 +9,4 @@ robustats
 scipy
 numexpr
 numba
+tensorflow-cpu
