@@ -1,5 +1,10 @@
 import tkinter as tk
-from tkinter import ttk
+
+try:
+    from tkinter.ttk import Spinbox
+except ImportError:
+    from compatibility.py36xspinbox import Spinbox
+    print("Spinbox compat is loaded")
 
 class EntryWithEnterKey(tk.Entry):
     def __init__(self,*args,**kwargs):
@@ -10,7 +15,7 @@ class EntryWithEnterKey(tk.Entry):
         self.winfo_toplevel().focus()
 
 
-class SpinboxWithEnterKey(ttk.Spinbox):
+class SpinboxWithEnterKey(Spinbox):
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
         self.bind("<Return>", self.on_keypress_enter)
