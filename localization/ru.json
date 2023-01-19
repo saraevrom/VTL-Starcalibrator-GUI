@@ -1,14 +1,17 @@
 {
   "teacher.pool_bg.title": "Источники фона",
   "teacher.pool_fg.title": "Источники сигнала",
+  "teacher.pool_interference.title": "Источники помех",
   "teacher.button.select_sources": "Выбрать источники",
   "teacher.filedialog.source": "Источник",
   "teacher.status.msg_bg": "Фон",
   "teacher.status.msg_fg": "Сигнал",
+  "teacher.status.msg_it": "Помехи",
   "teacher.status.msg_ok": "OK",
   "teacher.status.msg_missing": "Не хватает полей в {file}: {fields}",
   "teacher.status.msg_empty": "Пуст",
   "teacher.button.start": "Начать обучение",
+  "teacher.button.clear": "Очистить",
 
   "datasetgen.form.separator.display": "Отображение",
   "datasetgen.form.cutoff_start": "Пропуск кадров в начале",

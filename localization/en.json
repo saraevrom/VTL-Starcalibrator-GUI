@@ -1,15 +1,18 @@
 {
   "teacher.pool_bg.title": "Background sources",
   "teacher.pool_fg.title": "Foreground sources",
+  "teacher.pool_interference.title": "Interference sources",
   "teacher.button.select_sources": "Select sources",
   "teacher.filedialog.title": "Choose sources",
   "teacher.filedialog.source": "Source",
   "teacher.status.msg_bg": "Background",
   "teacher.status.msg_fg": "Foreground",
+  "teacher.status.msg_it": "Interference",
   "teacher.status.msg_ok": "OK",
   "teacher.status.msg_missing": "Missing fields in {file}: {fields}",
   "teacher.status.msg_empty": "Pool empty",
   "teacher.button.start": "Start teaching",
+  "teacher.button.clear": "Clear",
 
   "datasetgen.form.separator.display": "Display",
   "datasetgen.form.cutoff_start": "Cut off first [frames]",
