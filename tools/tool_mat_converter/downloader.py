@@ -77,7 +77,7 @@ class DownloaderWorker(Process):
         self.ftp_passwd = passwd
         self.ftp_src_dir = src_dir
         self.ftp_dst_dir = dst_dir
-        self.ftp_filelist = filelist
+        self.ftp_filelist = filter(lambda x: x.endswith(".mat"), filelist)
         self.ftp_pipe = conn_pipe
 
     def run(self):
