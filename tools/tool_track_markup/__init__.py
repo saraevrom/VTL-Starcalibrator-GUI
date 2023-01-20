@@ -341,7 +341,8 @@ class TrackMarkup(ToolBase):
                     if self.event_in_queue[1][1]:
                         self.pop_event(self.event_in_queue[1][0], True)
                     else:
-                        subdivide = False
+                        self.pop_event(self.event_in_queue[1][0], False)
+                        # subdivide = False
 
                 if subdivide:
                     self.queue.append([start, midpoint])

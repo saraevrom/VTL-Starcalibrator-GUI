@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
 import matplotlib
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
@@ -13,7 +12,6 @@ matplotlib.use("TkAgg")
 from parameters import *
 from localization import get_locale
 from parameters import SCALE_FLOATING_POINT_FORMAT
-import time
 
 LOWER_EDGES = np.arange(HALF_PIXELS)*PIXEL_SIZE+HALF_GAP_SIZE
 LOWER_EDGES = np.concatenate([-np.flip(LOWER_EDGES)-PIXEL_SIZE, LOWER_EDGES])

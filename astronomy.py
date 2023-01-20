@@ -68,7 +68,7 @@ def range_calculate(params:dict, t1: Time, t2:Time):
     dec0 = params["dec0"] * np.pi / 180
 
     half_size = HALF_GAP_SIZE+HALF_PIXELS*PIXEL_SIZE
-    half_fov = np.arctan(half_size*2**0.5/params["f"])
+    half_fov = np.arctan(half_size*2/params["f"])
     print(t1.to_datetime(), t2.to_datetime())
     era1 = t1.earth_rotation_angle(0).radian
     era2 = t2.earth_rotation_angle(0).radian
