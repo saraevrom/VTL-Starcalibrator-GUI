@@ -154,9 +154,3 @@ class Converter(tk.Frame):
                                 utc_time[pointer] = input_file['unixtime_dbl_global'][i][0]
                                 pointer += 1
 
-
-
-if __name__=="__main__":
-    root = tk.Tk()
-    conv = MatConverter(root)
-    root.mainloop()

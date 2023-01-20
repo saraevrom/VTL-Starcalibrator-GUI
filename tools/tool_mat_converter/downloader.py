@@ -10,6 +10,7 @@ import os.path as ospath
 import os
 from multiprocessing import Process, Pipe
 import h5py
+import time
 
 class FtpBrowser(simpledialog.Dialog):
 
@@ -68,6 +69,7 @@ def verify_mat(file_path: str):
     except OSError:
         return False
 
+
 class DownloaderWorker(Process):
     def __init__(self, conndata, src_dir, dst_dir, filelist, conn_pipe, *args, **kwargs):
         super().__init__(*args,**kwargs)
@@ -82,17 +84,38 @@ class DownloaderWorker(Process):
 
     def run(self):
         self.ftp_pipe.send([True, "", 0])
-        with FTP(self.ftp_addr, user=self.ftp_login, passwd=self.ftp_passwd) as ftp:
-            ftp.cwd(self.ftp_src_dir)
-            for i, filename in enumerate(self.ftp_filelist):
-                ftp_destination = ospath.join(self.ftp_dst_dir, filename)
-                self.ftp_pipe.send([True, filename, i])
-                if verify_mat(ftp_destination):
-                    print("Skipped", filename)
-                else:
-                    print("Downloading", filename)
-                    with open(ftp_destination, "wb") as fp:
-                        ftp.retrbinary(f'RETR {filename}', fp.write, 262144)
+        ftp = None
+        for i, filename in enumerate(self.ftp_filelist):
+
+
+            ftp_destination = ospath.join(self.ftp_dst_dir, filename)
+            self.ftp_pipe.send([True, filename, i])
+            if verify_mat(ftp_destination):
+                print("Skipped", filename)
+            else:
+                finished = False
+                with open(ftp_destination, "ab") as fp:
+                    while not finished:
+                        if ftp is None:
+                            ftp = FTP(self.ftp_addr, user=self.ftp_login, passwd=self.ftp_passwd)
+                            ftp.cwd(self.ftp_src_dir)
+                        try:
+                            rest = fp.tell()
+                            if rest == 0:
+                                rest = None
+                                print("Starting new transfer", filename)
+                            else:
+                                print(f"Resuming transfer from {rest} for", filename)
+
+                            ftp.retrbinary(f'RETR {filename}', fp.write, 262144, rest=rest)
+                            print("Done")
+                            finished = True
+                        except Exception as e:
+                            ftp = None
+                            sec = 5
+                            print(f"Transfer failed: {e}, will retry in {sec} seconds...")
+                            time.sleep(sec)
+
         self.ftp_pipe.send([False])
 
 class Downloader(tk.Frame):
