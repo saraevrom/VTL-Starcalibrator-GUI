@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from common_GUI import EntryWithEnterKey
 
 FAST_FWD_SKIP = 1
 FRAME_DELAY = 1 #ms
@@ -68,15 +69,31 @@ class ValuedSlider(ttk.Frame):
         self.value_variable.trace("w", self.on_slider_update)
         self.play_slider = ttk.Scale(self, orient=tk.HORIZONTAL, from_=0, to=100, variable=self.value_variable)
         self.play_slider.grid(row=0, column=0, sticky="nsew")
-        tk.Label(self, textvariable=self.display_variable, width=10).grid(row=0, column=1, sticky="nsew")
+        entry = EntryWithEnterKey(self, textvariable=self.display_variable, width=10)
+        entry.grid(row=0, column=1, sticky="nsew")
+        entry.on_commit = self.on_display_commit
         self.columnconfigure(0, weight=1)
         self.upper_limit = 100
 
     def set_slider_callback(self, callback):
         self.play_slider.config(command=callback)
+        self.slider_callback = callback
 
     def on_slider_update(self, *_):
         self.display_variable.set(str(self.value_variable.get()))
+
+    def on_display_commit(self):
+        pretending = self.display_variable.get()
+        try:
+            value = int(pretending)
+            if value >= self.upper_limit:
+                value = self.upper_limit-1
+                self.display_variable.set(str(value))
+            self.value_variable.set(value)
+            self.slider_callback()
+        except ValueError:
+            pass
+
 
     def get_value(self):
         return self.value_variable.get()

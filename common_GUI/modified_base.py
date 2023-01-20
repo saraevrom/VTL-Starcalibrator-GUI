@@ -8,11 +8,14 @@ except ImportError:
 
 class EntryWithEnterKey(tk.Entry):
     def __init__(self,*args,**kwargs):
-        super().__init__(*args,**kwargs)
+        super().__init__(*args, **kwargs)
         self.bind("<Return>", self.on_keypress_enter)
+        self.on_commit = None
 
     def on_keypress_enter(self, *args):
         self.winfo_toplevel().focus()
+        if self.on_commit:
+            self.on_commit()
 
 
 class SpinboxWithEnterKey(Spinbox):
