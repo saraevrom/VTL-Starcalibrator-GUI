@@ -11,6 +11,7 @@ import os
 from multiprocessing import Process, Pipe
 import h5py
 import time
+import gc
 
 class FtpBrowser(simpledialog.Dialog):
 
@@ -97,7 +98,7 @@ class DownloaderWorker(Process):
                 with open(ftp_destination, "ab") as fp:
                     while not finished:
                         if ftp is None:
-                            ftp = FTP(self.ftp_addr, user=self.ftp_login, passwd=self.ftp_passwd)
+                            ftp = FTP(self.ftp_addr, user=self.ftp_login, passwd=self.ftp_passwd, timeout=10)
                             ftp.cwd(self.ftp_src_dir)
                         try:
                             rest = fp.tell()
@@ -112,6 +113,7 @@ class DownloaderWorker(Process):
                             finished = True
                         except Exception as e:
                             ftp = None
+                            gc.collect()
                             sec = 5
                             print(f"Transfer failed: {e}, will retry in {sec} seconds...")
                             time.sleep(sec)
