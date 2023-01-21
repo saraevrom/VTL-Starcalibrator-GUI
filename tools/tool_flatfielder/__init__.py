@@ -196,7 +196,7 @@ class FlatFielder(ToolBase):
         self.apparent_data = apparent_data
         self.signal_plotter.plot_data(apparent_data)
         bottom = -10
-        top = np.max(self.drawn_data)
+        top = np.max(apparent_data)
         self.signal_plotter.view_y(bottom, top)
         self.signal_plotter.set_yrange(0, top)
 
@@ -223,6 +223,8 @@ class FlatFielder(ToolBase):
         ax.set_ylabel(f"S[{i2}, {j2}]")
         ax.scatter(S_1_o, S_2_o)
         ax.scatter(S_1, S_2)
+        maxval = np.max(np.concatenate([S_1, S_2, S_1_o, S_2_o]))
+        ax.plot([0, maxval], [0, maxval])
         # xs_test = np.array([min(S_1), max(S_1)])
         # ys_test = draw_coeff_matrix[i2, j2] * (xs_test - draw_bg_matrix[i1, j1]) / draw_coeff_matrix[i1, j1] + \
         #           draw_bg_matrix[i2, j2]

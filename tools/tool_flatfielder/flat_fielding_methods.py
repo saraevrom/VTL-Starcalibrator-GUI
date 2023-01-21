@@ -229,7 +229,7 @@ def multidim_lad_corr_flatfield_no_bg(requested_data_0):
 ALGO_MAP = {
     "proportional_correlation": (median_corr_flatfield, "PC"),
     "linear_correlation": (isotropic_lsq_corr_flatfield_parallel, "LC"),
-    "isotropic_lad_multidim": (multidim_lad_corr_flatfield, "LMDC"),
+    "linear_multidimensional_correlation": (multidim_lad_corr_flatfield, "LMDC"),
     "isotropic_lad_multidim_no_bg": (multidim_lad_corr_flatfield_no_bg, "LMSCNBG"),
     "nonlinear_saturated_respone": (isotropic_lsq_corr_flatfield_nonlinear, "NSR")
 }
