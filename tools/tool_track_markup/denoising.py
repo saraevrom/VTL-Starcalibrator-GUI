@@ -69,6 +69,13 @@ def antiflash(data):
         data1[i] = data[i] - np.median(data[i])
     return data1
 
+@nb.njit()
+def antiflash_single(part_data, full_data):
+    data1 = np.zeros(part_data.shape)
+    for i in range(part_data.shape[0]):
+        data1[i] = part_data[i] - np.median(full_data[i])
+    return data1
+
 def reduce_noise(data,sliding_win):
     if sliding_win>=data.shape[0]:
         std = np.std(data,axis=0)

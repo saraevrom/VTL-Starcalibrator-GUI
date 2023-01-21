@@ -8,7 +8,7 @@ import tkinter.filedialog
 import json
 from localization import get_locale
 import matplotlib.pyplot as plt
-from .denoising import reduce_noise, antiflash, moving_average_subtract
+from .denoising import reduce_noise, antiflash, moving_average_subtract, antiflash_single
 from .reset import ResetAsker
 
 OFF = get_locale("app.state_off")
@@ -436,7 +436,7 @@ class TrackMarkup(ToolBase):
         self.redraw_event()
 
 
-    def apply_filter(self,signal):
+    def apply_filter(self, signal):
         form_data = self.params_form.get_values()
         win = form_data["filter_win"]
 
@@ -449,8 +449,10 @@ class TrackMarkup(ToolBase):
 
         if form_data["use_noise_suppression"]:
             plot_data = reduce_noise(plot_data, form_data["noise_suppression_window"])
-        if form_data["use_flash_suppression"] and len(plot_data.shape)>1:
-            plot_data = antiflash(plot_data)
+        if form_data["use_flash_suppression"]:
+            if len(plot_data.shape)>1:
+                plot_data = antiflash(plot_data)
+
         return plot_data
 
     def popup_draw_all(self):
@@ -480,12 +482,13 @@ class TrackMarkup(ToolBase):
     def popup_draw_signal(self, i, j):
         if self.file and self.current_event:
             t1, t2 = self.current_event
-            signal = self.file["data0"][t1:t2, i, j]
+            full_data = self.file["data0"][t1:t2]
             model = self.get_ff_model()
             if model:
-                signal = model.apply_single_nobreak(signal, i, j)
+                full_data = model.apply_nobreak(full_data)
+                full_data[:, np.logical_not(self.plotter.alive_pixels_matrix)] = 0
 
-            plot_data = self.apply_filter(signal)
+            plot_data = self.apply_filter(full_data)[:, i, j]
 
             fig, ax = self.ensure_figure(False)
             xs = np.linspace(t1, t2, len(plot_data))
