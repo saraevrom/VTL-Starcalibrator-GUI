@@ -108,7 +108,7 @@ class DownloaderWorker(Process):
                             else:
                                 print(f"Resuming transfer from {rest} for", filename)
 
-                            ftp.retrbinary(f'RETR {filename}', fp.write, 262144, rest=rest)
+                            ftp.retrbinary(f'RETR {filename}', fp.write, rest=rest)
                             print("Done")
                             finished = True
                         except Exception as e:
