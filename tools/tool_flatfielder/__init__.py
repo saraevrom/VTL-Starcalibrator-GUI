@@ -158,7 +158,7 @@ class FlatFielder(ToolBase):
             fbase = self.get_loaded_filename()
             fbase = ospath.splitext(fbase)[0]
 
-            initial_filename = f"flat_fielding_src-{fbase}_{av}_{t1}-{t2}_{iden}.json"
+            initial_filename = f"flat_fielding_src-{fbase}___{av}_{t1}-{t2}_{iden}.json"
             filename = filedialog.asksaveasfilename(parent=self,
                                                       title=get_locale("flatfielder.filedialog.save_ff_settings.title"),
                                                       filetypes=[
