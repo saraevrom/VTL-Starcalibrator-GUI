@@ -34,9 +34,7 @@ class FilePool(tk.Frame):
     def on_clear(self):
         self.files_list.clear()
         self.files_listbox.delete(0, tk.END)
-        for v in self.open_files_cache.values():
-            v.close()
-        self.open_files_cache.clear()
+        self.clear_cache()
 
 
     def on_select_sources(self):
@@ -58,6 +56,11 @@ class FilePool(tk.Frame):
             obj = h5py.File(filename, "r")
             self.open_files_cache[filename] = obj
             return obj
+
+    def clear_cache(self):
+        for v in self.open_files_cache.values():
+            v.close()
+        self.open_files_cache.clear()
 
     def check_hdf5_fields(self,req_fields):
         failed = []
@@ -105,6 +108,6 @@ class RandomIntervalAccess(FilePool):
         sample_interval = intervals[i]
         start = sample_interval[0]
         end = sample_interval[1]
-        print(start,end)
-        sample = data0[int(start):int(end)]
-        return sample
+        #print(start, end)
+        #sample = data0[int(start):int(end)]
+        return data0, (int(start), int(end))

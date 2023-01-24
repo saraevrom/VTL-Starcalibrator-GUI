@@ -8,6 +8,8 @@ from trigger_ai import create_trigger_model
 import gc
 import numpy.random as rng
 import numpy as np
+from common_GUI import SettingMenu
+from .create_settings import build_menu
 
 class ToolTeacher(ToolBase):
     def __init__(self, master):
@@ -23,12 +25,17 @@ class ToolTeacher(ToolBase):
         self.columnconfigure(1, weight=1)
         self.columnconfigure(2, weight=1)
         self.status_display = ScrolledText(self)
-        self.status_display.grid(row=0, column=3)
+        self.status_display.grid(row=1, column=0, columnspan=4, sticky="nsew")
         self.check_passed = False
         self.workon_model = None
 
-        teachbtn = tk.Button(self, text=get_locale("teacher.button.start"), command=self.on_teach)
-        teachbtn.grid(row=1, column=0, columnspan=3, sticky="nsew")
+        #teachbtn = tk.Button(self, text=get_locale("teacher.button.start"), command=self.on_teach)
+        #teachbtn.grid(row=1, column=0, columnspan=3, sticky="nsew")
+
+        self.settings_menu = SettingMenu(self)
+        self.settings_menu.commit_action = self.on_teach
+        self.settings_menu.grid(row=0, column=3, sticky="nsew")
+        build_menu(self.settings_menu)
 
 
     def ensure_model(self):
@@ -40,8 +47,12 @@ class ToolTeacher(ToolBase):
         if self.check_passed:
             self.ensure_model()
             gc.collect()
-            generator = self.data_generator(100)
-            genlist = list(generator)
+            generator = self.data_generator()
+            #self.workon_model.com
+            #self.workon_model.fit(generator)
+        self.fg_pool.clear_cache()
+        self.bg_pool.clear_cache()
+        self.interference_pool.clear_cache()
 
     def println_status(self, message, tabs=0):
         if tabs == 0:
@@ -64,9 +75,15 @@ class ToolTeacher(ToolBase):
                 self.println_status(get_locale("teacher.status.msg_ok"), 1)
 
 
-    def data_generator(self,amount):
-        for i in range(amount):
-            bg = self.bg_pool.random_access()
+    def data_generator(self, frame_size=128, amount=None):
+        i = 0
+        cycle_forever = amount is None
+        while cycle_forever or i < amount:
+            bg_start, (bg_start, bg_end) = self.bg_pool.random_access()
+            if bg_end-bg_start < frame_size:
+                continue
+            sample_start = rng.randint(bg_start, bg_end-frame_size)
+            bg = bg_start[sample_start:sample_start+frame_size]
             x_data = bg
             if self.fg_pool.files_list:
                 if rng.random() < 0.5:
@@ -78,7 +95,7 @@ class ToolTeacher(ToolBase):
                 y_data = np.array([0, 1])
                 fg = self.fg_pool.random_access()
                 x_data = x_data + fg
-
+            i += 1
             yield x_data, y_data
 
     def check_files(self):

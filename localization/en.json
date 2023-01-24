@@ -13,6 +13,10 @@
   "teacher.status.msg_empty": "Pool empty",
   "teacher.button.start": "Start teaching",
   "teacher.button.clear": "Clear",
+  "teacher.form.separator.dataset_parameters": "Dataset parameters",
+  "teacher.form.separator.model_teaching": "Model fitting",
+  "teacher.form.epochs": "Epochs",
+  "teacher.form.batch_size" : "Batch size",
 
   "datasetgen.form.separator.display": "Display",
   "datasetgen.form.cutoff_start": "Cut off first [frames]",
