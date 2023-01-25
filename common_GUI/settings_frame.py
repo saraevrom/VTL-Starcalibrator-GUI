@@ -207,23 +207,12 @@ class IntValue(Setting):
 
     def build_setting(self, frame):
         self.entryvar = tk.StringVar(self)
-        self.entry_field = SpinboxWithEnterKey(frame, from_=self.start, to=self.end,
-                                       wrap=True, textvariable=self.entryvar)
+        self.entry_field = EntryWithEnterKey(frame, textvariable=self.entryvar)
         self.entry_field.pack(fill=tk.BOTH, expand=True)
         self.entryvar.trace('w', lambda nm, idx, mode, var=self.entryvar: self.validate_value(var))
 
-    def set_limits(self, start, end):
-        self.start = start
-        self.end = end
-        current_value = self.get_value()
-        self.entry_field.config(from_=start, to=end)
-        if current_value < start:
-            self.set_value(start)
-        elif current_value > end:
-            self.set_value(end)
-
     def get_value(self):
-        strval = self.entry_field.get()
+        strval = self.entryvar.get()
         if strval:
             try:
                 intval = int(strval)
@@ -234,8 +223,8 @@ class IntValue(Setting):
             return self.initial_value
 
     def set_value(self, value):
-        self.entry_field.set(str(value))
-        self.old_value = self.entry_field.get()
+        self.entryvar.set(str(value))
+        self.old_value = self.entryvar.get()
 
 
 class RangeIntValue(Setting):

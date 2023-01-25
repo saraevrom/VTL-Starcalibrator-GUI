@@ -65,7 +65,7 @@ class ConfigEntry(object):
     Field can accept configuration dictionary, mentioned as "conf".
     Some keys are common:
     display_name -- field prompt that appears on screen
-    default -- default value, oprional
+    default -- default value, optional
 
     type -- field type, not required by fields themselves. Instead TkDictForm class uses it to determine field type. it will be mentioned in fields.
 
@@ -131,15 +131,29 @@ class IntEntry(ConfigEntry):
         super().__init__(name,master,conf,color_index)
         tk.Label(self.frame,text=conf["display_name"]).pack(side="left",fill="both")
         self.textvar = tk.StringVar(master)
+        self.textvar.trace('w', lambda nm, idx, mode, var=self.textvar: self.validate_value(var))
         EntryWithEnterKey(self.frame, textvar=self.textvar).pack(side="left",fill="both")
+        self.old_value = 0
 
-    def set_value(self,newval):
+    def validate_value(self, var):
+        new_value = var.get()
+        try:
+            new_value == '' or int(new_value)
+            self.old_value = new_value
+        except:
+            var.set(self.old_value)
+
+    def set_value(self, newval):
         self.textvar.set(str(newval))
+        self.old_value = newval
 
     def get_value(self):
         sval = self.textvar.get()
         try:
-            val = int(sval)
+            if sval:
+                val = int(sval)
+            else:
+                val = 0
             return val
         except ValueError:
             raise EntryInvalidException(self.name,"Could not convert \"{}\" to integer".format(sval))
@@ -156,14 +170,27 @@ class FloatEntry(ConfigEntry):
         tk.Label(self.frame,text=conf["display_name"]).pack(side="left",fill="both")
         self.textvar = tk.StringVar(master)
         EntryWithEnterKey(self.frame,textvar=self.textvar).pack(side="left",fill="both")
+        self.old_value = 0
+        self.textvar.trace('w', lambda nm, idx, mode, var=self.textvar: self.validate_value(var))
 
-    def set_value(self,newval):
+    def validate_value(self, var):
+        new_value = var.get()
+        try:
+            new_value == '' or float(new_value)
+            self.old_value = new_value
+        except:
+            var.set(self.old_value)
+
+    def set_value(self, newval):
         self.textvar.set(str(newval))
 
     def get_value(self):
         sval = self.textvar.get()
         try:
-            val = float(sval)
+            if sval:
+                val = float(sval)
+            else:
+                val = 0.0
             return val
         except ValueError:
             raise EntryInvalidException(self.name,"Could not convert \"{}\" to float".format(sval))
@@ -371,7 +398,7 @@ class AlternatingEntry(ConfigEntry):
         self.sv = tk.StringVar(self.frame)
         self.sv.trace('w',self.on_combo_change)
 
-        self.combobox = ttk.Combobox(topframe,textvar=self.sv,values = self.valnames,state="readonly")
+        self.combobox = ttk.Combobox(topframe, textvar=self.sv, values=self.valnames, state="readonly")
         self.combobox.pack(side="left",fill="x",expand=False)
         #for sc in subconfs:
         #    self.addfield(sc)
@@ -394,26 +421,25 @@ class AlternatingEntry(ConfigEntry):
         if subconf is None:
             field = None
         else:
-            field = create_field(name,self.subframe,subconf, self.color_index+1)
+            field = create_field(name,self.subframe, subconf, self.color_index+1)
 
         self.subfield=field
         self.last_index=index
         return True
 
-
     def set_value(self,newval):
         sel = newval["selection_type"]
         self.combobox.set(sel)
         self.select_field(self.valnames.index(sel))
-        if "value"in newval.keys() and (self.subfield is not None):
+        if "value" in newval.keys() and (self.subfield is not None):
             self.subfield.set_value(newval["value"])
 
     def get_value(self):
         stype = self.combobox.get()
         if self.subfield:
-            return {"selection_type":stype,"value":self.subfield.get_value()}
+            return {"selection_type": stype, "value": self.subfield.get_value()}
         else:
-            return {"selection_type":stype,"value": None}
+            return {"selection_type": stype, "value": None}
 
 FIELDTYPES["alter"] = [AlternatingEntry,True]
 
@@ -449,7 +475,7 @@ class TkDictForm(tk.Frame):
     '''
     Tkinter configurable form.
 
-    argiments for __init__:
+    arguments for __init__:
     master -- master widget for form.
     tk_form_configuration -- configuration. See help(ConfigEntry) for details.
     use_scrollview -- shoud we use scrollable canvas instead of just tkinter frame?
