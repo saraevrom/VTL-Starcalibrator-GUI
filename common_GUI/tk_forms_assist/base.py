@@ -3,6 +3,12 @@
 PERSISTENT_CONFIGS = dict()
 
 class Node(object):
+    '''
+    Base node class
+    Contains some data about field
+    DEFAULT_VALUE: default value set for field. Set as None to skip
+    DISPLAY_NAME: string that will be displayed in GUI.
+    '''
     FIELD_TYPE = "FIXME"
     DEFAULT_VALUE = None
     DISPLAY_NAME = "Generic"

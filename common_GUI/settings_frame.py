@@ -234,7 +234,6 @@ class RangeIntValue(Setting):
         self.old_value = 0
         super(RangeIntValue, self).__init__(master, setting_key, initial_value, sensitive=sensitive)
 
-
     def validate_value(self,var):
         new_value = var.get()
         try:

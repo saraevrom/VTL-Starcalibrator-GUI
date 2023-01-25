@@ -17,6 +17,13 @@
   "teacher.form.epochs": "Эпохи",
   "teacher.form.batch_size" : "Размер группы",
 
+  "app.model.form.optimizer": "Оптимизатор",
+  "app.model.form.loss": "Фкнкция потери",
+  "app.model.form.metric": "Метрика",
+  "app.model.form.metrics": "Метрики",
+  "app.model.form.value": "Значение",
+  "app.model.form.set_to_default": "Установлено по умолчанию",
+
   "datasetgen.form.separator.display": "Отображение",
   "datasetgen.form.cutoff_start": "Пропуск кадров в начале",
   "datasetgen.form.cutoff_end": "Пропуск кадров в конце",

@@ -4,7 +4,7 @@ import h5py
 import tkinter as tk
 from tkinter.scrolledtext import ScrolledText
 from localization import get_locale, format_locale
-from trigger_ai import create_trigger_model
+from trigger_ai import compile_model
 import gc
 import numpy.random as rng
 import numpy as np
@@ -40,14 +40,18 @@ class ToolTeacher(ToolBase):
 
     def ensure_model(self):
         if self.workon_model is None:
-            self.workon_model = create_trigger_model(128)
+            new_model = compile_model(128, self)
+            if new_model:
+                self.workon_model = new_model
+            return bool(self.workon_model)
+        return False
 
     def on_teach(self):
         self.check_files()
         if self.check_passed:
-            self.ensure_model()
-            gc.collect()
-            generator = self.data_generator()
+            if self.ensure_model():
+                gc.collect()
+                generator = self.data_generator()
             #self.workon_model.com
             #self.workon_model.fit(generator)
         self.fg_pool.clear_cache()

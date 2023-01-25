@@ -2,6 +2,10 @@ from .base import Node
 
 
 class ArrayNode(Node):
+    '''
+    Node corresponding to the "array" entry
+    Use ITEM_TYPE for specifying subconf
+    '''
     FIELD_TYPE = "array"
     ITEM_TYPE = None
 
@@ -85,19 +89,18 @@ class AlternatingNode(Node):
 
 class FormNode(Node):
     '''
-    Node corresponding to the form itself
+    Node corresponding to the form itself and "subform" field
     Use FIELD__<name> for specifying fields
+    Call get_configuration_root() for getting root form
     '''
     FIELD_TYPE = "subform"
     USE_SCROLLVIEW = True
 
     def __init__(self):
-        print("FORM INIT")
         self.fields = dict()
         for k in type(self).__dict__.keys():
             if k.startswith("FIELD__"):
                 name = k[7:]
-                print(name)
                 self.fields[name] = type(self).__dict__[k]()
 
     def parse_formdata(self, formdata: dict):

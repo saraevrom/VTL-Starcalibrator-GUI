@@ -18,6 +18,13 @@
   "teacher.form.epochs": "Epochs",
   "teacher.form.batch_size" : "Batch size",
 
+  "app.model.form.optimizer": "Optimizer",
+  "app.model.form.loss": "Loss",
+  "app.model.form.metric": "Metric",
+  "app.model.form.metrics": "Metrics",
+  "app.model.form.value": "Value",
+  "app.model.form.set_to_default": "Set to default",
+
   "datasetgen.form.separator.display": "Display",
   "datasetgen.form.cutoff_start": "Cut off first [frames]",
   "datasetgen.form.cutoff_end": "Cut off last [frames]",

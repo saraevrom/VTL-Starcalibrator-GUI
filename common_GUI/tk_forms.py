@@ -120,6 +120,26 @@ class StringEntry(ConfigEntry):
     def get_frame(self):
         return self.frame
 
+class LabelEntry(ConfigEntry):
+    '''
+    Just a label for information
+
+    type: "label"
+    No unique keys
+    '''
+    def __init__(self,name,master,conf,color_index=0):
+        super().__init__(name, master, conf, color_index)
+        tk.Label(self.frame, text=conf["display_name"]).pack(side="left",fill="both",expand=True)
+
+    def set_value(self,newval):
+        pass
+
+    def get_value(self):
+        return None
+
+    def get_frame(self):
+        return self.frame
+
 class IntEntry(ConfigEntry):
     '''
     Enter an integer
@@ -226,7 +246,7 @@ class FileEntry(ConfigEntry):
         self.stringvar = tk.StringVar(master)
         tk.Label(self.frame,text=conf["display_name"]).pack(side="left")
         tk.Button(self.frame,text="Choose file",command=self.command).pack(side="left")
-        tk.Label(self.frame,textvar=self.stringvar).pack(side="left",fill="x")
+        tk.Label(self.frame, textvar=self.stringvar).pack(side="left",fill="x")
 
     def command(self):
         pth = filedialog.asksaveasfilename(initialdir=self.conf["initialdir"],filetypes=self.conf["filetypes"])
@@ -300,7 +320,8 @@ FIELDTYPES = {
     "bool":[CheckmarkEntry,False],
     "radio":[RadioEntry,False],
     "file":[FileEntry,False],
-    "combo":[ComboEntry,False]
+    "combo":[ComboEntry,False],
+    "label": [LabelEntry,False]
 }
 
 
@@ -383,6 +404,7 @@ class AlternatingEntry(ConfigEntry):
     '''
     def __init__(self,name,master,conf,color_index=0):
         super().__init__(name,master,conf,color_index)
+        self.remembered_selections = dict()
         topframe = tk.Frame(self.frame)
         topframe.pack(side="top",fill="x")
 
@@ -408,10 +430,21 @@ class AlternatingEntry(ConfigEntry):
     def on_combo_change(self,*args,**kwargs):
         sel = self.sv.get()
         self.select_field(self.valnames.index(sel))
+        stype = self.sv.get()
+        if (stype in self.remembered_selections.keys()) and (self.subfield is not None):
+            vset = self.remembered_selections[stype]
+            if vset is not None:
+                print("Restoring", vset, "for", stype)
+                self.subfield.set_value(vset)
 
     def select_field(self,index):
         if self.last_index == index:
             return False
+        old_selection = self.get_value()
+        index_to_remember = self.last_index
+        if self.last_index is None:
+            index_to_remember = index
+        self.remembered_selections[self.valnames[index_to_remember]] = old_selection["value"]
         if self.subfield is not None:
             self.subfield.frame.destroy()
             self.subfield = None
@@ -507,10 +540,12 @@ class TkDictForm(tk.Frame):
         '''
         res = dict()
         for i in self.tk_form_configuration.keys():
-            res[i] = self.fields[i].get_value()
+            val = self.fields[i].get_value()
+            if val is not None:
+                res[i] = val
         return res
 
-    def set_values(self,values):
+    def set_values(self, values):
         '''
         Set fields by dictionary of values. Will set only present fields.
         '''
