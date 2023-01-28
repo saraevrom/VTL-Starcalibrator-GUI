@@ -10,6 +10,8 @@ import numpy.random as rng
 import numpy as np
 from common_GUI import SettingMenu
 from .create_settings import build_menu
+import tkinter.filedialog as filedialog
+from tensorflow import keras
 
 class ToolTeacher(ToolBase):
     def __init__(self, master):
@@ -24,36 +26,75 @@ class ToolTeacher(ToolBase):
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
         self.columnconfigure(2, weight=1)
-        self.status_display = ScrolledText(self)
+        self.status_display = ScrolledText(self,height=16)
         self.status_display.grid(row=1, column=0, columnspan=4, sticky="nsew")
         self.check_passed = False
         self.workon_model = None
 
-        #teachbtn = tk.Button(self, text=get_locale("teacher.button.start"), command=self.on_teach)
-        #teachbtn.grid(row=1, column=0, columnspan=3, sticky="nsew")
+        control_frame = tk.Frame(self)
+        control_frame.grid(row=0, column=3, sticky="nsew")
+        control_frame.rowconfigure(0, weight=1)
 
-        self.settings_menu = SettingMenu(self)
+        self.settings_menu = SettingMenu(control_frame)
         self.settings_menu.commit_action = self.on_teach
-        self.settings_menu.grid(row=0, column=3, sticky="nsew")
+        self.settings_menu.grid(row=0, column=0, sticky="nsew")
         build_menu(self.settings_menu)
 
+        resetbtn = tk.Button(control_frame, text=get_locale("teacher.button.reset"), command=self.on_reset_model)
+        resetbtn.grid(row=1, column=0, sticky="ew")
+
+        savebtn = tk.Button(control_frame, text=get_locale("teacher.button.save"), command=self.on_save_model)
+        savebtn.grid(row=2, column=0, sticky="ew")
+
+        loadbtn = tk.Button(control_frame, text=get_locale("teacher.button.load"), command=self.on_load_model)
+        loadbtn.grid(row=3, column=0, sticky="ew")
+
+        teachbtn = tk.Button(control_frame, text=get_locale("teacher.button.start"), command=self.on_teach)
+        teachbtn.grid(row=4, column=0, sticky="ew")
+
+
+    def try_reset_model(self):
+        new_model = compile_model(128, self)
+        if new_model:
+            self.workon_model = new_model
 
     def ensure_model(self):
         if self.workon_model is None:
-            new_model = compile_model(128, self)
-            if new_model:
-                self.workon_model = new_model
+            self.try_reset_model()
             return bool(self.workon_model)
         return False
 
+
+    def on_save_model(self):
+        if self.workon_model:
+            filename = filedialog.asksaveasfilename(
+                title=get_locale("app.filedialog.save_model.title"),
+                filetypes=[(get_locale("app.filedialog_formats.model"), "*.h5")]
+            )
+            if filename:
+                self.workon_model.save(filename)
+
+    def on_load_model(self):
+        filename = filedialog.askopenfilename(
+            title=get_locale("app.filedialog.load_model.title"),
+            filetypes=[(get_locale("app.filedialog_formats.model"), "*.h5")]
+        )
+        if filename:
+            self.workon_model = keras.models.load_model(filename)
+
+    def on_reset_model(self):
+        self.try_reset_model()
+
     def on_teach(self):
-        self.check_files()
-        if self.check_passed:
-            if self.ensure_model():
+        if self.ensure_model():
+            self.check_files()
+            if self.check_passed:
                 gc.collect()
                 generator = self.data_generator()
             #self.workon_model.com
             #self.workon_model.fit(generator)
+        else:
+            self.println_status(get_locale("teacher.status.msg_missing_model"))
         self.fg_pool.clear_cache()
         self.bg_pool.clear_cache()
         self.interference_pool.clear_cache()

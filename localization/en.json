@@ -9,15 +9,20 @@
   "teacher.status.msg_fg": "Foreground",
   "teacher.status.msg_it": "Interference",
   "teacher.status.msg_ok": "OK",
+  "teacher.status.msg_missing_model": "No model",
   "teacher.status.msg_missing": "Missing fields in {file}: {fields}",
   "teacher.status.msg_empty": "Pool empty",
   "teacher.button.start": "Start teaching",
+  "teacher.button.reset": "Reset model",
+  "teacher.button.save": "Save model",
+  "teacher.button.load": "Load model",
   "teacher.button.clear": "Clear",
   "teacher.form.separator.dataset_parameters": "Dataset parameters",
   "teacher.form.separator.model_teaching": "Model fitting",
   "teacher.form.epochs": "Epochs",
   "teacher.form.batch_size" : "Batch size",
 
+  "app.model.form.title": "Create model",
   "app.model.form.optimizer": "Optimizer",
   "app.model.form.loss": "Loss",
   "app.model.form.metric": "Metric",
@@ -175,6 +180,8 @@
 
   "app.filedialog.save_settings.title": "Save settings",
   "app.filedialog.load_settings.title": "Load settings",
+  "app.filedialog.save_model.title": "Save model",
+  "app.filedialog.load_model.title": "Load model",
   "app.filedialog.load_ff_settings.title": "Open flat fielding parameters",
   "app.filedialog.load_mat.title": "Open data file",
 
@@ -182,6 +189,7 @@
   "app.filedialog_formats.ff_json": "JSON with FF parameters",
   "app.filedialog_formats.processed_mat": "Converted data files",
   "app.filedialog_formats.raw_mat": "Raw data",
+  "app.filedialog_formats.model": "Model",
 
   "app.widgets.gridplotter.use_autoscale": "Autoscale",
   "app.widgets.gridplotter.scale": "Scale",

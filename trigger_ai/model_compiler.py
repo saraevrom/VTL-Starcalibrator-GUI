@@ -14,6 +14,7 @@ class CompileDialog(simpledialog.Dialog):
         self.form = TkDictForm(master, conf, True)
         self.form.pack(fill="both", expand=True)
         self.result = None
+        self.title(get_locale("app.model.form.title"))
 
     def apply(self):
         formdata = self.form.get_values()
