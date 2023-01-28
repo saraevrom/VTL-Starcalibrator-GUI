@@ -59,13 +59,24 @@ class ScrollView(ttk.Frame):
             self.canvas.itemconfig(self.drawn_window_id, width=400)
 
 
+def index_to_color(color_index):
+    if color_index % 2 == 0:
+        color = "#AAAAAA"
+    else:
+        color = "#CCCCCC"
+    return color
+
+def index_to_style(color_index):
+    color = index_to_color(color_index)
+    return dict(highlightbackground="gray", background=color, highlightthickness=1,bd=5)
+
 class ConfigEntry(object):
     '''
     Base class for form fields.
     Field can accept configuration dictionary, mentioned as "conf".
     Some keys are common:
     display_name -- field prompt that appears on screen
-    default -- default value, oprional
+    default -- default value, optional
 
     type -- field type, not required by fields themselves. Instead TkDictForm class uses it to determine field type. it will be mentioned in fields.
 
@@ -75,11 +86,8 @@ class ConfigEntry(object):
         self.conf = conf
         self.name = name
         self.color_index = color_index
-        if color_index%2==0:
-            color = "#BBBBBB"
-        else:
-            color = "#DDDDDD"
-        self.frame = tk.Frame(master, highlightbackground="gray",background=color, highlightthickness=1,bd=5)
+        style = index_to_style(color_index)
+        self.frame = tk.Frame(master, **style)
 
     def get_value(self):
         raise NotImplementedError("This method is not implemented")
@@ -120,6 +128,30 @@ class StringEntry(ConfigEntry):
     def get_frame(self):
         return self.frame
 
+class LabelEntry(ConfigEntry):
+    '''
+    Just a label for information
+
+    type: "label"
+    fancy: makes label big and noticeable
+    '''
+    def __init__(self,name,master,conf,color_index=0):
+        super().__init__(name, master, conf, color_index)
+        if conf["fancy"]:
+            label = tk.Label(self.frame, text=conf["display_name"], anchor="center", font='TkDefaultFont 10 bold')
+        else:
+            label = tk.Label(self.frame, text=conf["display_name"], anchor="center")
+        label.pack(side="left", fill="both", expand=True)
+
+    def set_value(self,newval):
+        pass
+
+    def get_value(self):
+        return None
+
+    def get_frame(self):
+        return self.frame
+
 class IntEntry(ConfigEntry):
     '''
     Enter an integer
@@ -131,15 +163,29 @@ class IntEntry(ConfigEntry):
         super().__init__(name,master,conf,color_index)
         tk.Label(self.frame,text=conf["display_name"]).pack(side="left",fill="both")
         self.textvar = tk.StringVar(master)
+        self.textvar.trace('w', lambda nm, idx, mode, var=self.textvar: self.validate_value(var))
         EntryWithEnterKey(self.frame, textvar=self.textvar).pack(side="left",fill="both")
+        self.old_value = 0
 
-    def set_value(self,newval):
+    def validate_value(self, var):
+        new_value = var.get()
+        try:
+            new_value == '' or int(new_value)
+            self.old_value = new_value
+        except:
+            var.set(self.old_value)
+
+    def set_value(self, newval):
         self.textvar.set(str(newval))
+        self.old_value = newval
 
     def get_value(self):
         sval = self.textvar.get()
         try:
-            val = int(sval)
+            if sval:
+                val = int(sval)
+            else:
+                val = 0
             return val
         except ValueError:
             raise EntryInvalidException(self.name,"Could not convert \"{}\" to integer".format(sval))
@@ -156,14 +202,27 @@ class FloatEntry(ConfigEntry):
         tk.Label(self.frame,text=conf["display_name"]).pack(side="left",fill="both")
         self.textvar = tk.StringVar(master)
         EntryWithEnterKey(self.frame,textvar=self.textvar).pack(side="left",fill="both")
+        self.old_value = 0
+        self.textvar.trace('w', lambda nm, idx, mode, var=self.textvar: self.validate_value(var))
 
-    def set_value(self,newval):
+    def validate_value(self, var):
+        new_value = var.get()
+        try:
+            new_value == '' or float(new_value)
+            self.old_value = new_value
+        except:
+            var.set(self.old_value)
+
+    def set_value(self, newval):
         self.textvar.set(str(newval))
 
     def get_value(self):
         sval = self.textvar.get()
         try:
-            val = float(sval)
+            if sval:
+                val = float(sval)
+            else:
+                val = 0.0
             return val
         except ValueError:
             raise EntryInvalidException(self.name,"Could not convert \"{}\" to float".format(sval))
@@ -199,7 +258,7 @@ class FileEntry(ConfigEntry):
         self.stringvar = tk.StringVar(master)
         tk.Label(self.frame,text=conf["display_name"]).pack(side="left")
         tk.Button(self.frame,text="Choose file",command=self.command).pack(side="left")
-        tk.Label(self.frame,textvar=self.stringvar).pack(side="left",fill="x")
+        tk.Label(self.frame, textvar=self.stringvar).pack(side="left",fill="x")
 
     def command(self):
         pth = filedialog.asksaveasfilename(initialdir=self.conf["initialdir"],filetypes=self.conf["filetypes"])
@@ -273,7 +332,8 @@ FIELDTYPES = {
     "bool":[CheckmarkEntry,False],
     "radio":[RadioEntry,False],
     "file":[FileEntry,False],
-    "combo":[ComboEntry,False]
+    "combo":[ComboEntry,False],
+    "label": [LabelEntry,False]
 }
 
 
@@ -356,6 +416,7 @@ class AlternatingEntry(ConfigEntry):
     '''
     def __init__(self,name,master,conf,color_index=0):
         super().__init__(name,master,conf,color_index)
+        self.remembered_selections = dict()
         topframe = tk.Frame(self.frame)
         topframe.pack(side="top",fill="x")
 
@@ -371,7 +432,7 @@ class AlternatingEntry(ConfigEntry):
         self.sv = tk.StringVar(self.frame)
         self.sv.trace('w',self.on_combo_change)
 
-        self.combobox = ttk.Combobox(topframe,textvar=self.sv,values = self.valnames,state="readonly")
+        self.combobox = ttk.Combobox(topframe, textvar=self.sv, values=self.valnames, state="readonly")
         self.combobox.pack(side="left",fill="x",expand=False)
         #for sc in subconfs:
         #    self.addfield(sc)
@@ -381,10 +442,21 @@ class AlternatingEntry(ConfigEntry):
     def on_combo_change(self,*args,**kwargs):
         sel = self.sv.get()
         self.select_field(self.valnames.index(sel))
+        stype = self.sv.get()
+        if (stype in self.remembered_selections.keys()) and (self.subfield is not None):
+            vset = self.remembered_selections[stype]
+            if vset is not None:
+                print("Restoring", vset, "for", stype)
+                self.subfield.set_value(vset)
 
     def select_field(self,index):
         if self.last_index == index:
             return False
+        old_selection = self.get_value()
+        index_to_remember = self.last_index
+        if self.last_index is None:
+            index_to_remember = index
+        self.remembered_selections[self.valnames[index_to_remember]] = old_selection["value"]
         if self.subfield is not None:
             self.subfield.frame.destroy()
             self.subfield = None
@@ -394,26 +466,25 @@ class AlternatingEntry(ConfigEntry):
         if subconf is None:
             field = None
         else:
-            field = create_field(name,self.subframe,subconf, self.color_index+1)
+            field = create_field(name,self.subframe, subconf, self.color_index+1)
 
         self.subfield=field
         self.last_index=index
         return True
 
-
     def set_value(self,newval):
         sel = newval["selection_type"]
         self.combobox.set(sel)
         self.select_field(self.valnames.index(sel))
-        if "value"in newval.keys() and (self.subfield is not None):
+        if "value" in newval.keys() and (self.subfield is not None):
             self.subfield.set_value(newval["value"])
 
     def get_value(self):
         stype = self.combobox.get()
         if self.subfield:
-            return {"selection_type":stype,"value":self.subfield.get_value()}
+            return {"selection_type": stype, "value": self.subfield.get_value()}
         else:
-            return {"selection_type":stype,"value": None}
+            return {"selection_type": stype, "value": None}
 
 FIELDTYPES["alter"] = [AlternatingEntry,True]
 
@@ -434,8 +505,8 @@ class SubFormEntry(ConfigEntry):
         use_scrollview = True
         if "use_scrollview" in conf.keys():
             use_scrollview = conf["use_scrollview"]
-        self.subform = TkDictForm(self.frame,self.subconf,use_scrollview)
-        self.subform.pack(side="bottom",fill="x",expand=True,padx=20)
+        self.subform = TkDictForm(self.frame, self.subconf, use_scrollview, color_index=color_index+1)
+        self.subform.pack(side="bottom",fill="x",expand=True, padx=5)
 
     def set_value(self,newval):
         self.subform.set_values(newval)
@@ -449,13 +520,15 @@ class TkDictForm(tk.Frame):
     '''
     Tkinter configurable form.
 
-    argiments for __init__:
+    arguments for __init__:
     master -- master widget for form.
     tk_form_configuration -- configuration. See help(ConfigEntry) for details.
     use_scrollview -- shoud we use scrollable canvas instead of just tkinter frame?
     '''
-    def __init__(self,master,tk_form_configuration,use_scrollview=True):
-        super(TkDictForm,self).__init__(master)
+    def __init__(self,master,tk_form_configuration,use_scrollview=True,color_index=0):
+        super(TkDictForm, self).__init__(master)
+        self.color_index = color_index
+        self.configure(index_to_style(color_index))
         self.master = master
         self.tk_form_configuration = tk_form_configuration
 
@@ -472,7 +545,7 @@ class TkDictForm(tk.Frame):
         for i in tk_form_configuration.keys():
             conf = tk_form_configuration[i]
             name = i
-            field = create_field(name,self.contents_tgt,conf)
+            field = create_field(name,self.contents_tgt, conf, self.color_index)
             self.fields[i] = field
 
     def get_values(self):
@@ -481,10 +554,12 @@ class TkDictForm(tk.Frame):
         '''
         res = dict()
         for i in self.tk_form_configuration.keys():
-            res[i] = self.fields[i].get_value()
+            val = self.fields[i].get_value()
+            if val is not None:
+                res[i] = val
         return res
 
-    def set_values(self,values):
+    def set_values(self, values):
         '''
         Set fields by dictionary of values. Will set only present fields.
         '''

@@ -185,13 +185,54 @@ class RangeDoubleValue(Setting):
 
 
 
+class IntValue(Setting):
+    def __init__(self, master, setting_key, initial_value, sensitive=False):
+        self.old_value = 0
+        super(IntValue, self).__init__(master, setting_key, initial_value, sensitive=sensitive)
+
+
+    def validate_value(self,var):
+        new_value = var.get()
+        try:
+            new_value == '' or int(new_value)
+            self.old_value = new_value
+        except:
+            var.set(self.old_value)
+
+    def add_tracer(self, callback):
+        self.entryvar.trace("w", callback)
+
+    def add_on_edit_end_callback_nosensitive(self, callback):
+        self.entry_field.bind("<FocusOut>", callback)
+
+    def build_setting(self, frame):
+        self.entryvar = tk.StringVar(self)
+        self.entry_field = EntryWithEnterKey(frame, textvariable=self.entryvar)
+        self.entry_field.pack(fill=tk.BOTH, expand=True)
+        self.entryvar.trace('w', lambda nm, idx, mode, var=self.entryvar: self.validate_value(var))
+
+    def get_value(self):
+        strval = self.entryvar.get()
+        if strval:
+            try:
+                intval = int(strval)
+                return intval
+            except ValueError:
+                return self.initial_value
+        else:
+            return self.initial_value
+
+    def set_value(self, value):
+        self.entryvar.set(str(value))
+        self.old_value = self.entryvar.get()
+
+
 class RangeIntValue(Setting):
     def __init__(self, master, setting_key, initial_value, start, end, sensitive=False):
         self.start = start
         self.end = end
         self.old_value = 0
         super(RangeIntValue, self).__init__(master, setting_key, initial_value, sensitive=sensitive)
-
 
     def validate_value(self,var):
         new_value = var.get()

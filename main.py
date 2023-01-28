@@ -53,7 +53,7 @@ class App(tk.Tk):
         title = get_locale("app.title")
         warnings = []
         if self.file:
-            warnings.append(format_locale("app.loaded_file",self.filename))
+            warnings.append(format_locale("app.loaded_file", ospath.basename(self.filename)))
         if not self.ffmodel:
             warnings.append(get_locale("app.ff_warning"))
         if warnings:

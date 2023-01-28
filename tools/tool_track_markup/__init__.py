@@ -25,21 +25,6 @@ FORM_CONF = {
         "default": 256,
         "display_name": get_locale("track_markup.form.min_frame")
     },
-    # "max_frame": {
-    #     "type": "int",
-    #     "default": 0,
-    #     "display_name": get_locale("track_markup.form.max_frame")
-    # },
-    # "start_skip":{
-    #     "type": "int",
-    #     "default": 0,
-    #     "display_name": get_locale("track_markup.form.start_skip")
-    # },
-    # "end_skip":{
-    #     "type": "int",
-    #     "default": 0,
-    #     "display_name": get_locale("track_markup.form.end_skip")
-    # },
     "pmt_select": {
         "type": "combo",
         "default": "full",
