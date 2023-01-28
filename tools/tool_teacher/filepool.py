@@ -89,9 +89,11 @@ class RandomFileAccess(FilePool):
         f = self.pull_random_file()
         dataset = f[self.reading_field]
         length = dataset.shape[0]
-        i = random.randint(0, length)
-        sample = dataset[i]
-        return sample
+        if length > 0:
+            i = random.randint(0, length)
+            sample = dataset[i]
+            return sample
+        return None
 
 class RandomIntervalAccess(FilePool):
     def __init__(self, master, title_key, allow_clear=False):

@@ -1,5 +1,16 @@
 from .base import Node
 
+import collections
+
+class OrderedClassMembers(type):
+    @classmethod
+    def __prepare__(self, name, bases):
+        return collections.OrderedDict()
+
+    def __new__(self, name, bases, classdict):
+        classdict['__ordered__'] = [key for key in classdict.keys()
+                if key not in ('__module__', '__qualname__')]
+        return type.__new__(self, name, bases, classdict)
 
 class ArrayNode(Node):
     '''
@@ -36,7 +47,7 @@ class ArrayNode(Node):
         return False
 
 
-class AlternatingNode(Node):
+class AlternatingNode(Node, metaclass=OrderedClassMembers):
     '''
     Node corresponding to "alter" entry
     Use SEL__<name> for specifying selection types
@@ -51,10 +62,13 @@ class AlternatingNode(Node):
     def generate_configuration(cls):
         conf = super(AlternatingNode, cls).generate_configuration()
         values = []
-        for k in cls.__dict__.keys():
+        attrs = cls.get_class_attributes_dict_ordered()
+        # Using dir() instead of __dict__ allows to use inherited fields. Only cons is reversed order of fields
+        for k in attrs.keys():
             if k.startswith("SEL__"):
                 name = k[5:]
-                subconf = cls.__dict__[k].get_config_persistent()
+                attr = attrs[k]
+                subconf = attr.get_config_persistent()
                 values.append({
                     "name": name,
                     "subconf": subconf
@@ -72,22 +86,25 @@ class AlternatingNode(Node):
     @classmethod
     def fill_configuration(cls):
         if super().fill_configuration():
-            for k in cls.__dict__.keys():
+            attrs = cls.get_class_attributes_dict_ordered()
+            for k in attrs.keys():
                 if k.startswith("SEL__"):
-                    cls.__dict__[k].fill_configuration()
+                    attr = attrs[k]
+                    attr.fill_configuration()
             return True
         return False
 
     def parse_formdata(self, formdata):
         selection = formdata["selection_type"]
         obj_value = formdata["value"]
-        self.value = type(self).__dict__["SEL__"+selection]()
+        self.value = getattr(self, "SEL__"+selection)()
         self.value.parse_formdata(obj_value)
 
     def get_data(self):
         return self.value.get_data()
 
-class FormNode(Node):
+
+class FormNode(Node, metaclass=OrderedClassMembers):
     '''
     Node corresponding to the form itself and "subform" field
     Use FIELD__<name> for specifying fields
@@ -98,10 +115,12 @@ class FormNode(Node):
 
     def __init__(self):
         self.fields = dict()
-        for k in type(self).__dict__.keys():
+        attrs = self.get_attributes_dict_ordered()
+        for k in attrs.keys():
             if k.startswith("FIELD__"):
                 name = k[7:]
-                self.fields[name] = type(self).__dict__[k]()
+                attr = attrs[k]
+                self.fields[name] = attr()
 
     def parse_formdata(self, formdata: dict):
         for k in formdata.keys():
@@ -116,10 +135,13 @@ class FormNode(Node):
     @classmethod
     def generate_configuration_root(cls):
         res_dict = dict()
-        for k in cls.__dict__.keys():
+
+        attrs = cls.get_class_attributes_dict_ordered()
+        for k in attrs.keys():
             if k.startswith("FIELD__"):
                 name = k[7:]
-                res_dict[name] = cls.__dict__[k].get_config_persistent()
+                attr = attrs[k]
+                res_dict[name] = attr.get_config_persistent()
         return res_dict
 
     @classmethod
@@ -139,9 +161,11 @@ class FormNode(Node):
 
     @classmethod
     def fill_configurations(cls):
-        for k in cls.__dict__.keys():
+        attrs = cls.get_class_attributes_dict_ordered()
+        for k in attrs.keys():
             if k.startswith("FIELD__"):
-                cls.__dict__[k].fill_configuration()
+                attr = attrs[k]
+                attr.fill_configuration()
 
     @classmethod
     def get_configuration_root(cls):

@@ -59,6 +59,17 @@ class ScrollView(ttk.Frame):
             self.canvas.itemconfig(self.drawn_window_id, width=400)
 
 
+def index_to_color(color_index):
+    if color_index % 2 == 0:
+        color = "#AAAAAA"
+    else:
+        color = "#CCCCCC"
+    return color
+
+def index_to_style(color_index):
+    color = index_to_color(color_index)
+    return dict(highlightbackground="gray", background=color, highlightthickness=1,bd=5)
+
 class ConfigEntry(object):
     '''
     Base class for form fields.
@@ -75,11 +86,8 @@ class ConfigEntry(object):
         self.conf = conf
         self.name = name
         self.color_index = color_index
-        if color_index%2==0:
-            color = "#BBBBBB"
-        else:
-            color = "#DDDDDD"
-        self.frame = tk.Frame(master, highlightbackground="gray",background=color, highlightthickness=1,bd=5)
+        style = index_to_style(color_index)
+        self.frame = tk.Frame(master, **style)
 
     def get_value(self):
         raise NotImplementedError("This method is not implemented")
@@ -125,11 +133,15 @@ class LabelEntry(ConfigEntry):
     Just a label for information
 
     type: "label"
-    No unique keys
+    fancy: makes label big and noticeable
     '''
     def __init__(self,name,master,conf,color_index=0):
         super().__init__(name, master, conf, color_index)
-        tk.Label(self.frame, text=conf["display_name"]).pack(side="left",fill="both",expand=True)
+        if conf["fancy"]:
+            label = tk.Label(self.frame, text=conf["display_name"], anchor="center", font='TkDefaultFont 10 bold')
+        else:
+            label = tk.Label(self.frame, text=conf["display_name"], anchor="center")
+        label.pack(side="left", fill="both", expand=True)
 
     def set_value(self,newval):
         pass
@@ -493,8 +505,8 @@ class SubFormEntry(ConfigEntry):
         use_scrollview = True
         if "use_scrollview" in conf.keys():
             use_scrollview = conf["use_scrollview"]
-        self.subform = TkDictForm(self.frame,self.subconf,use_scrollview)
-        self.subform.pack(side="bottom",fill="x",expand=True,padx=20)
+        self.subform = TkDictForm(self.frame, self.subconf, use_scrollview, color_index=color_index+1)
+        self.subform.pack(side="bottom",fill="x",expand=True, padx=5)
 
     def set_value(self,newval):
         self.subform.set_values(newval)
@@ -513,8 +525,10 @@ class TkDictForm(tk.Frame):
     tk_form_configuration -- configuration. See help(ConfigEntry) for details.
     use_scrollview -- shoud we use scrollable canvas instead of just tkinter frame?
     '''
-    def __init__(self,master,tk_form_configuration,use_scrollview=True):
-        super(TkDictForm,self).__init__(master)
+    def __init__(self,master,tk_form_configuration,use_scrollview=True,color_index=0):
+        super(TkDictForm, self).__init__(master)
+        self.color_index = color_index
+        self.configure(index_to_style(color_index))
         self.master = master
         self.tk_form_configuration = tk_form_configuration
 
@@ -531,7 +545,7 @@ class TkDictForm(tk.Frame):
         for i in tk_form_configuration.keys():
             conf = tk_form_configuration[i]
             name = i
-            field = create_field(name,self.contents_tgt,conf)
+            field = create_field(name,self.contents_tgt, conf, self.color_index)
             self.fields[i] = field
 
     def get_values(self):

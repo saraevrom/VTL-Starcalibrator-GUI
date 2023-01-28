@@ -94,7 +94,8 @@ class MetricDataSingle(ComboNode):
     VALUES = get_subclasses(metrics, "Metric")
 
     def get_data(self):
-        return super().get_data().lower()
+        index_data = super().get_data()
+        return getattr(metrics, index_data)()
 
 class MetricData(ArrayNode):
     DISPLAY_NAME = get_locale("app.model.form.metrics")

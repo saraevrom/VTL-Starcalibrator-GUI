@@ -3,13 +3,13 @@ import tensorflow as tf
 
 def create_lambda(index):
     if index==0:
-        return tf.keras.layers.Lambda(lambda x: tf.expand_dims(x[:, :, :8, :8], -1))
+        return tf.keras.layers.Lambda(lambda x: x[:, :, :8, :8])
     elif index==1:
-        return tf.keras.layers.Lambda(lambda x: tf.expand_dims(x[:, :, :8, 8:], -1))
+        return tf.keras.layers.Lambda(lambda x: x[:, :, :8, 8:])
     elif index==10:
-        return tf.keras.layers.Lambda(lambda x: tf.expand_dims(x[:, :, 8:, :8], -1))
+        return tf.keras.layers.Lambda(lambda x: x[:, :, 8:, :8])
     elif index==11:
-        return tf.keras.layers.Lambda(lambda x: tf.expand_dims(x[:, :, 8:, 8:], -1))
+        return tf.keras.layers.Lambda(lambda x: x[:, :, 8:, 8:])
 
 
 def create_trigger_model(frames):
@@ -20,7 +20,8 @@ def create_trigger_model(frames):
         cut = create_lambda(i)(inputs)
         print(cut.shape)
         normed = tf.keras.layers.LayerNormalization(axis=1)(cut)
-        conv = tf.keras.layers.Conv3D(2, (8, 3, 3))(normed)
+        preconv = tf.keras.layers.Lambda(lambda x: tf.expand_dims(x, -1))(normed)
+        conv = tf.keras.layers.Conv3D(2, (8, 3, 3))(preconv)
         pooled = tf.keras.layers.MaxPooling3D(pool_size=(16, 2, 2))(conv)
         flat = tf.keras.layers.Flatten()(pooled)
         pmt.append(flat)

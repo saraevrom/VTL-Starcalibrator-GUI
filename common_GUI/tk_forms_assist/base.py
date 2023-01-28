@@ -1,4 +1,4 @@
-
+import inspect
 
 PERSISTENT_CONFIGS = dict()
 
@@ -53,3 +53,14 @@ class Node(object):
         key = cls
         return PERSISTENT_CONFIGS[key]
 
+    @classmethod
+    def get_class_attributes_dict_ordered(cls):
+        res = dict(cls.__dict__)
+        for base in inspect.getmro(cls):
+            if base != cls:
+                if hasattr(base, "get_class_attributes_dict_ordered"):
+                    res.update(base.get_class_attributes_dict_ordered())
+        return res
+
+    def get_attributes_dict_ordered(self):
+        return type(self).get_class_attributes_dict_ordered()

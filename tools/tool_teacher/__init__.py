@@ -9,9 +9,13 @@ import gc
 import numpy.random as rng
 import numpy as np
 from common_GUI import SettingMenu
-from .create_settings import build_menu
 import tkinter.filedialog as filedialog
 from tensorflow import keras
+from common_GUI import TkDictForm
+from .advanced_form import SettingForm
+from multiprocessing import Process, Pipe
+from tensorflow.data import Dataset
+import tensorflow as tf
 
 class ToolTeacher(ToolBase):
     def __init__(self, master):
@@ -26,8 +30,9 @@ class ToolTeacher(ToolBase):
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
         self.columnconfigure(2, weight=1)
-        self.status_display = ScrolledText(self,height=16)
+        self.status_display = ScrolledText(self, height=16)
         self.status_display.grid(row=1, column=0, columnspan=4, sticky="nsew")
+        self.status_display.config(state=tk.DISABLED)
         self.check_passed = False
         self.workon_model = None
 
@@ -35,10 +40,12 @@ class ToolTeacher(ToolBase):
         control_frame.grid(row=0, column=3, sticky="nsew")
         control_frame.rowconfigure(0, weight=1)
 
-        self.settings_menu = SettingMenu(control_frame)
+        self.settings_form = SettingForm()
+        form_conf = self.settings_form.get_configuration_root()
+
+        self.settings_menu = TkDictForm(control_frame, form_conf, True)
         self.settings_menu.commit_action = self.on_teach
         self.settings_menu.grid(row=0, column=0, sticky="nsew")
-        build_menu(self.settings_menu)
 
         resetbtn = tk.Button(control_frame, text=get_locale("teacher.button.reset"), command=self.on_reset_model)
         resetbtn.grid(row=1, column=0, sticky="ew")
@@ -61,8 +68,7 @@ class ToolTeacher(ToolBase):
     def ensure_model(self):
         if self.workon_model is None:
             self.try_reset_model()
-            return bool(self.workon_model)
-        return False
+        return bool(self.workon_model)
 
 
     def on_save_model(self):
@@ -86,24 +92,43 @@ class ToolTeacher(ToolBase):
         self.try_reset_model()
 
     def on_teach(self):
+        self.clear_status()
         if self.ensure_model():
+            self.println_status(get_locale("teacher.status.msg_model_ok"))
             self.check_files()
             if self.check_passed:
+                self.close_mat_file()
+                conf = self.settings_menu.get_values()
+                self.settings_form.parse_formdata(conf)
+                conf = self.settings_form.get_data()
                 gc.collect()
-                generator = self.data_generator()
-            #self.workon_model.com
-            #self.workon_model.fit(generator)
+
+
+                self.workon_model.summary()
+                dataset = Dataset.from_generator(
+                    lambda: self.batch_generator(conf),
+                    output_signature=(tf.TensorSpec(shape=(None, 128, 16, 16), dtype=tf.double),
+                                      tf.TensorSpec(shape=(None, 2), dtype=tf.double))
+                )
+                self.workon_model.fit(dataset, **conf.get_fit_parameters())
         else:
-            self.println_status(get_locale("teacher.status.msg_missing_model"))
+            self.println_status(get_locale("teacher.status.msg_model_missing"))
         self.fg_pool.clear_cache()
         self.bg_pool.clear_cache()
         self.interference_pool.clear_cache()
 
     def println_status(self, message, tabs=0):
+        self.status_display.config(state=tk.NORMAL)
         if tabs == 0:
             self.status_display.insert(tk.INSERT, message + "\n")
         else:
             self.status_display.insert(tk.INSERT, "\t"*tabs + message + "\n")
+        self.status_display.config(state=tk.DISABLED)
+
+    def clear_status(self):
+        self.status_display.config(state=tk.NORMAL)
+        self.status_display.delete('1.0', tk.END)
+        self.status_display.config(state=tk.DISABLED)
 
     def check_pool(self, msg_key, pool: FilePool,fields,allow_empty=False):
         self.println_status(get_locale(msg_key))
@@ -120,31 +145,60 @@ class ToolTeacher(ToolBase):
                 self.println_status(get_locale("teacher.status.msg_ok"), 1)
 
 
-    def data_generator(self, frame_size=128, amount=None):
+    def data_generator(self, conf, frame_size=128, amount=None):
         i = 0
         cycle_forever = amount is None
         while cycle_forever or i < amount:
-            bg_start, (bg_start, bg_end) = self.bg_pool.random_access()
-            if bg_end-bg_start < frame_size:
+            bg_sample, (bg_start, bg_end) = self.bg_pool.random_access()
+            if np.abs(bg_end-bg_start) < frame_size:
                 continue
-            sample_start = rng.randint(bg_start, bg_end-frame_size)
-            bg = bg_start[sample_start:sample_start+frame_size]
+            if bg_start==bg_end-frame_size:
+                sample_start = bg_start
+            else:
+                sample_start = rng.randint(bg_start, bg_end-frame_size)
+            bg = bg_sample[sample_start:sample_start+frame_size]
             x_data = bg
-            if self.fg_pool.files_list:
+            if self.interference_pool.files_list:
                 if rng.random() < 0.5:
-                    interference = self.fg_pool.random_access()
+                    interference = self.interference_pool.random_access()
+                    interference = conf.process_it(interference)
                     x_data = x_data+interference
             if rng.random() < 0.5:
-                y_data = np.array([1, 0])
+                y_data = np.array([1., 0.])
             else:
-                y_data = np.array([0, 1])
-                fg = self.fg_pool.random_access()
+                y_data = np.array([0., 1.])
+                fg = np.zeros(bg.shape)
+                #conf.process_fg(self.fg_pool.random_access)
+                rng_append = rng.randint(1,16)
+                if rng_append % 2 == 1:
+                    fg[:, :8, :8] = conf.process_fg(self.fg_pool.random_access())
+                if rng_append / 2 % 2 == 1:
+                    fg[:, 8:, :8] = conf.process_fg(self.fg_pool.random_access())
+                if rng_append / 4 % 2 == 2:
+                    fg[:, :8, 8:] = conf.process_fg(self.fg_pool.random_access())
+                if rng_append / 8 % 2 == 2:
+                    fg[:, 8:, 8:] = conf.process_fg(self.fg_pool.random_access())
                 x_data = x_data + fg
             i += 1
             yield x_data, y_data
 
+    def batch_generator(self, conf, frame_size=128):
+        generator = self.data_generator(conf, frame_size)
+        batchX = []
+        batchY = []
+        gen_params = conf.generator_params()
+        batch_size = gen_params["batch_size"]
+        while True:
+            batchX.clear()
+            batchY.clear()
+            for _ in range(batch_size):
+                X, Y = next(generator)
+                batchX.append(X)
+                batchY.append(Y)
+            yield np.array(batchX), np.array(batchY)
+
+
     def check_files(self):
-        self.status_display.delete('1.0', tk.END)
         self.check_passed = True
         self.check_pool("teacher.status.msg_bg", self.bg_pool, ["data0", "marked_intervals"])
         self.check_pool("teacher.status.msg_fg", self.fg_pool, ["EventsIJ"])

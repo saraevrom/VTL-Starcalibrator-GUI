@@ -44,6 +44,13 @@ class LabelNode(ValueNode):
     Just set its DISPLAY_NAME for displayment
     '''
     FIELD_TYPE = "label"
+    FANCY = False
+
+    @classmethod
+    def generate_configuration(cls):
+        conf = super().generate_configuration()
+        conf["fancy"] = cls.FANCY
+        return conf
 
 class BoolNode(ValueNode):
     '''
