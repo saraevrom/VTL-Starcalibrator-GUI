@@ -192,7 +192,7 @@
   "app.menu.tools.track_markup": "Background",
   "app.menu.tools.starcalibrator": "Orientation",
   "app.menu.tools.dataset_generator": "Dataset generator",
-  "app.menu.tools.teacher": "Model teacher",
+  "app.menu.tools.teacher": "Model training",
 
   "app.filedialog.save_settings.title": "Save settings",
   "app.filedialog.load_settings.title": "Load settings",
