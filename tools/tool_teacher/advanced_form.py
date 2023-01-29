@@ -111,6 +111,7 @@ class SettingForm(FormNode):
     FIELD__steps_per_epoch = create_value_field(IntNode, get_locale("teacher.form.steps_per_epoch"), 100)
     FIELD__batch_size = create_value_field(IntNode, get_locale("teacher.form.batch_size"), 32)
     FIELD__workers = create_value_field(IntNode, get_locale("teacher.form.workers"), 1)
+    FIELD__fastcache = create_value_field(BoolNode, get_locale("teacher.form.fastcache"), False)
 
     def get_data(self):
         data = super().get_data()

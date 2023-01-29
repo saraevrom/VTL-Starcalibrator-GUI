@@ -27,6 +27,7 @@
   "teacher.form.steps_per_epoch": "Шаги на эпоху",
   "teacher.form.workers": "Потоки",
   "teacher.form.batch_size" : "Размер группы",
+  "teacher.form.fastcache": "Быстрый кэш",
   "teacher.advform.constant": "Константа",
   "teacher.advform.lower": "Минимальное зн.",
   "teacher.advform.higher": "Максимальное зн.",

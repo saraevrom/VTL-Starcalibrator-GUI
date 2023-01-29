@@ -18,6 +18,7 @@ class FilePool(tk.Frame):
         self.files_listbox = tk.Listbox(self)
         self.files_list = []
         self.open_files_cache = dict()
+        self.data_cache = dict()
         self.files_listbox.grid(row=1, column=0, sticky="nsew")
         self.rowconfigure(1, weight=1)
         self.columnconfigure(0, weight=1)
@@ -30,6 +31,8 @@ class FilePool(tk.Frame):
             selectbtn.grid(row=3, column=0, sticky="nsew")
         else:
             selectbtn.grid(row=2, column=0, sticky="nsew")
+
+        self.fast_cache = False
 
     def on_clear(self):
         self.files_list.clear()
@@ -48,8 +51,8 @@ class FilePool(tk.Frame):
                 self.files_listbox.insert(tk.END, ospath.basename(f))
                 self.files_list.append(f)
 
-    def pull_random_file(self):
-        filename = random.choice(self.files_list)
+
+    def get_cached_fileaccess(self, filename):
         if filename in self.open_files_cache.keys():
             return self.open_files_cache[filename]
         else:
@@ -57,10 +60,39 @@ class FilePool(tk.Frame):
             self.open_files_cache[filename] = obj
             return obj
 
+    def pull_random_file(self):
+        filename = random.choice(self.files_list)
+        obj = self.get_cached_fileaccess(filename)
+        return obj
+
+    def pull_fields_from_random_file(self, fields):
+        filename = random.choice(self.files_list)
+        if self.fast_cache:
+            result = []
+            obj = None
+            if filename not in self.data_cache.keys():
+                self.data_cache[filename] = dict()
+            for i in fields:
+                cachedict = self.data_cache[filename]
+                if i not in cachedict.keys():
+                    if obj is None:
+                        obj = self.get_cached_fileaccess(filename)
+                    print(f"Creating cache for {filename}[{i}]")
+                    cachedict[i] = np.array(obj[i])
+                    print(f"Created cache for {filename}[{i}]")
+                result.append(cachedict[i])
+            return result
+
+        else:
+            obj = self.get_cached_fileaccess(filename)
+            return [obj[i] for i in fields]
+
+
     def clear_cache(self):
         for v in self.open_files_cache.values():
             v.close()
         self.open_files_cache.clear()
+        self.data_cache.clear()
 
     def check_hdf5_fields(self,req_fields):
         failed = []
@@ -86,8 +118,7 @@ class RandomFileAccess(FilePool):
         self.reading_field = reading_field
 
     def random_access(self):
-        f = self.pull_random_file()
-        dataset = f[self.reading_field]
+        dataset, = self.pull_fields_from_random_file([self.reading_field])
         length = dataset.shape[0]
         if length > 0:
             i = random.randint(0, length)
@@ -100,9 +131,7 @@ class RandomIntervalAccess(FilePool):
         super().__init__(master, title_key, "*.mat *.hdf *.h5", allow_clear=allow_clear)
 
     def random_access(self):
-        f = self.pull_random_file()
-        intervals = np.array(f["marked_intervals"])
-        data0 = f["data0"]
+        intervals, data0 = self.pull_fields_from_random_file(["marked_intervals", "data0"])
         weights = intervals[:, 2]
         p = weights/np.sum(weights)
         length = intervals.shape[0]

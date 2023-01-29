@@ -37,7 +37,7 @@ class SingleProcessor(object):
         self.common_layers = [
             tf.keras.layers.Concatenate(),
             tf.keras.layers.Dense(100, activation="relu"),
-            tf.keras.layers.Dense(1, activation="sigmoid")
+            tf.keras.layers.Dense(2, activation="softmax")
         ]
 
     def apply(self, inputs):
@@ -49,13 +49,14 @@ def create_trigger_model(frames, slider=20):
     inputs = tf.keras.Input(shape=(frames, 16, 16))
     print(inputs.shape)
     processor = SingleProcessor(frames)
-    slided = []
-    for start_index in range(frames-slider+1):
-        timecut = cut_interval(start_index, start_index+slider)(inputs)
-        slided.append(processor.apply(timecut))
-
-    merged = tf.keras.layers.Concatenate()(slided)
-    output = tf.keras.layers.Dense(2, activation="softmax")(merged)
+    output = processor.apply(inputs)
+    # slided = []
+    # for start_index in range(frames-slider+1):
+    #     timecut = cut_interval(start_index, start_index+slider)(inputs)
+    #     slided.append(processor.apply(timecut))
+    #
+    # merged = tf.keras.layers.Concatenate()(slided)
+    # output = tf.keras.layers.Dense(2, activation="softmax")(merged)
 
     return tf.keras.Model(inputs, output)
 

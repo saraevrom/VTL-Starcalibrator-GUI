@@ -28,6 +28,7 @@
   "teacher.form.steps_per_epoch": "Steps per epoch",
   "teacher.form.workers": "Workers",
   "teacher.form.batch_size" : "Batch size",
+  "teacher.form.fastcache": "Fast cache",
   "teacher.advform.constant": "Constant",
   "teacher.advform.lower": "Lower",
   "teacher.advform.higher": "Higher",

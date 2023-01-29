@@ -99,6 +99,9 @@ class ToolTeacher(ToolBase):
             if self.check_passed:
                 self.close_mat_file()
                 conf = self.settings_menu.get_values()
+                self.fg_pool.fast_cache = conf["fastcache"]
+                self.bg_pool.fast_cache = conf["fastcache"]
+                self.interference_pool.fast_cache = conf["fastcache"]
                 self.settings_form.parse_formdata(conf)
                 conf = self.settings_form.get_data()
                 gc.collect()
