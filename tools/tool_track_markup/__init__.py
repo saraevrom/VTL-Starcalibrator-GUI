@@ -8,48 +8,12 @@ import tkinter.filedialog
 import json
 from localization import get_locale
 import matplotlib.pyplot as plt
-from .denoising import reduce_noise, antiflash, moving_average_subtract, antiflash_single
+from preprocessing.denoising import reduce_noise, antiflash, moving_average_subtract
 from .reset import ResetAsker
+from .form import TrackMarkupForm
 
 OFF = get_locale("app.state_off")
 ON = get_locale("app.state_on")
-
-FORM_CONF = {
-    "filter_win":{
-        "type": "int",
-        "default": 10,
-        "display_name": get_locale("track_markup.form.filter_win")
-    },
-    "min_frame": {
-        "type": "int",
-        "default": 256,
-        "display_name": get_locale("track_markup.form.min_frame")
-    },
-    "pmt_select": {
-        "type": "combo",
-        "default": "full",
-        "display_name": get_locale("track_markup.form.pmt_select"),
-        "values": ["full", "topright", "topleft", "bottomright", "bottomleft"],
-        "readonly": True
-    },
-    "use_noise_suppression":{
-        "type":"bool",
-        "default":False,
-        "display_name": get_locale("track_markup.form.noise_suppress_use")
-    },
-    "noise_suppression_window":{
-        "type":"int",
-        "default":100,
-        "display_name": get_locale("track_markup.form.noise_suppress_window")
-    },
-    "use_flash_suppression":{
-        "type":"bool",
-        "default":False,
-        "display_name": get_locale("track_markup.form.flash_suppress_use")
-    },
-
-}
-
 
 def try_append_event(target_list,start,end):
     ok = True
@@ -94,7 +58,7 @@ class TrackMarkup(ToolBase):
         self.rejected_data.pack(side="bottom", fill="both", expand=True)
         tk.Label(left_panel,text=get_locale("track_markup.label.rejected")).pack(side="bottom", fill="x", expand=False)
         right_panel = tk.Frame(self)
-        right_panel.pack(side="right")
+        right_panel.pack(side="right", fill="y")
         tk.Button(right_panel, text=get_locale("track_markup.btn.reset"),
                   command=self.on_reset).grid(row=0, column=0, sticky="ew")
         tk.Button(right_panel, text=get_locale("track_markup.btn.save"),
@@ -102,8 +66,11 @@ class TrackMarkup(ToolBase):
         tk.Button(right_panel, text=get_locale("track_markup.btn.load"),
                   command=self.on_load_data).grid(row=2, column=0, sticky="ew")
 
-        self.params_form = TkDictForm(right_panel, FORM_CONF)
-        self.params_form.grid(row=3, column=0, sticky="ew", columnspan=2)
+        self.params_form_parser = TrackMarkupForm()
+
+        self.params_form = TkDictForm(right_panel, self.params_form_parser.get_configuration_root())
+        self.params_form.grid(row=3, column=0, sticky="nsew")
+        right_panel.rowconfigure(3, weight=1)
 
         self.plotter.pack(side="top", expand=True, fill="both")
         bottom_panel = tk.Frame(self)
@@ -420,24 +387,12 @@ class TrackMarkup(ToolBase):
         self.update_answer_panel()
         self.redraw_event()
 
-
     def apply_filter(self, signal):
-        form_data = self.params_form.get_values()
-        win = form_data["filter_win"]
-
-        if signal.shape[0] >= win:
-            plot_data = moving_average_subtract(signal, win)
-            #filtered_bg = np.mean(sliding_window_view(signal, axis=0, window_shape=win), axis=-1)
-            #plot_data = signal[win // 2: win // 2 + filtered_bg.shape[0]] - filtered_bg
-        else:
-            plot_data = signal - np.mean(signal, axis=0)
-
-        if form_data["use_noise_suppression"]:
-            plot_data = reduce_noise(plot_data, form_data["noise_suppression_window"])
-        if form_data["use_flash_suppression"]:
-            if len(plot_data.shape)>1:
-                plot_data = antiflash(plot_data)
-
+        raw_form_data = self.params_form.get_values()
+        self.params_form_parser.parse_formdata(raw_form_data)
+        form_data = self.params_form_parser.get_data()
+        preprocessor = form_data["preprocessing"]
+        plot_data = preprocessor.three_stage_preprocess(signal)
         return plot_data
 
     def popup_draw_all(self):

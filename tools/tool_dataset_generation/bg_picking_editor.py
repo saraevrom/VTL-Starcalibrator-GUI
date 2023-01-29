@@ -1,5 +1,5 @@
 from common_GUI import Plotter
-from ..tool_track_markup.denoising import reduce_noise, antiflash, moving_average_subtract
+from preprocessing.denoising import moving_average_subtract
 import numpy as np
 from matplotlib.patches import Rectangle
 

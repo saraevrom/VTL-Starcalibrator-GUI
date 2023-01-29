@@ -37,6 +37,14 @@
   "teacher.advform.multiplier": "Множитель",
   "teacher.advform.parameters": "Параметры",
 
+
+  "app.preprocess.form.preprocess.title": "Предобработка",
+  "app.preprocess.form.preprocess.stage1": "Скользящее среднее",
+  "app.preprocess.form.preprocess.stage2": "Скользящее стандартное отклонение",
+  "app.preprocess.form.preprocess.stage3": "Подавление вспышек",
+  "app.preprocess.advform.win": "Окно",
+  "app.preprocess.advform.none": "Нет",
+
   "app.model.form.title": "Создание модели",
   "app.model.form.optimizer": "Оптимизатор",
   "app.model.form.loss": "Фкнкция потери",

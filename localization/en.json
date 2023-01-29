@@ -29,6 +29,7 @@
   "teacher.form.workers": "Workers",
   "teacher.form.batch_size" : "Batch size",
   "teacher.form.fastcache": "Fast cache",
+
   "teacher.advform.constant": "Constant",
   "teacher.advform.lower": "Lower",
   "teacher.advform.higher": "Higher",
@@ -38,6 +39,14 @@
   "teacher.advform.multiplier": "Multiplier",
   "teacher.advform.parameters": "Parameters",
 
+
+
+  "app.preprocess.form.preprocess.title": "Preprocessing",
+  "app.preprocess.form.preprocess.stage1": "Apply MA",
+  "app.preprocess.form.preprocess.stage2": "Apply MSTD",
+  "app.preprocess.form.preprocess.stage3": "Apply antiflash",
+  "app.preprocess.advform.win": "Window",
+  "app.preprocess.advform.none": "None",
 
   "app.model.form.title": "Create model",
   "app.model.form.optimizer": "Optimizer",

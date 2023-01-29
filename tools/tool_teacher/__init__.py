@@ -151,6 +151,7 @@ class ToolTeacher(ToolBase):
     def data_generator(self, conf, frame_size=128, amount=None):
         i = 0
         cycle_forever = amount is None
+        preprocessor = conf.get_preprocessor()
         while cycle_forever or i < amount:
             bg_sample, (bg_start, bg_end) = self.bg_pool.random_access()
             if np.abs(bg_end-bg_start) < frame_size:
@@ -160,7 +161,7 @@ class ToolTeacher(ToolBase):
             else:
                 sample_start = rng.randint(bg_start, bg_end-frame_size)
             bg = bg_sample[sample_start:sample_start+frame_size]
-            x_data = bg
+            x_data = preprocessor.three_stage_preprocess(bg)
             if self.interference_pool.files_list:
                 if rng.random() < 0.5:
                     interference = self.interference_pool.random_access()

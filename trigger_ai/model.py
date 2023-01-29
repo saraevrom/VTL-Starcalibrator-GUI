@@ -27,16 +27,16 @@ class SingleProcessor(object):
         for i in [0, 1, 10, 11]:
             self.pmt_layers.append([
                 create_lambda(i),
-                tf.keras.layers.LayerNormalization(axis=1),
+                #tf.keras.layers.LayerNormalization(axis=1),
                 tf.keras.layers.Lambda(lambda x: tf.expand_dims(x, -1)),
                 tf.keras.layers.Conv3D(2, (8, 3, 3)),
-                tf.keras.layers.MaxPooling3D(pool_size=(4, 2, 2)),
+                tf.keras.layers.MaxPooling3D(pool_size=(16, 2, 2)),
                 tf.keras.layers.Flatten()
             ])
 
         self.common_layers = [
             tf.keras.layers.Concatenate(),
-            tf.keras.layers.Dense(100, activation="relu"),
+            tf.keras.layers.Dense(16, activation="relu"),
             tf.keras.layers.Dense(2, activation="softmax")
         ]
 

@@ -59,6 +59,8 @@ class LearnParameters(object):
     def generator_params(self):
         return {k: self.config[k] for k in ["batch_size", ]}
 
+    def get_preprocessor(self):
+        return self.config["preprocessing"]
 
     def process_fg(self, data):
         modifier = self.config["modification"]

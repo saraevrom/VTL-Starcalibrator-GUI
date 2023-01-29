@@ -4,6 +4,7 @@ from common_GUI.tk_forms_assist.factory import create_value_field, create_label
 from localization import get_locale
 from .sampling import SamplerConstant, SamplerRange
 from .parameters_processing import Augmenter, DualProcessing, SignalModifier, LearnParameters
+from preprocessing import DataPreProcessorForm
 
 #Constant = create_value_field(FloatNode, get_locale("teacher.advform.constant"))
 class Constant(FloatNode):
@@ -33,13 +34,6 @@ class RangedValue(FormNode):
 class FloatDistributedAlter(AlternatingNode):
     SEL__const = Constant
     SEL__uniform = RangedValue
-
-
-class IntOption(AlternatingNode):
-    SEL__none = create_label(get_locale("teacher.advform.none"))
-    SEL__const = create_value_field(IntNode, get_locale("teacher.advform.constant"))
-    USE_SCROLLVIEW = False
-
 
 
 
@@ -94,8 +88,12 @@ class ProcessingSubform(FormNode):
         data = super().get_data()
         return SignalModifier(**data)
 
+
+
+
 class SettingForm(FormNode):
     FIELD__label_dataset_parameters = create_label(get_locale("teacher.form.separator.dataset_parameters"), True)
+    FIELD__preprocessing = DataPreProcessorForm
     FIELD__modification = create_dual(ProcessingSubform,
                                       get_locale("teacher.form.dataset_modification"),
                                       get_locale("teacher.status.msg_fg"),

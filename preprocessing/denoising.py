@@ -103,6 +103,17 @@ def moving_average_edged(src, win):
 
 
 @nb.njit()
+def mean_by_axis(src, axis=0):
+    summed = np.sum(src, axis=axis)
+    return summed/src.shape[0]
+
+
+
+@nb.njit()
 def moving_average_subtract(src, win):
-    average = moving_average_edged(src, win)
-    return src - average
+    if src.shape[0] >= win:
+        average = moving_average_edged(src, win)
+        return src - average
+    else:
+        return src - mean_by_axis(src, axis=0)
+
