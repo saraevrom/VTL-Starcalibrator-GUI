@@ -33,10 +33,15 @@
   "teacher.advform.constant": "Constant",
   "teacher.advform.lower": "Lower",
   "teacher.advform.higher": "Higher",
-  "teacher.advform.range": "Range",
+  "teacher.advform.mean": "Mean",
+  "teacher.advform.stdev": "Standard deviation",
+  "teacher.advform.uniform": "Uniform",
+  "teacher.advform.gauss": "Gauss",
+  "teacher.advform.laplace": "Laplace",
   "teacher.advform.none": "None",
   "teacher.advform.same": "Same",
   "teacher.advform.multiplier": "Multiplier",
+  "teacher.advform.offset": "Offset",
   "teacher.advform.parameters": "Parameters",
 
 

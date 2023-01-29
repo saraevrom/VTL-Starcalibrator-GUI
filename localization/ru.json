@@ -31,10 +31,15 @@
   "teacher.advform.constant": "Константа",
   "teacher.advform.lower": "Минимальное зн.",
   "teacher.advform.higher": "Максимальное зн.",
-  "teacher.advform.range": "Диапазон",
+  "teacher.advform.mean": "Мат. ожидание",
+  "teacher.advform.stdev": "Среднеквадратичное отклонение",
+  "teacher.advform.uniform": "Однородно",
+  "teacher.advform.gauss": "Гаусс",
+  "teacher.advform.laplace": "Лаплас",
   "teacher.advform.none": "Ничего не задано",
   "teacher.advform.same": "Такие же",
   "teacher.advform.multiplier": "Множитель",
+  "teacher.advform.offset": "Сдвиг",
   "teacher.advform.parameters": "Параметры",
 
 

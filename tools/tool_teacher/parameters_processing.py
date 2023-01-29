@@ -6,12 +6,7 @@ class Appliance(object):
         raise NotImplementedError()
 
 
-class SignalModifier(Appliance):
-    def __init__(self, multiplier):
-        self.multiplier = multiplier
 
-    def apply(self, data):
-        return self.multiplier.sample()*data
 
 class Augmenter(Appliance):
     def __init__(self, use_transpose, use_reverse):
