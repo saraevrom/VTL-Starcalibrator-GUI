@@ -401,6 +401,51 @@ class ArrayEntry(ConfigEntry):
 
 FIELDTYPES["array"] = [ArrayEntry,False]
 
+
+class OptionEntry(ConfigEntry):
+    '''
+    Field that can be turned off
+
+    type: "option"
+    subconf -- controlled widget
+    '''
+
+    def __init__(self,name,master,conf,color_index=0):
+        super().__init__(name,master,conf,color_index)
+        self.use_var = tk.IntVar(master)
+        tk.Checkbutton(self.frame, text=conf["display_name"], variable=self.use_var).pack(anchor="nw")
+        self.subconf = conf["subconf"]
+
+        name = self.name+".option"
+        self.subfield = create_field(name, self.frame, self.subconf, self.color_index + 1)
+        self.subfield.frame.pack_forget()
+        self.use_var.trace("w",self.update_visibility)
+
+
+    def update_visibility(self,*args, **kwargs):
+        if self.use_var.get():
+            self.subfield.frame.pack(side="bottom", fill="both")
+        else:
+            self.subfield.frame.pack_forget()
+
+
+    def set_value(self,newval):
+        if newval is None:
+            self.use_var.set(0)
+            self.update_visibility()
+        else:
+            self.use_var.set(1)
+            self.update_visibility()
+            self.subfield.set_value(newval)
+
+    def get_value(self):
+        if self.use_var.get() != 0:
+            return self.subfield.get_value()
+        else:
+            return None
+
+FIELDTYPES["option"] = [OptionEntry, False]
+
 class AlternatingEntry(ConfigEntry):
     '''
     Alternating field based on selection.
@@ -502,7 +547,7 @@ class SubFormEntry(ConfigEntry):
         lab = tk.Label(self.frame,text=conf["display_name"], anchor='w')
         lab.pack(side="top",fill="x",expand=True)
         self.subconf = conf["subconf"]
-        use_scrollview = True
+        use_scrollview = False
         if "use_scrollview" in conf.keys():
             use_scrollview = conf["use_scrollview"]
         self.subform = TkDictForm(self.frame, self.subconf, use_scrollview, color_index=color_index+1)
@@ -545,7 +590,7 @@ class TkDictForm(tk.Frame):
         for i in tk_form_configuration.keys():
             conf = tk_form_configuration[i]
             name = i
-            field = create_field(name,self.contents_tgt, conf, self.color_index)
+            field = create_field(name, self.contents_tgt, conf, self.color_index)
             self.fields[i] = field
 
     def get_values(self):

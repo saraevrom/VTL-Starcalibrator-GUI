@@ -1,5 +1,5 @@
 from common_GUI.tk_forms_assist import FormNode, FloatNode, AlternatingNode, IntNode
-from common_GUI.tk_forms_assist import BoolNode
+from common_GUI.tk_forms_assist import BoolNode, OptionNode
 from common_GUI.tk_forms_assist.factory import create_value_field, create_label
 from localization import get_locale
 from .parameters_processing import Augmenter, DualProcessing, LearnParameters
@@ -14,10 +14,12 @@ def create_dual(shared_field, common_title, title_master, title_slave):
     class IndependentSlaveField(shared_field):
         DISPLAY_NAME = get_locale("teacher.advform.parameters")
 
-    class SlaveFieldAlter(AlternatingNode):
+    class SlaveFieldAlter(OptionNode):
         DISPLAY_NAME = title_slave
-        SEL__same = create_label(get_locale("teacher.advform.same"))
-        SEL__independent = IndependentSlaveField
+        DEFAULT_VALUE = None
+        ITEM_TYPE = IndependentSlaveField
+        #SEL__same = create_label(get_locale("teacher.advform.same"))
+        #SEL__independent = IndependentSlaveField
 
     class DualForm(FormNode):
         DISPLAY_NAME = common_title

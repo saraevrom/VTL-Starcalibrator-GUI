@@ -1,4 +1,5 @@
 from .base import Node
+from .simple_fields import ValueNode
 
 import collections
 
@@ -11,6 +12,27 @@ class OrderedClassMembers(type):
         classdict['__ordered__'] = [key for key in classdict.keys()
                 if key not in ('__module__', '__qualname__')]
         return type.__new__(self, name, bases, classdict)
+
+
+class OptionNode(ValueNode):
+    '''
+    Node corresponding to the "option" entry
+    '''
+    FIELD_TYPE = "option"
+    ITEM_TYPE = None
+
+    @classmethod
+    def generate_configuration(cls):
+        conf = super(OptionNode, cls).generate_configuration()
+        conf["subconf"] = cls.ITEM_TYPE.get_config_persistent()
+        return conf
+
+    @classmethod
+    def fill_configuration(cls):
+        if super().fill_configuration():
+            cls.ITEM_TYPE.fill_configuration()
+            return True
+        return False
 
 class ArrayNode(Node):
     '''
@@ -123,8 +145,11 @@ class FormNode(Node, metaclass=OrderedClassMembers):
                 self.fields[name] = attr()
 
     def parse_formdata(self, formdata: dict):
-        for k in formdata.keys():
-            self.fields[k].parse_formdata(formdata[k])
+        for k in self.fields.keys():
+            if k in formdata.keys():
+                self.fields[k].parse_formdata(formdata[k])
+            else:
+                self.fields[k].parse_formdata(None)
 
     def get_data(self):
         res_dict = dict()
