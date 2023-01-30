@@ -91,6 +91,8 @@
   "flatfielder.baselevel.title": "Фон",
   "flatfielder.response.title": "Отклик",
   "flatfielder.saturation.title": "Насыщение",
+  "flatfielder.sensitivity.title": "Чувствительность",
+  "flatfielder.dead_time.title": "Мёртвое время",
   "flatfielder.btn.coeffs_calculate": "Расчёт коэффициентов",
   "flatfielder.btn.save": "Сохранить данные",
   "flatfielder.btn.random_plot": "Отрисовать случайную пару пикселей",

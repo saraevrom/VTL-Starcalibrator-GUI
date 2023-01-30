@@ -1,6 +1,7 @@
 import numpy as np
 import json
 
+from scipy.special import lambertw
 
 class FlatFieldingModel(object):
     subclass_dict = None
@@ -177,3 +178,32 @@ class NonlinearSaturation(FlatFieldingModel):
     def get_broken_auto(self):
         return np.logical_or(np.abs(self.saturation) <= 1e-8, np.abs(self.saturation/self.response)<=1e-8)
 
+
+class NonlinearPileup(FlatFieldingModel):
+    def __init__(self, sensitivity=None, dead_time=None):
+        super().__init__()
+        self.sensitivity = sensitivity
+        self.dead_time = dead_time
+
+    def get_data(self):
+        return {
+            "sensitivity": self.sensitivity.tolist(),
+            "dead_time": self.dead_time.tolist(),
+            "broken": self.broken_pixels.tolist()
+        }
+
+    def set_data(self, x_data):
+        self.sensitivity = np.array(x_data["sensitivity"])
+        self.dead_time = np.array(x_data["dead_time"])
+        self.broken_pixels = np.array(x_data["broken"])
+
+    def display_parameter_1(self):
+        return "flatfielder.sensitivity.title", self.sensitivity
+
+    def display_parameter_2(self):
+        return "flatfielder.dead_time.title", self.dead_time
+
+    def apply(self, pixel_data):
+        upper_clamp = self.dead_time/np.e
+        pixels_clip = np.clip(pixel_data, a_min=None, a_max=upper_clamp)
+        return -self.dead_time/self.sensitivity*lambertw(-pixels_clip/self.dead_time).real

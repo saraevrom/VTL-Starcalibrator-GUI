@@ -91,6 +91,8 @@
   "flatfielder.baselevel.title": "Base Line",
   "flatfielder.response.title": "Response",
   "flatfielder.saturation.title": "Saturation",
+  "flatfielder.sensitivity.title": "Sensivity",
+  "flatfielder.dead_time.title": "Dead time",
 
   "flatfielder.btn.coeffs_calculate": "Calculate coefficients",
   "flatfielder.btn.save": "Save coefficients",
