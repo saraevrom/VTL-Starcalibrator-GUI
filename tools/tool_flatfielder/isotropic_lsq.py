@@ -195,7 +195,11 @@ def multidim_vec_score_no_bg(params, signal_mat):
 
 def isotropic_lad_multidim_no_bg(signal_mat):
     dims = signal_mat.shape[1]
-    initial_guess = np.zeros(dims-1)
+    distances = np.sum(signal_mat**2, axis=1)
+    furthest = signal_mat[np.argmax(distances)]
+
+
+    initial_guess = get_sphere_angles(furthest)
     res = minimize(multidim_vec_score_no_bg, np.array(initial_guess), args=(signal_mat,), method="Powell")
     assert res.success
     params = res.x

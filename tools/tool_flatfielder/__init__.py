@@ -12,7 +12,7 @@ from localization import get_locale
 import tkinter.filedialog as filedialog
 
 from ..tool_base import ToolBase
-from .models import FlatFieldingModel
+from .models import FlatFieldingModel, Chain
 import os.path as ospath
 
 def line_fit_robust(xs, ys):
@@ -30,6 +30,11 @@ class LineFitter(object):
         if np.median(i_data)==0 or np.median(j_data)==0:
             return 0
         return line_fit_robust(i_data, j_data)
+
+REPLACE = 0
+APPEND = 1
+AMEND = 2
+
 
 class FlatFielder(ToolBase):
     def __init__(self, master):
@@ -56,7 +61,7 @@ class FlatFielder(ToolBase):
         self.settings_menu = SettingMenu(settings_menu_parent,True)
         settings_menu_parent.grid(row=0, column=1, sticky="nsew")
         build_settings(self.settings_menu)
-        self.settings_menu.grid(row=0, column=0, sticky="nsew")
+        self.settings_menu.grid(row=0, column=0, sticky="nsew", columnspan=3)
 
         self.signal_plotter = SignalPlotter(self)
         self.signal_plotter.grid(row=0, column=0, sticky="nsew")
@@ -74,11 +79,16 @@ class FlatFielder(ToolBase):
         self.get_mat_file()
         self.signal_plotter.draw()
         self.drawn_data = None
+        self.model_change_mode = REPLACE
 
         btn = ttk.Button(settings_menu_parent, text=get_locale("flatfielder.btn.coeffs_calculate"), command=self.on_calculate)
         btn.grid(row=1, column=0, sticky="ew")
+        btn = ttk.Button(settings_menu_parent, text=get_locale("flatfielder.btn.append"), command=self.on_append)
+        btn.grid(row=1, column=1, sticky="ew")
+        btn = ttk.Button(settings_menu_parent, text=get_locale("flatfielder.btn.amend"), command=self.on_amend)
+        btn.grid(row=1, column=2, sticky="ew")
         btn = ttk.Button(settings_menu_parent, text=get_locale("flatfielder.btn.save"), command=self.on_save_press)
-        btn.grid(row=2, column=0, sticky="ew")
+        btn.grid(row=2, column=0, sticky="ew", columnspan=3)
         #btn = ttk.Button(self, text=get_locale("flatfielder.btn.random_plot"), command=self.on_random_draw)
         #btn.grid(row=4, column=0, sticky="ew")
         self.on_apply_settings()
@@ -111,12 +121,30 @@ class FlatFielder(ToolBase):
             self.draw_plot()
         self.signal_plotter.draw()
 
+    def on_amend(self):
+        self.model_change_mode = AMEND
+        self.on_calculate_common()
+
+    def on_append(self):
+        self.model_change_mode = APPEND
+        self.on_calculate_common()
+
     def on_calculate(self):
+        self.model_change_mode = REPLACE
+        self.on_calculate_common()
+
+    def on_calculate_common(self):
         if self.drawn_data is not None:
             t1 = self.settings_dict["time_1"]
             t2 = self.settings_dict["time_2"]
-            assert t2>t1
+            assert t2 > t1
             requested_data = self.drawn_data[t1:t2]
+            if (self.model_change_mode == APPEND) and (self.remembered_model is not None):
+                #apply data for next stage
+                requested_data = self.remembered_model.apply(requested_data)
+            elif self.model_change_mode == AMEND:
+                if isinstance(self.remembered_model, Chain):
+                    requested_data = self.remembered_model.apply_amending(requested_data)
 
             used_algo = self.settings_dict["used_algo"]
             if used_algo in ALGO_MAP.keys():
@@ -127,9 +155,29 @@ class FlatFielder(ToolBase):
             else:
                 return
 
-            broke_signal = model.broken_query()
+            if self.model_change_mode==REPLACE:
+                self.remembered_model = model
+            else:
+                # Chaining models!
+                # But do not turn FF into perceptron though
+                if not isinstance(self.remembered_model, Chain):
+                    tmpmodel = self.remembered_model
+                    self.remembered_model = Chain()
+                    if isinstance(tmpmodel, FlatFieldingModel):
+                        self.remembered_model.append_model(tmpmodel)
+                if self.model_change_mode == APPEND:
+                    self.remembered_model.append_model(model)
+                elif self.model_change_mode == AMEND:
+                    self.remembered_model.amend_model(model)
+                else:
+                    return
+
+            # del model # to prevent usage
+            print("MODEL:", self.remembered_model)
+            self.remembered_model.reset_broken()
+            broke_signal = self.remembered_model.broken_query()
             print("BROKEN_DETECTION:", broke_signal)
-            display1, param1 = model.display_parameter_1()
+            display1, param1 = self.remembered_model.display_parameter_1()
             self.coeff_plotter.axes.set_title(get_locale(display1))
             if param1 is not None:
                 self.coeff_plotter.buffer_matrix = param1
@@ -137,14 +185,13 @@ class FlatFielder(ToolBase):
             self.coeff_plotter.update_matrix_plot(update_norm=True)
             self.coeff_plotter.draw()
 
-            display2, param2 = model.display_parameter_2()
+            display2, param2 = self.remembered_model.display_parameter_2()
             self.bg_plotter.axes.set_title(get_locale(display2))
             if param2 is not None:
                 self.bg_plotter.buffer_matrix = param2
             self.bg_plotter.set_broken(broke_signal)
             self.bg_plotter.update_matrix_plot(update_norm=True)
             self.bg_plotter.draw()
-            self.remembered_model = model
             self.remembered_settings.update(self.settings_dict)
             self.draw_plot()
             self.signal_plotter.draw()
@@ -160,7 +207,10 @@ class FlatFielder(ToolBase):
             fbase = self.get_loaded_filename()
             fbase = ospath.splitext(fbase)[0]
 
-            initial_filename = f"flat_fielding_src-{fbase}___{av}_{t1}-{t2}_{iden}.json"
+            if isinstance(self.remembered_model, Chain):
+                initial_filename = f"flat_fielding_src-{fbase}___chain.json"
+            else:
+                initial_filename = f"flat_fielding_src-{fbase}___{av}_{t1}-{t2}_{iden}.json"
             filename = filedialog.asksaveasfilename(parent=self,
                                                       title=get_locale("flatfielder.filedialog.save_ff_settings.title"),
                                                       filetypes=[

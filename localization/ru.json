@@ -111,6 +111,10 @@
   "flatfielder.form.field.used_algo": "Метод",
   "flatfielder.nothing": "Н/Д",
 
+
+  "flatfielder.btn.append": "Рассчитать и добавить",
+  "flatfielder.btn.amend": "Рассчитать и изменить",
+
   "matplayer.title": "Воспроизведение",
   "matplayer.form.use_filter": "Использовать фильтр",
   "matplayer.form.filter_window": "Окно фильтра",

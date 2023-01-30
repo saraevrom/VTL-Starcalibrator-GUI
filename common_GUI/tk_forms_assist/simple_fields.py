@@ -94,9 +94,13 @@ class FileNode(ValueNode):
     '''
     FIELD_TYPE = "file"
     USE_OPEN = False
+    FILE_TYPES = []
+    INITIAL_DIR = ""
 
     @classmethod
     def generate_configuration(cls):
         conf = super(FileNode, cls).generate_configuration()
         conf["use_open"] = cls.USE_OPEN
+        conf["filetypes"] = cls.FILE_TYPES
+        conf["initialdir"] = cls.INITIAL_DIR
         return conf

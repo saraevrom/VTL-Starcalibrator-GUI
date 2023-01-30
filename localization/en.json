@@ -94,6 +94,9 @@
   "flatfielder.sensitivity.title": "Sensitivity",
   "flatfielder.divider.title": "Divider",
 
+  "flatfielder.btn.append": "Calculate and append",
+  "flatfielder.btn.amend": "Calculate and amend",
+
   "flatfielder.btn.coeffs_calculate": "Calculate coefficients",
   "flatfielder.btn.save": "Save coefficients",
   "flatfielder.btn.random_plot": "Draw random pair of pixels",

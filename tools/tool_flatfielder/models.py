@@ -9,6 +9,9 @@ class FlatFieldingModel(object):
     def __init__(self):
         self.broken_pixels = None
 
+    def __str__(self):
+        return type(self).__name__
+
     def apply(self, pixel_data):
         raise NotImplementedError("How do I apply parameters?")
 
@@ -27,6 +30,9 @@ class FlatFieldingModel(object):
             print("Generated auto")
             self.broken_pixels = self.get_broken_auto()
         return self.broken_pixels
+
+    def reset_broken(self):
+        self.broken_pixels = None
 
     def broken_query(self):
         return np.array(np.where(self.get_broken())).T
@@ -47,13 +53,17 @@ class FlatFieldingModel(object):
         return "tool_flatfielder.nothing", None
 
     def save(self, file_path):
+        save_data = self.dump()
+        with open(file_path, "w") as fp:
+            json.dump(save_data, fp, indent=4, sort_keys=True)
+
+    def dump(self):
         class_name = type(self).__name__
         save_data = {
             "model": class_name,
             "parameters": self.get_data()
         }
-        with open(file_path, "w") as fp:
-            json.dump(save_data, fp, indent=4, sort_keys=True)
+        return save_data
 
     def apply_nobreak(self, pixel_data):
         pre_res = self.apply(pixel_data)
@@ -109,6 +119,7 @@ class Linear(FlatFieldingModel):
         return ret_data
 
     def get_data(self):
+        self.get_broken()
         return {
             "coefficients": self.coefficients.tolist(),
             "baseline": self.baseline.tolist(),
@@ -135,6 +146,7 @@ class NonlinearSaturation(FlatFieldingModel):
         self.offset = offset
 
     def get_data(self):
+        self.get_broken()
         return {
             "saturation": self.saturation.tolist(),
             "response": self.response.tolist(),
@@ -191,6 +203,7 @@ class NonlinearPileup(FlatFieldingModel):
         self.prescaler = prescaler
 
     def get_data(self):
+        self.get_broken()
         return {
             "sensitivity": self.sensitivity.tolist(),
             "divider": self.divider.tolist(),
@@ -240,16 +253,46 @@ class Chain(FlatFieldingModel):
         else:
             self.models = []
 
+    def __str__(self):
+        superstr = super().__str__()
+        arr = ", ".join([item.__str__() for item in self.models])
+        return f"{superstr}[{arr}]"
+
+    def append_model(self, model):
+        print("APPENDED", model)
+        self.models.append(model)
+
+    def amend_model(self, model):
+        '''
+        Edit last model if present
+        :return:
+        '''
+        if self.models:
+            self.models[-1] = model
+
     def get_data(self):
-        return [item.get_data() for item in self.models]
+        self.get_broken()
+        return {
+            "models": [item.dump() for item in self.models],
+            "broken": self.broken_pixels.tolist()
+        }
 
     def set_data(self, x_data):
-        self.models = [self.create_from_parameters(item) for item in x_data]
+        self.models = [self.create_from_parameters(item) for item in x_data["models"]]
+        self.broken_pixels = np.array(x_data["broken"])
 
     def apply(self, pixel_data):
         if self.models:
             workon = self.models[0].apply(pixel_data)
             for model in self.models[1:]:
+                workon = model.apply(workon)
+            return workon
+        return pixel_data
+
+    def apply_amending(self, pixel_data):
+        if self.models:
+            workon = self.models[0].apply(pixel_data)
+            for model in self.models[1:-1]:
                 workon = model.apply(workon)
             return workon
         return pixel_data
@@ -263,4 +306,20 @@ class Chain(FlatFieldingModel):
         return pixel_data
 
     def get_broken_auto(self):
-        return np.logical_or([model.get_broken_auto() for model in self.models])
+        workon = np.full((16, 16), False)
+        if self.models:
+            for model in self.models:
+                workon = model.get_broken_auto()
+        return workon
+
+    def display_parameter_1(self):
+        if self.models:
+            return self.models[-1].display_parameter_1()
+        else:
+            return super().display_parameter_1()
+
+    def display_parameter_2(self):
+        if self.models:
+            return self.models[-1].display_parameter_2()
+        else:
+            return super().display_parameter_2()
