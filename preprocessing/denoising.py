@@ -52,7 +52,7 @@ def sliding_std_old(data, window_size):
     for i in range(output_shape[0]-window_size+1):
         mean = np.zeros(data.shape[1:])
         meansq = np.zeros(data.shape[1:])
-        for j in range(i,i+window_size):
+        for j in range(i, i+window_size):
             mean += data[j]
             meansq += data[j]**2
 

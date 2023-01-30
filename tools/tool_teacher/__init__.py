@@ -1,3 +1,6 @@
+import matplotlib.pyplot as plt
+import tqdm
+
 from ..tool_base import ToolBase
 from .filepool import RandomIntervalAccess, RandomFileAccess, FilePool
 import h5py
@@ -47,17 +50,21 @@ class ToolTeacher(ToolBase):
         self.settings_menu.commit_action = self.on_teach
         self.settings_menu.grid(row=0, column=0, sticky="nsew")
 
+        probe_btn = tk.Button(control_frame, text=get_locale("teacher.button.probe"), command=self.on_probe)
+        probe_btn.grid(row=1, column=0, sticky="ew")
+
         resetbtn = tk.Button(control_frame, text=get_locale("teacher.button.reset"), command=self.on_reset_model)
-        resetbtn.grid(row=1, column=0, sticky="ew")
+        resetbtn.grid(row=2, column=0, sticky="ew")
 
         savebtn = tk.Button(control_frame, text=get_locale("teacher.button.save"), command=self.on_save_model)
-        savebtn.grid(row=2, column=0, sticky="ew")
+        savebtn.grid(row=3, column=0, sticky="ew")
 
         loadbtn = tk.Button(control_frame, text=get_locale("teacher.button.load"), command=self.on_load_model)
-        loadbtn.grid(row=3, column=0, sticky="ew")
+        loadbtn.grid(row=4, column=0, sticky="ew")
+
 
         teachbtn = tk.Button(control_frame, text=get_locale("teacher.button.start"), command=self.on_teach)
-        teachbtn.grid(row=4, column=0, sticky="ew")
+        teachbtn.grid(row=5, column=0, sticky="ew")
 
 
     def try_reset_model(self):
@@ -92,6 +99,9 @@ class ToolTeacher(ToolBase):
         self.try_reset_model()
 
     def on_teach(self):
+        self.fg_pool.clear_cache()
+        self.bg_pool.clear_cache()
+        self.interference_pool.clear_cache()
         self.clear_status()
         if self.ensure_model():
             self.println_status(get_locale("teacher.status.msg_model_ok"))
@@ -106,19 +116,55 @@ class ToolTeacher(ToolBase):
                 conf = self.settings_form.get_data()
                 gc.collect()
 
-
                 self.workon_model.summary()
-                dataset = Dataset.from_generator(
-                    lambda: self.batch_generator(conf),
-                    output_signature=(tf.TensorSpec(shape=(None, 128, 16, 16), dtype=tf.double),
-                                      tf.TensorSpec(shape=(None, 2), dtype=tf.double))
-                )
-                self.workon_model.fit(dataset, **conf.get_fit_parameters())
+                if conf.config["pregenerate"] is not None:
+                    N = conf.config["pregenerate"]
+                    trainX = np.zeros((N, 128, 16, 16))
+                    trainY = np.zeros((N, 2))
+                    gen = self.data_generator(conf)
+                    for i in tqdm.tqdm(range(N)):
+                        x,y = next(gen)
+                        trainX[i] = x
+                        trainY[i] = y
+                    self.workon_model.fit(trainX, trainY, **conf.get_fit_parameters_finite())
+                else:
+                    dataset = Dataset.from_generator(
+                        lambda: self.batch_generator(conf),
+                        output_signature=(tf.TensorSpec(shape=(None, 128, 16, 16), dtype=tf.double),
+                                          tf.TensorSpec(shape=(None, 2), dtype=tf.double))
+                    )
+                    self.workon_model.fit(dataset, **conf.get_fit_parameters())
         else:
             self.println_status(get_locale("teacher.status.msg_model_missing"))
         self.fg_pool.clear_cache()
         self.bg_pool.clear_cache()
         self.interference_pool.clear_cache()
+
+
+    def on_probe(self):
+        self.clear_status()
+        self.println_status(get_locale("teacher.status.msg_model_ok"))
+        self.check_files()
+        if self.check_passed:
+            self.close_mat_file()
+            conf = self.settings_menu.get_values()
+            self.fg_pool.fast_cache = conf["fastcache"]
+            self.bg_pool.fast_cache = conf["fastcache"]
+            self.interference_pool.fast_cache = conf["fastcache"]
+            self.settings_form.parse_formdata(conf)
+            conf = self.settings_form.get_data()
+            gc.collect()
+            gen = self.data_generator(conf)
+            x, y = next(gen)
+            fig, ax = plt.subplots()
+            display_data = np.max(x, axis=0)
+            ax.matshow(display_data.T)
+            if y[1] > 0:
+                ax.set_title(get_locale("teacher.sampleplot.title_true"))
+            else:
+                ax.set_title(get_locale("teacher.sampleplot.title_false"))
+            fig.show()
+
 
     def println_status(self, message, tabs=0):
         self.status_display.config(state=tk.NORMAL)

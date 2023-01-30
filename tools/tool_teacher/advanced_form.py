@@ -46,6 +46,11 @@ class Augmentation(FormNode):
         return Augmenter(**data)
 
 
+class PregenerateDataset(OptionNode):
+    DISPLAY_NAME = get_locale("teacher.form.pregenerate_dataset")
+    ITEM_TYPE = create_value_field(IntNode, get_locale("teacher.advform.amount"), 40000)
+    DEFAULT_VALUE = None
+
 class SettingForm(FormNode):
     FIELD__label_dataset_parameters = create_label(get_locale("teacher.form.separator.dataset_parameters"), True)
     FIELD__preprocessing = DataPreProcessorForm
@@ -65,6 +70,7 @@ class SettingForm(FormNode):
     FIELD__batch_size = create_value_field(IntNode, get_locale("teacher.form.batch_size"), 32)
     FIELD__workers = create_value_field(IntNode, get_locale("teacher.form.workers"), 1)
     FIELD__fastcache = create_value_field(BoolNode, get_locale("teacher.form.fastcache"), False)
+    FIELD__pregenerate = PregenerateDataset
 
     def get_data(self):
         data = super().get_data()

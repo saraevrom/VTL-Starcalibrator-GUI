@@ -1,4 +1,5 @@
 import tkinter as tk
+
 from common_GUI import GridPlotter, TkDictForm
 from ..tool_base import ToolBase
 from .sorted_queue import SortedQueue
@@ -8,12 +9,14 @@ import tkinter.filedialog
 import json
 from localization import get_locale
 import matplotlib.pyplot as plt
-from preprocessing.denoising import reduce_noise, antiflash, moving_average_subtract
 from .reset import ResetAsker
 from .form import TrackMarkupForm
+from tensorflow import keras
+from .edges import edged_intervals
 
 OFF = get_locale("app.state_off")
 ON = get_locale("app.state_on")
+
 
 def try_append_event(target_list,start,end):
     ok = True
@@ -24,6 +27,8 @@ def try_append_event(target_list,start,end):
     if ok:
         target_list.append([start,end])
     return ok
+
+
 def stitch_events(events):
     sorted_events = list(sorted(events, key=lambda x: x[0]))
     deflation_i = 0
@@ -38,6 +43,7 @@ def stitch_events(events):
 class TrackMarkup(ToolBase):
     def __init__(self, master):
         super(TrackMarkup, self).__init__(master)
+        self.form_data = None
         self.title(get_locale("track_markup.title"))
         self.plotter = GridPlotter(self)
         self.get_mat_file()
@@ -47,6 +53,7 @@ class TrackMarkup(ToolBase):
         self.trackless_events = []
         self.tracked_events = []
         self.last_single_plot_data = None
+        self.tf_model = None
 
         self.current_event = None
         self.event_set = False
@@ -65,6 +72,8 @@ class TrackMarkup(ToolBase):
                   command=self.on_save_data).grid(row=1, column=0, sticky="ew")
         tk.Button(right_panel, text=get_locale("track_markup.btn.load"),
                   command=self.on_load_data).grid(row=2, column=0, sticky="ew")
+        tk.Button(right_panel, text=get_locale("track_markup.btn.load_tf"),
+                  command=self.on_load_tf).grid(row=2, column=0, sticky="ew")
 
         self.params_form_parser = TrackMarkupForm()
 
@@ -85,6 +94,8 @@ class TrackMarkup(ToolBase):
                   command=self.on_track_visible_poll)
         self.no_btn = tk.Button(bottom_panel, text=get_locale("track_markup.btn.track_no"),
                   command=self.on_track_invisible_poll)
+        self.auto_btn = tk.Button(bottom_panel, text=get_locale("track_markup.btn.im_too_lazy"),
+                  command=self.on_auto)
         #self.yes_btn.pack(side="left", expand=True, fill="both")
         #self.no_btn.pack(side="right", expand=True, fill="both")
 
@@ -109,10 +120,12 @@ class TrackMarkup(ToolBase):
             self.start_btn.pack_forget()
             self.yes_btn.pack(side="left", expand=True, fill="both")
             self.no_btn.pack(side="right", expand=True, fill="both")
+            self.auto_btn.pack(expand=True, fill="both")
             self.event_set = True
         elif self.event_set and not self.current_event:
             self.yes_btn.pack_forget()
             self.no_btn.pack_forget()
+            self.auto_btn.pack_forget()
             self.start_btn.pack(expand=True, fill="both")
             self.event_set = False
 
@@ -122,10 +135,12 @@ class TrackMarkup(ToolBase):
             self.yes_btn.config(fg="red")
             self.no_btn.config(fg="red")
             self.start_btn.config(fg="red")
+            self.auto_btn.config(fg="red")
         else:
             self.yes_btn.config(fg="black")
             self.no_btn.config(fg="black")
             self.start_btn.config(fg="black")
+            self.auto_btn.config(fg="black")
 
     def on_loaded_file_success(self):
         self.just_started = True
@@ -253,13 +268,13 @@ class TrackMarkup(ToolBase):
                 self.retractable_event = False
                 self.current_event = None
                 return False
-            form_data = self.params_form.get_values()
-            win = form_data["filter_win"]
+            form_data = self.form_data
+            win = form_data["preprocessing"].ma_win
             print(self.queue)
             event_start, event_end = self.queue.pop(0)
             self.retractable_event = True
             self.event_in_queue = True, None
-            if (event_end-event_start) < win or (event_end-event_start)<form_data["min_frame"]:
+            if (event_end-event_start) < win or (event_end-event_start) < form_data["min_frame"]:
                 self.add_tracked_event(event_start, event_end)
                 return True
             self.current_event = event_start, event_end
@@ -272,6 +287,7 @@ class TrackMarkup(ToolBase):
         self.on_poll(False)
 
     def on_start(self):
+        self.sync_form()
         if self.just_started:
             if not self.reset_events():
                 return
@@ -279,7 +295,34 @@ class TrackMarkup(ToolBase):
         self.update_answer_panel()
         self.update_highlight_button()
 
+    def on_auto(self):
+        if self.tf_model is None:
+            self.on_load_tf()
+        if self.tf_model is None:
+            # Model was not loaded during last time. Do nothing
+            return
+        if self.current_event is None:
+            return
+
+        pos, neg = self.form_data["trigger"].apply(self)
+
+        if not self.event_in_queue[0]:
+            if self.event_in_queue[1][1]:
+                self.pop_event(self.event_in_queue[1][0], True)
+            else:
+                self.pop_event(self.event_in_queue[1][0], False)
+
+        for r in pos:
+            self.add_tracked_event(r[0], r[1])
+
+        for r in neg:
+            self.add_trackless_event(r[0], r[1])
+
+        self.show_next_event()
+        self.update_answer_panel()
+
     def on_poll(self, result):
+        self.sync_form()
         if self.current_event is not None:
             start, end = self.current_event
             assert end>=start
@@ -366,6 +409,14 @@ class TrackMarkup(ToolBase):
                 self.update_highlight_button()
                 self.update_answer_panel()
 
+    def on_load_tf(self):
+        filename = tkinter.filedialog.askopenfilename(
+            title=get_locale("app.filedialog.load_model.title"),
+            filetypes=[(get_locale("app.filedialog_formats.model"), "*.h5")]
+        )
+        if filename:
+            self.tf_model = keras.models.load_model(filename)
+
     def on_review_trackless_select(self, evt):
         return self.on_review_select_universal(evt, True)
 
@@ -387,11 +438,14 @@ class TrackMarkup(ToolBase):
         self.update_answer_panel()
         self.redraw_event()
 
-    def apply_filter(self, signal):
+    def sync_form(self):
         raw_form_data = self.params_form.get_values()
         self.params_form_parser.parse_formdata(raw_form_data)
-        form_data = self.params_form_parser.get_data()
-        preprocessor = form_data["preprocessing"]
+        self.form_data = self.params_form_parser.get_data()
+
+    def apply_filter(self, signal):
+        self.sync_form()
+        preprocessor = self.form_data["preprocessing"]
         plot_data = preprocessor.three_stage_preprocess(signal)
         return plot_data
 

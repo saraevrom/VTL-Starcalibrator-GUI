@@ -51,6 +51,9 @@ class LearnParameters(object):
     def get_fit_parameters(self):
         return {k: self.config[k] for k in ["epochs", "steps_per_epoch", "workers"]}
 
+    def get_fit_parameters_finite(self):
+        return {k: self.config[k] for k in ["epochs", "workers", "batch_size"]}
+
     def generator_params(self):
         return {k: self.config[k] for k in ["batch_size", ]}
 
