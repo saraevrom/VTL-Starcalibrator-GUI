@@ -70,15 +70,19 @@ class FlatFieldingModel(object):
 
     @staticmethod
     def load(file_path):
-        if FlatFieldingModel.subclass_dict is None:
-            FlatFieldingModel.subclass_dict = {cls.__name__: cls for cls in FlatFieldingModel.__subclasses__()}
         with open(file_path, "r") as fp:
             jsd = json.load(fp)
-        model = FlatFieldingModel.subclass_dict[jsd["model"]]
-        instance = model()
-        instance.set_data(jsd["parameters"])
+        instance = FlatFieldingModel.create_from_parameters(jsd)
         return instance
 
+    @staticmethod
+    def create_from_parameters(parameters):
+        if FlatFieldingModel.subclass_dict is None:
+            FlatFieldingModel.subclass_dict = {cls.__name__: cls for cls in FlatFieldingModel.__subclasses__()}
+        model = FlatFieldingModel.subclass_dict[parameters["model"]]
+        instance = model()
+        instance.set_data(parameters["parameters"])
+        return instance
 
 class Linear(FlatFieldingModel):
     def __init__(self, coefficients=None, baseline=None):
@@ -226,3 +230,37 @@ class NonlinearPileup(FlatFieldingModel):
 
     def get_broken_auto(self):
         return self.sensitivity <= 0
+
+
+class Chain(FlatFieldingModel):
+    def __init__(self, models=None):
+        super().__init__()
+        if models:
+            self.models = models
+        else:
+            self.models = []
+
+    def get_data(self):
+        return [item.get_data() for item in self.models]
+
+    def set_data(self, x_data):
+        self.models = [self.create_from_parameters(item) for item in x_data]
+
+    def apply(self, pixel_data):
+        if self.models:
+            workon = self.models[0].apply(pixel_data)
+            for model in self.models[1:]:
+                workon = model.apply(workon)
+            return workon
+        return pixel_data
+
+    def apply_single(self, pixel_data, i, j):
+        if self.models:
+            workon = self.models[0].apply_single(pixel_data, i, j)
+            for model in self.models[1:]:
+                workon = model.apply_single(workon, i, j)
+            return workon
+        return pixel_data
+
+    def get_broken_auto(self):
+        return np.logical_or([model.get_broken_auto() for model in self.models])
