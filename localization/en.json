@@ -64,6 +64,12 @@
   "app.model.form.metric": "Metric",
   "app.model.form.metrics": "Metrics",
   "app.model.form.value": "Value",
+
+  "app.model_create.form.title": "Neural network",
+  "app.model_create.form.conv_outputs": "Convolution outputs",
+  "app.model_create.form.dense_count": "Dense neurons",
+  "app.model_create.form.dense_activation": "Dense layer activation",
+
   "app.model.form.set_to_default": "Set to default",
 
   "datasetgen.form.separator.display": "Display",

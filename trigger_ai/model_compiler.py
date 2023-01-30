@@ -21,15 +21,18 @@ class CompileDialog(simpledialog.Dialog):
         self.form_parser.parse_formdata(formdata)
         self.result = self.form_parser.get_data()
 
-    def compile_model(self, model):
+    def compile_model(self):
         print(self.result)
-        model.compile(**self.result)
+        model = self.result["model"]
+        kwargs = {k: self.result[k] for k in ["loss", "optimizer", "metrics"]}
+        model.compile(**kwargs)
+        model.summary()
+        return model
 
 
 def compile_model(frames, tk_parent):
     compile_params = CompileDialog(tk_parent)
     if compile_params.result:
-        model = create_trigger_model(frames)
-        compile_params.compile_model(model)
+        model = compile_params.compile_model()
         return model
     return None

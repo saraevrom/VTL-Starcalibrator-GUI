@@ -94,6 +94,7 @@ class ToolTeacher(ToolBase):
         )
         if filename:
             self.workon_model = keras.models.load_model(filename)
+            self.workon_model.summary()
 
     def on_reset_model(self):
         self.try_reset_model()
@@ -116,7 +117,6 @@ class ToolTeacher(ToolBase):
                 conf = self.settings_form.get_data()
                 gc.collect()
 
-                self.workon_model.summary()
                 if conf.config["pregenerate"] is not None:
                     N = conf.config["pregenerate"]
                     trainX = np.zeros((N, 128, 16, 16))

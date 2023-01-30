@@ -6,6 +6,7 @@ import tensorflow.keras.optimizers as optimizers
 import tensorflow.keras.optimizers.experimental as optimizers_exp
 import tensorflow.keras.losses as losses
 import tensorflow.keras.metrics as metrics
+from .model_creating_form import NeuralNetworkCreator
 
 
 def get_subclasses(source_module, required_class_name):
@@ -109,6 +110,7 @@ attach_options(OptimizerData, optimizers_exp, OPTIMIZER_MAP, "Optimizer")
 attach_options(LossData, losses, dict(), "Loss")
 
 class CompileForm(FormNode):
+    FIELD__model = NeuralNetworkCreator
     FIELD__optimizer = OptimizerData
     FIELD__loss = LossData
     FIELD__metrics = MetricData

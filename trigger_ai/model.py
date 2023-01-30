@@ -22,14 +22,14 @@ def apply_layer_array(inputs, layer_array):
     return workon
 
 class SingleProcessor(object):
-    def __init__(self, frames):
+    def __init__(self, conv_layers, dense_count):
         self.pmt_layers = []
         for i in [0, 1, 10, 11]:
             self.pmt_layers.append([
                 create_lambda(i),
                 #tf.keras.layers.LayerNormalization(axis=1),
                 tf.keras.layers.Lambda(lambda x: tf.expand_dims(x, -1)),
-                tf.keras.layers.Conv3D(2, (8, 3, 3)),
+                tf.keras.layers.Conv3D(1, (8, 3, 3)),
                 tf.keras.layers.MaxPooling3D(pool_size=(16, 2, 2)),
                 tf.keras.layers.Flatten()
             ])
@@ -45,10 +45,10 @@ class SingleProcessor(object):
         return apply_layer_array(workon, self.common_layers)
 
 
-def create_trigger_model(frames, slider=20):
+def create_trigger_model(frames, conv_outputs=1, dense_count=16, slider=20):
     inputs = tf.keras.Input(shape=(frames, 16, 16))
     print(inputs.shape)
-    processor = SingleProcessor(frames)
+    processor = SingleProcessor(conv_layers=conv_outputs, dense_count=dense_count)
     output = processor.apply(inputs)
     # slided = []
     # for start_index in range(frames-slider+1):
