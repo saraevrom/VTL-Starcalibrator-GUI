@@ -144,7 +144,7 @@ class BgPickingEditor(Plotter):
     def reload_data(self, file, settings, ff_model=None):
         ys = file["data0"]
         if ff_model:
-            ys = ff_model.apply(ys)
+            ys = ff_model.apply(np.array(ys))
         else:
             ys = np.array(ys)
         print(ys.shape)

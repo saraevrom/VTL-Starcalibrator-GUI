@@ -122,6 +122,8 @@ class FlatFielder(ToolBase):
             if used_algo in ALGO_MAP.keys():
                 algo, iden = ALGO_MAP[used_algo]
                 model = algo(requested_data)
+                if model is None:
+                    return
             else:
                 return
 
@@ -197,6 +199,7 @@ class FlatFielder(ToolBase):
         self.signal_plotter.plot_data(apparent_data)
         bottom = -10
         top = np.max(apparent_data)
+        print("LIMITS:", bottom, top)
         self.signal_plotter.view_y(bottom, top)
         self.signal_plotter.set_yrange(0, top)
 

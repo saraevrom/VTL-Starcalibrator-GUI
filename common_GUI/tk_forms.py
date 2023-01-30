@@ -252,16 +252,26 @@ class FileEntry(ConfigEntry):
     type: "file"
     initialdir -- initial director for file dialog
     filetypes -- File types for dialog
+    use_open -- File dialog will be set to "open" instead of "save as"
     '''
     def __init__(self,name,master,conf,color_index=0):
         super().__init__(name,master,conf,color_index)
         self.stringvar = tk.StringVar(master)
-        tk.Label(self.frame,text=conf["display_name"]).pack(side="left")
-        tk.Button(self.frame,text="Choose file",command=self.command).pack(side="left")
-        tk.Label(self.frame, textvar=self.stringvar).pack(side="left",fill="x")
+        tk.Label(self.frame, text=conf["display_name"]).pack(side="left")
+        tk.Button(self.frame, text="Choose file", command=self.command).pack(side="left")
+        tk.Label(self.frame, textvariable=self.stringvar).pack(side="left",fill="x")
+        self.use_open = False
+        if "use_open" in conf.keys():
+            self.use_open = conf["use_open"]
+
 
     def command(self):
-        pth = filedialog.asksaveasfilename(initialdir=self.conf["initialdir"],filetypes=self.conf["filetypes"])
+        if self.use_open:
+            asker = filedialog.askopenfilename
+        else:
+            asker = filedialog.asksaveasfilename
+
+        pth = asker(initialdir=self.conf["initialdir"], filetypes=self.conf["filetypes"])
         if pth:
             self.set_value(pth)
         top = self.frame.winfo_toplevel()

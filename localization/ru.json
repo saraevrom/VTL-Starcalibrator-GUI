@@ -92,7 +92,7 @@
   "flatfielder.response.title": "Отклик",
   "flatfielder.saturation.title": "Насыщение",
   "flatfielder.sensitivity.title": "Чувствительность",
-  "flatfielder.dead_time.title": "Мёртвое время",
+  "flatfielder.divider.title": "Делитель",
   "flatfielder.btn.coeffs_calculate": "Расчёт коэффициентов",
   "flatfielder.btn.save": "Сохранить данные",
   "flatfielder.btn.random_plot": "Отрисовать случайную пару пикселей",
@@ -104,6 +104,8 @@
   "flatfielder.form.separator.display": "Отображение",
   "flatfielder.form.field.use_model": "Применить модель",
   "flatfielder.filedialog.save_ff_settings.title": "Сохранить параметры для выравнивания пикселей",
+  "flatfielder.filedialog.open_k.title": "Открыть файл с чувствительностями",
+  "flatfielder.filedialog.open_tau.title": "Открыть файл с мёртвым временем",
 
   "flatfielder.form.separator.algo": "Алгоритм",
   "flatfielder.form.field.used_algo": "Метод",
@@ -226,6 +228,8 @@
   "app.filedialog_formats.processed_mat": "Обработанные mat файлы",
   "app.filedialog_formats.raw_mat": "Файл с сырыми данными",
   "app.filedialog_formats.model": "Модель",
+  "app.filedialog_formats.txt": "Текстовый документ",
+  "app.filedialog_formats.csv": "Значения, разделённые запятыми",
 
   "app.widgets.gridplotter.use_autoscale": "Автоматическая нормировка",
   "app.widgets.gridplotter.scale": "Нормировка",

@@ -91,8 +91,8 @@
   "flatfielder.baselevel.title": "Base Line",
   "flatfielder.response.title": "Response",
   "flatfielder.saturation.title": "Saturation",
-  "flatfielder.sensitivity.title": "Sensivity",
-  "flatfielder.dead_time.title": "Dead time",
+  "flatfielder.sensitivity.title": "Sensitivity",
+  "flatfielder.divider.title": "Divider",
 
   "flatfielder.btn.coeffs_calculate": "Calculate coefficients",
   "flatfielder.btn.save": "Save coefficients",
@@ -108,6 +108,8 @@
   "flatfielder.form.field.used_algo": "Method",
   "flatfielder.nothing": "None",
   "flatfielder.filedialog.save_ff_settings.title": "Save flat fielding parameters",
+  "flatfielder.filedialog.open_k.title": "Open sensitivity file",
+  "flatfielder.filedialog.open_tau.title": "Open dead time file",
 
   "matplayer.title": "Data viewer",
   "matplayer.form.use_filter": "Use filter",
@@ -223,6 +225,8 @@
   "app.filedialog_formats.processed_mat": "Converted data files",
   "app.filedialog_formats.raw_mat": "Raw data",
   "app.filedialog_formats.model": "Model",
+  "app.filedialog_formats.txt": "Text file",
+  "app.filedialog_formats.csv": "Comma separated values",
 
   "app.widgets.gridplotter.use_autoscale": "Autoscale",
   "app.widgets.gridplotter.scale": "Scale",

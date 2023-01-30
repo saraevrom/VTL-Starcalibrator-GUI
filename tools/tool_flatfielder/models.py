@@ -180,30 +180,49 @@ class NonlinearSaturation(FlatFieldingModel):
 
 
 class NonlinearPileup(FlatFieldingModel):
-    def __init__(self, sensitivity=None, dead_time=None):
+    def __init__(self, sensitivity=None, divider=None, prescaler=None):
         super().__init__()
         self.sensitivity = sensitivity
-        self.dead_time = dead_time
+        self.divider = divider
+        self.prescaler = prescaler
 
     def get_data(self):
         return {
             "sensitivity": self.sensitivity.tolist(),
-            "dead_time": self.dead_time.tolist(),
+            "divider": self.divider.tolist(),
+            "prescaler": self.prescaler,
             "broken": self.broken_pixels.tolist()
         }
 
     def set_data(self, x_data):
         self.sensitivity = np.array(x_data["sensitivity"])
-        self.dead_time = np.array(x_data["dead_time"])
+        self.divider = np.array(x_data["divider"])
         self.broken_pixels = np.array(x_data["broken"])
+        self.prescaler = x_data["prescaler"]
 
     def display_parameter_1(self):
         return "flatfielder.sensitivity.title", self.sensitivity
 
     def display_parameter_2(self):
-        return "flatfielder.dead_time.title", self.dead_time
+        return "flatfielder.divider.title", self.divider
 
-    def apply(self, pixel_data):
-        upper_clamp = self.dead_time/np.e
-        pixels_clip = np.clip(pixel_data, a_min=None, a_max=upper_clamp)
-        return -self.dead_time/self.sensitivity*lambertw(-pixels_clip/self.dead_time).real
+    def apply(self, pixel_data_in):
+        pixel_data = pixel_data_in*self.prescaler
+        upper_clamp = self.divider / np.e
+        pixels_clip = np.clip(pixel_data, a_min=0, a_max=upper_clamp)
+        pre = -self.divider / self.sensitivity * lambertw(-pixels_clip / self.divider).real
+        pre = np.nan_to_num(pre)
+        return pre
+
+    def apply_single(self, single_data_in, i, j):
+        single_data = single_data_in*self.prescaler
+        divider = self.divider[i, j]
+        sens = self.sensitivity[i, j]
+        upper_clamp = divider / np.e
+        clip = np.clip(single_data, a_min=0, a_max=upper_clamp)
+        pre = -divider / sens * lambertw(-clip / divider, 0).real
+        pre = np.nan_to_num(pre)
+        return pre
+
+    def get_broken_auto(self):
+        return self.sensitivity <= 0

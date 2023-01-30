@@ -93,3 +93,10 @@ class FileNode(ValueNode):
     Node corresponding to "file" field (choose a filename)
     '''
     FIELD_TYPE = "file"
+    USE_OPEN = False
+
+    @classmethod
+    def generate_configuration(cls):
+        conf = super(FileNode, cls).generate_configuration()
+        conf["use_open"] = cls.USE_OPEN
+        return conf

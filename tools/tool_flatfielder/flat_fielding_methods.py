@@ -5,9 +5,11 @@ from .isotropic_lsq import isotropic_lad_line, phir0_to_kb, phir0_to_kb_inv, iso
 from .isotropic_lsq import isotropic_lad_multidim_no_bg, multidim_sphere
 from multiprocessing import Pool
 from parameters import NPROC
-from .models import Linear, NonlinearSaturation
+from .models import Linear, NonlinearSaturation, NonlinearPileup
 from scipy.optimize import minimize, Bounds, LinearConstraint
 import numpy.random as rng
+from localization import get_locale
+import tkinter.filedialog as filedialog
 
 def line_fit_robust(xs, ys):
     k = np.float(weighted_median(ys/xs, xs))
@@ -226,10 +228,42 @@ def multidim_lad_corr_flatfield_no_bg(requested_data_0):
     draw_bg_matrix = np.zeros((x_len, y_len))
     return Linear(draw_coeff_matrix, draw_bg_matrix)
 
+
+def pile_up_manual(requested_data0):
+    '''
+    Load coefficients provided by Daniel
+    requested_data0 is not used
+    '''
+    filename_k = filedialog.askopenfilename(
+                                            title=get_locale("flatfielder.filedialog.open_k.title"),
+                                            filetypes=[
+                                                (get_locale("app.filedialog_formats.txt"), "*.txt")
+                                            ],
+                                            initialfile="k_eff.txt"
+                                            )
+    if filename_k:
+        filename_tau = filedialog.askopenfilename(
+            title=get_locale("flatfielder.filedialog.open_tau.title"),
+            filetypes=[
+                (get_locale("app.filedialog_formats.txt"), "*.txt")
+            ],
+            initialfile="tau.txt"
+        )
+        if filename_tau:
+            k = np.genfromtxt(filename_k, delimiter=",").T  # Original format is transposed
+            tau = np.genfromtxt(filename_tau, delimiter=",").T * 1e-9 # ns
+            gtu = 2.5e-6
+            return NonlinearPileup(sensitivity=k, divider=gtu / tau, prescaler=gtu/1e-3)
+            # Device is outputting integrated signal
+            # Converting to mean by dividing by number of gtu per 1e-3 s
+    return None
+
+
 ALGO_MAP = {
     "proportional_correlation": (median_corr_flatfield, "PC"),
     "linear_correlation": (isotropic_lsq_corr_flatfield_parallel, "LC"),
     "linear_multidimensional_correlation": (multidim_lad_corr_flatfield, "LMDC"),
     "isotropic_lad_multidim_no_bg": (multidim_lad_corr_flatfield_no_bg, "LMSCNBG"),
-    "nonlinear_saturated_respone": (isotropic_lsq_corr_flatfield_nonlinear, "NSR")
+    "nonlinear_saturated_respone": (isotropic_lsq_corr_flatfield_nonlinear, "NSR"),
+    "pileup_manual": (pile_up_manual, "PUM")
 }
