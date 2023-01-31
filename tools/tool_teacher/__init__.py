@@ -245,9 +245,9 @@ class ToolTeacher(ToolBase):
                     fg[:, :8, :8] = conf.process_fg(self.fg_pool.random_access())
                 if rng_append / 2 % 2 == 1:
                     fg[:, 8:, :8] = conf.process_fg(self.fg_pool.random_access())
-                if rng_append / 4 % 2 == 2:
+                if rng_append / 4 % 2 == 1:
                     fg[:, :8, 8:] = conf.process_fg(self.fg_pool.random_access())
-                if rng_append / 8 % 2 == 2:
+                if rng_append / 8 % 2 == 1:
                     fg[:, 8:, 8:] = conf.process_fg(self.fg_pool.random_access())
                 x_data = x_data + fg
             i += 1
