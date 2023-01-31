@@ -251,9 +251,9 @@ def pile_up_manual(requested_data0):
         )
         if filename_tau:
             k = np.genfromtxt(filename_k, delimiter=",").T  # Original format is transposed
-            tau = np.genfromtxt(filename_tau, delimiter=",").T * 1e-9 # ns
-            gtu = 2.5e-6
-            return NonlinearPileup(sensitivity=k, divider=gtu / tau, prescaler=gtu/1e-3)
+            tau = np.genfromtxt(filename_tau, delimiter=",").T * 1e-6 # ns->ms
+            gtu = 1 # ms
+            return NonlinearPileup(sensitivity=k*gtu, divider=gtu / tau, prescaler=1.0)
             # Device is outputting integrated signal
             # Converting to mean by dividing by number of gtu per 1e-3 s
     return None
