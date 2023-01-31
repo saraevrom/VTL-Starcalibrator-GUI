@@ -5,10 +5,10 @@ import tkinter.simpledialog as simpledialog
 from localization import get_locale
 from .compiler_form import CompileForm
 from .model_creating_form import NeuralNetworkCreator
+from common_GUI.modified_base import DialogScalable
 
 
-
-class CompileDialog(simpledialog.Dialog):
+class CompileDialog(DialogScalable):
     def body(self, master):
         self.form_parser = CompileForm()
         conf = self.form_parser.get_configuration_root()
@@ -29,7 +29,7 @@ class CompileDialog(simpledialog.Dialog):
         model.compile(**kwargs)
         model.summary()
 
-class CreateDialog(simpledialog.Dialog):
+class CreateDialog(DialogScalable):
     def body(self, master):
         self.form_parser = NeuralNetworkCreator()
         conf = self.form_parser.get_configuration_root()
