@@ -66,6 +66,9 @@
   "app.model.form.value": "Value",
 
   "app.model_create.form.title": "Neural network",
+  "app.model_create.form.conv_X": "Convolution window X",
+  "app.model_create.form.conv_Y": "Convolution window Y",
+  "app.model_create.form.conv_T": "Convolution window T",
   "app.model_create.form.conv_outputs": "Convolution outputs",
   "app.model_create.form.dense_count": "Dense neurons",
   "app.model_create.form.dense_activation": "Dense layer activation",

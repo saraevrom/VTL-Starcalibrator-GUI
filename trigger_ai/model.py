@@ -22,21 +22,21 @@ def apply_layer_array(inputs, layer_array):
     return workon
 
 class SingleProcessor(object):
-    def __init__(self, conv_layers, dense_count):
+    def __init__(self, conv_outputs, dense_count, conv_X, conv_Y, conv_T, dense_activation):
         self.pmt_layers = []
         for i in [0, 1, 10, 11]:
             self.pmt_layers.append([
                 create_lambda(i),
                 #tf.keras.layers.LayerNormalization(axis=1),
                 tf.keras.layers.Lambda(lambda x: tf.expand_dims(x, -1)),
-                tf.keras.layers.Conv3D(1, (8, 3, 3)),
+                tf.keras.layers.Conv3D(conv_outputs, (conv_T, conv_X, conv_Y)),
                 tf.keras.layers.MaxPooling3D(pool_size=(16, 2, 2)),
                 tf.keras.layers.Flatten()
             ])
 
         self.common_layers = [
             tf.keras.layers.Concatenate(),
-            tf.keras.layers.Dense(16, activation="relu"),
+            tf.keras.layers.Dense(dense_count, activation=dense_activation),
             tf.keras.layers.Dense(2, activation="softmax")
         ]
 
@@ -45,24 +45,10 @@ class SingleProcessor(object):
         return apply_layer_array(workon, self.common_layers)
 
 
-def create_trigger_model(frames, conv_outputs=1, dense_count=16, slider=20):
+def create_trigger_model(frames, **kwargs):
     inputs = tf.keras.Input(shape=(frames, 16, 16))
     print(inputs.shape)
-    processor = SingleProcessor(conv_layers=conv_outputs, dense_count=dense_count)
+    processor = SingleProcessor(**kwargs)
     output = processor.apply(inputs)
-    # slided = []
-    # for start_index in range(frames-slider+1):
-    #     timecut = cut_interval(start_index, start_index+slider)(inputs)
-    #     slided.append(processor.apply(timecut))
-    #
-    # merged = tf.keras.layers.Concatenate()(slided)
-    # output = tf.keras.layers.Dense(2, activation="softmax")(merged)
 
     return tf.keras.Model(inputs, output)
-
-
-
-
-if __name__=="__main__":
-    model = create_trigger_model(128)
-    model.summary()
