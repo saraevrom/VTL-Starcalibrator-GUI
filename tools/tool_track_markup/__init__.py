@@ -71,15 +71,15 @@ class TrackMarkup(ToolBase):
         tk.Button(right_panel, text=get_locale("track_markup.btn.save"),
                   command=self.on_save_data).grid(row=1, column=0, sticky="ew")
         tk.Button(right_panel, text=get_locale("track_markup.btn.load"),
-                  command=self.on_load_data).grid(row=2, column=0, sticky="ew")
+                  command=self.on_load_data).grid(row=3, column=0, sticky="ew")
         tk.Button(right_panel, text=get_locale("track_markup.btn.load_tf"),
-                  command=self.on_load_tf).grid(row=2, column=0, sticky="ew")
+                  command=self.on_load_tf).grid(row=4, column=0, sticky="ew")
 
         self.params_form_parser = TrackMarkupForm()
 
         self.params_form = TkDictForm(right_panel, self.params_form_parser.get_configuration_root())
-        self.params_form.grid(row=3, column=0, sticky="nsew")
-        right_panel.rowconfigure(3, weight=1)
+        self.params_form.grid(row=5, column=0, sticky="nsew")
+        right_panel.rowconfigure(5, weight=1)
 
         self.plotter.pack(side="top", expand=True, fill="both")
         bottom_panel = tk.Frame(self)
