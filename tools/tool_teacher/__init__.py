@@ -7,7 +7,7 @@ import h5py
 import tkinter as tk
 from tkinter.scrolledtext import ScrolledText
 from localization import get_locale, format_locale
-from trigger_ai import compile_model
+from trigger_ai import compile_model, create_model
 import gc
 import numpy.random as rng
 import numpy as np
@@ -56,11 +56,14 @@ class ToolTeacher(ToolBase):
         resetbtn = tk.Button(control_frame, text=get_locale("teacher.button.reset"), command=self.on_reset_model)
         resetbtn.grid(row=2, column=0, sticky="ew")
 
+        recompbtn = tk.Button(control_frame, text=get_locale("teacher.button.recompile"), command=self.on_recompile_model)
+        recompbtn.grid(row=3, column=0, sticky="ew")
+
         savebtn = tk.Button(control_frame, text=get_locale("teacher.button.save"), command=self.on_save_model)
-        savebtn.grid(row=3, column=0, sticky="ew")
+        savebtn.grid(row=4, column=0, sticky="ew")
 
         loadbtn = tk.Button(control_frame, text=get_locale("teacher.button.load"), command=self.on_load_model)
-        loadbtn.grid(row=4, column=0, sticky="ew")
+        loadbtn.grid(row=5, column=0, sticky="ew")
 
 
         teachbtn = tk.Button(control_frame, text=get_locale("teacher.button.start"), command=self.on_teach)
@@ -68,14 +71,32 @@ class ToolTeacher(ToolBase):
 
 
     def try_reset_model(self):
-        new_model = compile_model(128, self)
+        new_model = create_model(self)
         if new_model:
             self.workon_model = new_model
+
+    def try_recompile_model(self):
+        if self.workon_model:
+            compile_model(self.workon_model, self)
 
     def ensure_model(self):
         if self.workon_model is None:
             self.try_reset_model()
-        return bool(self.workon_model)
+            if not self.workon_model:
+                self.println_status(get_locale("teacher.status.msg_model_missing"))
+                return False
+
+        self.println_status(get_locale("teacher.status.msg_model_ok"))
+        if self.workon_model._is_compiled:
+            self.println_status(get_locale("teacher.status.msg_model_compiled"))
+            return True
+        else:
+            self.try_recompile_model()
+            if self.workon_model._is_compiled:
+                self.println_status(get_locale("teacher.status.msg_model_compiled"))
+            else:
+                self.println_status(get_locale("teacher.status.msg_model_nocompile"))
+            return self.workon_model._is_compiled
 
 
     def on_save_model(self):
@@ -99,13 +120,15 @@ class ToolTeacher(ToolBase):
     def on_reset_model(self):
         self.try_reset_model()
 
+    def on_recompile_model(self):
+        self.try_recompile_model()
+
     def on_teach(self):
         self.fg_pool.clear_cache()
         self.bg_pool.clear_cache()
         self.interference_pool.clear_cache()
         self.clear_status()
         if self.ensure_model():
-            self.println_status(get_locale("teacher.status.msg_model_ok"))
             self.check_files()
             if self.check_passed:
                 self.close_mat_file()
@@ -134,8 +157,6 @@ class ToolTeacher(ToolBase):
                                           tf.TensorSpec(shape=(None, 2), dtype=tf.double))
                     )
                     self.workon_model.fit(dataset, **conf.get_fit_parameters())
-        else:
-            self.println_status(get_locale("teacher.status.msg_model_missing"))
         self.fg_pool.clear_cache()
         self.bg_pool.clear_cache()
         self.interference_pool.clear_cache()

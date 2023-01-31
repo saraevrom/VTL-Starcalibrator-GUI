@@ -110,7 +110,6 @@ attach_options(OptimizerData, optimizers_exp, OPTIMIZER_MAP, "Optimizer")
 attach_options(LossData, losses, dict(), "Loss")
 
 class CompileForm(FormNode):
-    FIELD__model = NeuralNetworkCreator
     FIELD__optimizer = OptimizerData
     FIELD__loss = LossData
     FIELD__metrics = MetricData
