@@ -257,6 +257,11 @@
   "app.widgets.gridplotter.use_autoscale": "Автоматическая нормировка",
   "app.widgets.gridplotter.scale": "Нормировка",
   "app.ff_warning": "ПИКСЕЛИ НЕ ВЫРАВНИВАЮТСЯ",
-  "app.loaded_file": "Загружен файл {}"
+  "app.loaded_file": "Загружен файл {}",
 
+  "app.menu.extension": "Расширения",
+  "app.extension.action_install_tf": "Установить tensorflow",
+  "app.extension.action_install_tf_desc": "Данное действие разблокирует возможность исполльзования нейросетей. Продолжить?",
+  "app.extension.action_install_tf_info_ok": "Tensorflow установлен. Перезапустите приложение для применения изменений.",
+  "app.extension.action_install_tf_info_err": "Ошибка установки tensorflow. Подробности в консоли."
 }

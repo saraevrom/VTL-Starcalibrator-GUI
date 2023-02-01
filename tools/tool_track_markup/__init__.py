@@ -11,7 +11,12 @@ from localization import get_locale
 import matplotlib.pyplot as plt
 from .reset import ResetAsker
 from .form import TrackMarkupForm
-from tensorflow import keras
+from extension.optional_tensorflow import TENSORFLOW_INSTALLED
+if TENSORFLOW_INSTALLED:
+    from tensorflow import keras
+else:
+    keras = None
+
 from .edges import edged_intervals
 
 OFF = get_locale("app.state_off")
@@ -72,8 +77,9 @@ class TrackMarkup(ToolBase):
                   command=self.on_save_data).grid(row=1, column=0, sticky="ew")
         tk.Button(right_panel, text=get_locale("track_markup.btn.load"),
                   command=self.on_load_data).grid(row=3, column=0, sticky="ew")
-        tk.Button(right_panel, text=get_locale("track_markup.btn.load_tf"),
-                  command=self.on_load_tf).grid(row=4, column=0, sticky="ew")
+        if TENSORFLOW_INSTALLED:
+            tk.Button(right_panel, text=get_locale("track_markup.btn.load_tf"),
+                      command=self.on_load_tf).grid(row=4, column=0, sticky="ew")
 
         self.params_form_parser = TrackMarkupForm()
 
@@ -94,8 +100,11 @@ class TrackMarkup(ToolBase):
                   command=self.on_track_visible_poll)
         self.no_btn = tk.Button(bottom_panel, text=get_locale("track_markup.btn.track_no"),
                   command=self.on_track_invisible_poll)
-        self.auto_btn = tk.Button(bottom_panel, text=get_locale("track_markup.btn.im_too_lazy"),
-                  command=self.on_auto)
+        if TENSORFLOW_INSTALLED:
+            self.auto_btn = tk.Button(bottom_panel, text=get_locale("track_markup.btn.im_too_lazy"),
+                      command=self.on_auto)
+        else:
+            self.auto_btn = None
         #self.yes_btn.pack(side="left", expand=True, fill="both")
         #self.no_btn.pack(side="right", expand=True, fill="both")
 
@@ -120,12 +129,14 @@ class TrackMarkup(ToolBase):
             self.start_btn.pack_forget()
             self.yes_btn.pack(side="left", expand=True, fill="both")
             self.no_btn.pack(side="right", expand=True, fill="both")
-            self.auto_btn.pack(expand=True, fill="both")
+            if self.auto_btn:
+                self.auto_btn.pack(expand=True, fill="both")
             self.event_set = True
         elif self.event_set and not self.current_event:
             self.yes_btn.pack_forget()
             self.no_btn.pack_forget()
-            self.auto_btn.pack_forget()
+            if self.auto_btn:
+                self.auto_btn.pack_forget()
             self.start_btn.pack(expand=True, fill="both")
             self.event_set = False
 
@@ -135,12 +146,14 @@ class TrackMarkup(ToolBase):
             self.yes_btn.config(fg="red")
             self.no_btn.config(fg="red")
             self.start_btn.config(fg="red")
-            self.auto_btn.config(fg="red")
+            if self.auto_btn:
+                self.auto_btn.config(fg="red")
         else:
             self.yes_btn.config(fg="black")
             self.no_btn.config(fg="black")
             self.start_btn.config(fg="black")
-            self.auto_btn.config(fg="black")
+            if self.auto_btn:
+                self.auto_btn.config(fg="black")
 
     def on_loaded_file_success(self):
         self.just_started = True
@@ -269,12 +282,11 @@ class TrackMarkup(ToolBase):
                 self.current_event = None
                 return False
             form_data = self.form_data
-            win = form_data["preprocessing"].ma_win
             print(self.queue)
             event_start, event_end = self.queue.pop(0)
             self.retractable_event = True
             self.event_in_queue = True, None
-            if (event_end-event_start) < win or (event_end-event_start) < form_data["min_frame"]:
+            if (event_end-event_start) < form_data["min_frame"]:
                 self.add_tracked_event(event_start, event_end)
                 return True
             self.current_event = event_start, event_end

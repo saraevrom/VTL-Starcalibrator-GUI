@@ -2,7 +2,7 @@ from common_GUI import TkDictForm
 from common_GUI.tk_forms_assist import FormNode, IntNode, ComboNode, BoolNode, FloatNode
 from common_GUI.tk_forms_assist.factory import create_value_field
 from localization import get_locale
-from ..tool_teacher.advanced_form import DataPreProcessorForm
+from preprocessing.forms import DataPreProcessorForm
 from .edges import EdgeProcessor
 
 class PmtSelect(ComboNode):

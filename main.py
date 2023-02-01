@@ -8,9 +8,9 @@ from tools import add_tools
 from tools.tool_flatfielder import FlatFieldingModel
 
 from localization import get_locale, format_locale
-from tools.tool_starcalibrator import StarCalibrator
 import warnings
 import os.path as ospath
+from extension import expand_app
 
 class Tool(object):
     def __init__(self,master,tool_class):
@@ -19,6 +19,8 @@ class Tool(object):
 
     def __call__(self):
         return self.tool_class(self.master)
+
+
 
 class App(tk.Tk):
 
@@ -36,6 +38,7 @@ class App(tk.Tk):
 
         #self.toolsmenu = tk.Menu(self.topmenu, tearoff=0)
         self.topmenu.add_cascade(label=get_locale("app.menu.file"), menu=self.filemenu)
+        expand_app(self.topmenu)
         #self.topmenu.add_cascade(label=get_locale("app.menu.tools"), menu=self.toolsmenu)
         self.config(menu=self.topmenu)
         self.file = None
@@ -47,7 +50,6 @@ class App(tk.Tk):
         self.bind("<1>", self.set_focus)
         add_tools(self.add_tool)
         self.update_title()
-
 
     def update_title(self):
         title = get_locale("app.title")
