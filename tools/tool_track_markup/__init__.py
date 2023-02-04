@@ -498,7 +498,7 @@ class TrackMarkup(ToolBase):
 
             fig, ax = self.ensure_figure(False)
             xs = np.linspace(t1, t2, len(plot_data))
-            ax.plot(xs, plot_data, label=f"[{i}, {j}]")
+            ax.plot(xs, plot_data, label=f"[{i+1}, {j+1}]")
             ax.legend()
             fig.show()
             self.last_single_plot_data = fig, ax

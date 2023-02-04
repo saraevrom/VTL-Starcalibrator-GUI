@@ -101,7 +101,7 @@ class ValuedSlider(ttk.Frame):
 
 
     def get_value(self):
-        print("GET", self.real_value)
+        # print("GET", self.real_value)
         return self.real_value
 
     def get_limits(self):
@@ -109,7 +109,7 @@ class ValuedSlider(ttk.Frame):
         return int(round(low)), int(round(high))
 
     def set_value(self, v):
-        print("SET", v)
+        # print("SET", v)
         self.real_value = v
         self.display_variable.set(str(self.real_value))
         low, high, pos = self.play_slider.get_params()
@@ -169,3 +169,7 @@ class PlayerControls(ttk.Frame):
             self.after(FRAME_DELAY, self.playcycle)
         else:
             self.playing = False
+
+
+    def get_selected_range(self):
+        return self.play_slider.get_limits()

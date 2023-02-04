@@ -7,6 +7,8 @@ from ..tool_base import ToolBase
 from localization import get_locale
 from common_GUI import TkDictForm
 from parameters import DATETIME_FORMAT
+from preprocessing.denoising import moving_average_subtract
+import matplotlib.pyplot as plt
 
 FORM_CONF = {
     "use_filter": {
@@ -35,10 +37,12 @@ class MatPlayer(ToolBase):
         self.form.pack(side=tk.RIGHT, fill=tk.Y)
         self.plotter = GridPlotter(self)
         self.plotter.pack(side=tk.TOP, expand=True, fill=tk.BOTH)
+        self.plotter.on_right_click_callback = self.on_pixel_rmb
         self.player_controls = PlayerControls(self, self.on_frame_draw, self.click_callback)
         self.player_controls.pack(side=tk.BOTTOM, fill=tk.X)
         self.get_mat_file()
         self.form_data = self.form.get_values()
+        self.fig, self.ax = None, None
 
     def on_frame_draw(self, frame_num):
         if self.file:
@@ -83,3 +87,27 @@ class MatPlayer(ToolBase):
         self.plotter.set_broken(ffmodel.broken_query())
         self.plotter.draw()
         self.poke()
+
+
+    def handle_mpl_close(self, mpl_event):
+        if self.fig is None:
+            return
+        if mpl_event.canvas.figure == self.fig:
+            print("Closed last figure. Figure resetting.")
+            self.fig = None
+            self.ax = None
+    def on_pixel_rmb(self, i, j):
+        if self.file:
+            print("DRAW", i, j)
+            start, end = self.player_controls.get_selected_range()
+            print("FROM", start, "TO", end)
+            xs = self.ut0_s[start: end+1]
+            ys = self.frames[start: end+1, i, j]
+            if self.form_data["use_filter"]:
+                ys = moving_average_subtract(ys, self.form_data["filter_window"])
+            if self.fig is None:
+                self.fig, self.ax = plt.subplots()
+                self.fig.canvas.mpl_connect('close_event', self.handle_mpl_close)
+            self.ax.plot(xs, ys, label=f"[{i+1},{j+1}]")
+            self.ax.legend()
+            self.fig.show()

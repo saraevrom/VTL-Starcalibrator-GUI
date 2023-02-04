@@ -60,6 +60,15 @@ class DoubleSlider(tk.Canvas):
         self._callback_enable = True
         self.after(10, self.consistency_sheck)
 
+
+    def set_range(self, low, high):
+        self.lower_value = low
+        self.higher_value = high
+        lpos, rpos = self.interval.get_range()
+        pos = self.upper_knob.get_position()
+        self.report_motion(lpos,rpos,pos)
+
+
     def on_motion(self, event):
         for obj in self.tracked_objects:
             obj.on_hover(event)
