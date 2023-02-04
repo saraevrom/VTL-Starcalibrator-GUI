@@ -19,3 +19,10 @@ def get_locale(key):
         return locale_dict[key]
     else:
         return key
+
+
+help_path = ospath.join(ospath.dirname(cwd), "help", LOCALE)
+
+def get_help(key):
+    with open(ospath.join(help_path, key), "r") as fp:
+        return fp.read()

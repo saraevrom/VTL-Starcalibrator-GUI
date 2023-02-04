@@ -11,6 +11,7 @@ from localization import get_locale, format_locale
 import warnings
 import os.path as ospath
 from extension import expand_app
+from helper import add_help_menu
 
 class Tool(object):
     def __init__(self,master,tool_class):
@@ -39,6 +40,7 @@ class App(tk.Tk):
         #self.toolsmenu = tk.Menu(self.topmenu, tearoff=0)
         self.topmenu.add_cascade(label=get_locale("app.menu.file"), menu=self.filemenu)
         expand_app(self.topmenu)
+        add_help_menu(self.topmenu)
         #self.topmenu.add_cascade(label=get_locale("app.menu.tools"), menu=self.toolsmenu)
         self.config(menu=self.topmenu)
         self.file = None

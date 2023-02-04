@@ -265,5 +265,9 @@
   "app.extension.action_install_tf": "Install tensorflow",
   "app.extension.action_install_tf_desc": "This will unlock ANN utilities. Continue?",
   "app.extension.action_install_tf_info_ok": "Tensorflow installed. Restart app to take effect.",
-  "app.extension.action_install_tf_info_err": "Tensorflow installation error. Check console for details"
+  "app.extension.action_install_tf_info_err": "Tensorflow installation error. Check console for details",
+
+
+  "app.menu.help": "Help",
+  "app.help.datetime_hint": "Datetime entry"
 }

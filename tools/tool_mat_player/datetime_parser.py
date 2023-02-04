@@ -8,13 +8,21 @@ import time
 # Y - year, M - month, D - day
 # h - hour, m - minute, s - second, ms - millisecond
 DATETIME_REGEXES = [
-    (r"[\sa-zA-Z]+", None),
+    (r"\s+", None),
     (r"(\d+)-(\d+)-(\d+)", "Y M D"),
     (r"(\d+)\.(\d+)\.(\d+)", "D M Y"),
     (r"(\d+):(\d+):(\d+):(\d+)", "h m s ms"),
     (r"(\d+):(\d+):(\d)+\.(\d+)", "h m s ms"),
     (r"(\d+):(\d+):(\d+)", "h m s"),
-    (r"(\d+):(\d+)", "h m")
+    (r"(\d+):(\d+)", "h m"),
+    # manual entry
+    (r"Y\s*=\s*(\d+)", "Y"),
+    (r"M\s*=\s*(\d+)", "M"),
+    (r"D\s*=\s*(\d+)", "D"),
+    (r"h\s*=\s*(\d+)", "h"),
+    (r"ms\s*=\s*(\d+)", "ms"),
+    (r"m\s*=\s*(\d+)", "m"),
+    (r"s\s*=\s*(\d+)", "s")
 ]
 
 for i in range(len(DATETIME_REGEXES)):

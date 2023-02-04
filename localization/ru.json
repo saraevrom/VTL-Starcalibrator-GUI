@@ -264,5 +264,8 @@
   "app.extension.action_install_tf": "Установить tensorflow",
   "app.extension.action_install_tf_desc": "Данное действие разблокирует возможность исполльзования нейросетей. Продолжить?",
   "app.extension.action_install_tf_info_ok": "Tensorflow установлен. Перезапустите приложение для применения изменений.",
-  "app.extension.action_install_tf_info_err": "Ошибка установки tensorflow. Подробности в консоли."
+  "app.extension.action_install_tf_info_err": "Ошибка установки tensorflow. Подробности в консоли.",
+
+  "app.menu.help": "Помощь",
+  "app.help.datetime_hint": "Ввод даты/времени"
 }
