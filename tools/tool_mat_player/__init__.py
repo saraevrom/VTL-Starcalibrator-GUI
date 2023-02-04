@@ -76,6 +76,7 @@ class MatPlayer(ToolBase):
         self.player_controls.set_limit(len(self.file["UT0"]) - 1)
         self.frames = np.array(self.file["data0"])
         self.ut0_s = np.array(self.file["UT0"])
+        self.player_controls.time_link(self.ut0_s)
         #self.plotter.draw()
         self.poke()
 

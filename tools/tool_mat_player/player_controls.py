@@ -2,6 +2,11 @@ import tkinter as tk
 from tkinter import ttk
 from common_GUI import EntryWithEnterKey
 from common_GUI.double_slider import DoubleSlider
+from localization import get_locale
+from tkinter.simpledialog import askstring
+from .datetime_parser import parse_datetimes
+import numpy as np
+from datetime import datetime
 
 FAST_FWD_SKIP = 1
 FRAME_DELAY = 1 #ms
@@ -68,15 +73,19 @@ class ValuedSlider(ttk.Frame):
         self.display_variable.set("0")
         #self.play_slider = ttk.Scale(self, orient=tk.HORIZONTAL, from_=0, to=100, variable=self.value_variable)
         self.play_slider = DoubleSlider(self, low_end=0, high_end=100)
-        self.play_slider.grid(row=0, column=0, sticky="nsew")
+        self.play_slider.grid(row=0, column=0, sticky="nsew", rowspan=2)
         self.play_slider.set_slider_callback(self.on_slider_update)
         entry = EntryWithEnterKey(self, textvariable=self.display_variable, width=10)
         entry.grid(row=0, column=1, sticky="nsew")
         entry.on_commit = self.on_display_commit
+
+        dt_asker_btn = tk.Button(self,text=get_locale("matplayer.button.datetime_entry"), command=self.on_ask_datetime)
+        dt_asker_btn.grid(row=1, column=1, sticky="nsew")
         self.columnconfigure(0, weight=1)
         self.upper_limit = 100
         self.slider_callback = None
         self.real_value = 0
+        self.ut0_explorer = None
 
     def set_slider_callback(self, callback):
         self.slider_callback = callback
@@ -95,6 +104,7 @@ class ValuedSlider(ttk.Frame):
                 value = self.upper_limit
                 self.display_variable.set(str(value))
             self.play_slider.move_slider(value)
+            self.real_value = value
             self.slider_callback()
         except ValueError:
             pass
@@ -119,6 +129,26 @@ class ValuedSlider(ttk.Frame):
     def set_limit(self, upper):
         self.play_slider.high_end = upper
         self.upper_limit = upper
+
+    def on_ask_datetime(self):
+        if self.ut0_explorer is not None:
+            ans = askstring(title=get_locale("matplayer.button.datetime_entry"),
+                           prompt=get_locale("matplayer.dialog.datetime_prompt"))
+            if ans:
+                start_dt = datetime.utcfromtimestamp(self.ut0_explorer[self.real_value])
+                ut0 = parse_datetimes(ans, start_dt)
+
+                if ut0 < np.min(self.ut0_explorer):
+                    return
+                if ut0 > np.max(self.ut0_explorer):
+                    return
+                frame = np.argmin(np.abs(self.ut0_explorer - ut0))
+                print("INTERVAL OK")
+                self.play_slider.move_slider(frame)
+                self.real_value = frame
+                self.display_variable.set(str(frame))
+                self.slider_callback()
+
 
 
 
@@ -173,3 +203,6 @@ class PlayerControls(ttk.Frame):
 
     def get_selected_range(self):
         return self.play_slider.get_limits()
+
+    def time_link(self, ut0):
+        self.play_slider.ut0_explorer = ut0
