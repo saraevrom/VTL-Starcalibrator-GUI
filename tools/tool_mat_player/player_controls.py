@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from common_GUI import EntryWithEnterKey
+from common_GUI.double_slider import DoubleSlider
 
 FAST_FWD_SKIP = 1
 FRAME_DELAY = 1 #ms
@@ -63,46 +64,60 @@ class ControlButtons(ttk.Frame):
 class ValuedSlider(ttk.Frame):
     def __init__(self, master):
         super(ValuedSlider, self).__init__(master)
-        self.value_variable = tk.IntVar(self)
         self.display_variable = tk.StringVar(self)
         self.display_variable.set("0")
-        self.value_variable.trace("w", self.on_slider_update)
-        self.play_slider = ttk.Scale(self, orient=tk.HORIZONTAL, from_=0, to=100, variable=self.value_variable)
+        #self.play_slider = ttk.Scale(self, orient=tk.HORIZONTAL, from_=0, to=100, variable=self.value_variable)
+        self.play_slider = DoubleSlider(self, low_end=0, high_end=100)
         self.play_slider.grid(row=0, column=0, sticky="nsew")
+        self.play_slider.set_slider_callback(self.on_slider_update)
         entry = EntryWithEnterKey(self, textvariable=self.display_variable, width=10)
         entry.grid(row=0, column=1, sticky="nsew")
         entry.on_commit = self.on_display_commit
         self.columnconfigure(0, weight=1)
         self.upper_limit = 100
+        self.slider_callback = None
+        self.real_value = 0
 
     def set_slider_callback(self, callback):
-        self.play_slider.config(command=callback)
         self.slider_callback = callback
 
-    def on_slider_update(self, *_):
-        self.display_variable.set(str(self.value_variable.get()))
+    def on_slider_update(self, low, high, pos):
+        self.real_value = int(round(pos))
+        self.display_variable.set(str(self.real_value))
+        if self.slider_callback:
+            self.slider_callback()
 
     def on_display_commit(self):
         pretending = self.display_variable.get()
         try:
             value = int(pretending)
-            if value >= self.upper_limit:
-                value = self.upper_limit-1
+            if value > self.upper_limit:
+                value = self.upper_limit
                 self.display_variable.set(str(value))
-            self.value_variable.set(value)
+            self.play_slider.move_slider(value)
             self.slider_callback()
         except ValueError:
             pass
 
 
     def get_value(self):
-        return self.value_variable.get()
+        print("GET", self.real_value)
+        return self.real_value
+
+    def get_limits(self):
+        low, high, pos = self.play_slider.get_params()
+        return int(round(low)), int(round(high))
 
     def set_value(self, v):
-        return self.value_variable.set(v)
+        print("SET", v)
+        self.real_value = v
+        self.display_variable.set(str(self.real_value))
+        low, high, pos = self.play_slider.get_params()
+        if abs(pos-v)>0.5:
+            self.play_slider.move_slider(v)
 
     def set_limit(self, upper):
-        self.play_slider.config(to=upper)
+        self.play_slider.high_end = upper
         self.upper_limit = upper
 
 
@@ -136,13 +151,13 @@ class PlayerControls(ttk.Frame):
 
     def draw_frame(self):
         frame_step = self.control_btns.get_frame_step()
-
+        low, high = self.play_slider.get_limits()
         frame_num = self.play_slider.get_value() + frame_step
-        if frame_num >= self.upper_limit:
-            frame_num = self.upper_limit - 1
+        if frame_num >= high:
+            frame_num = high
             self.control_btns.stop_playing()
-        if frame_num < 0:
-            frame_num = 0
+        if frame_num < low:
+            frame_num = low
             self.control_btns.stop_playing()
         self.frame_callback(frame_num)
         self.play_slider.set_value(frame_num)
