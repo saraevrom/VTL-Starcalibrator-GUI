@@ -23,7 +23,7 @@ Every part of datetime can be set by modifier <letter from legend>=<value>
 ## Examples
 ### Set datetime to 20 of October 2022 17:01:45
 2022-10-20 17:01:45
-## Set time to midnight without changing date
+### Set time to midnight without changing date
 0:0:0:0
 or
 0:0:0 ms=0
