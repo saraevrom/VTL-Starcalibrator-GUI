@@ -5,10 +5,9 @@ import tkinter.simpledialog as simpledialog
 from localization import get_locale
 from .compiler_form import CompileForm
 from .model_creating_form import NeuralNetworkCreator
-from common_GUI.modified_base import DialogScalable
 
 
-class CompileDialog(DialogScalable):
+class CompileDialog(simpledialog.Dialog):
     def body(self, master):
         self.form_parser = CompileForm()
         conf = self.form_parser.get_configuration_root()
@@ -16,6 +15,10 @@ class CompileDialog(DialogScalable):
         self.form.pack(fill="both", expand=True)
         self.result = None
         self.title(get_locale("app.model.form.title_compile"))
+
+        # Due to inconsistency of python tk.simpledialog implementations, this fix should enable rescaling.
+        master.pack_forget()
+        master.pack(padx=5, pady=5, expand=True, fill=tk.BOTH)
 
     def apply(self):
         formdata = self.form.get_values()
@@ -29,7 +32,7 @@ class CompileDialog(DialogScalable):
         model.compile(**kwargs)
         model.summary()
 
-class CreateDialog(DialogScalable):
+class CreateDialog(simpledialog.Dialog):
     def body(self, master):
         self.form_parser = NeuralNetworkCreator()
         conf = self.form_parser.get_configuration_root()
@@ -37,6 +40,10 @@ class CreateDialog(DialogScalable):
         self.form.pack(fill="both", expand=True)
         self.result = None
         self.title(get_locale("app.model.form.title_create"))
+
+        # Due to inconsistency of python tk.simpledialog implementations, this fix should enable rescaling.
+        master.pack_forget()
+        master.pack(padx=5, pady=5, expand=True, fill=tk.BOTH)
 
     def apply(self):
         formdata = self.form.get_values()
