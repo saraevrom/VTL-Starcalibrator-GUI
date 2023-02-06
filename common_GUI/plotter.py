@@ -78,6 +78,8 @@ class GridPlotter(Plotter):
         self.axes.hlines([-HALF_GAP_SIZE, span], -span, -HALF_GAP_SIZE, colors="black")
         self.axes.hlines([-HALF_GAP_SIZE, span], span, HALF_GAP_SIZE, colors="black")
         self.figure.canvas.mpl_connect("button_press_event", self.on_plot_click)
+        self.figure.canvas.mpl_connect("motion_notify_event", self.on_hover)
+        self.figure.canvas.mpl_connect("axes_leave_event", self.on_leave)
 
         norm_panel = tk.Frame(self)
         norm_panel.pack(side=tk.BOTTOM, fill=tk.X)
@@ -91,6 +93,11 @@ class GridPlotter(Plotter):
             tk.Label(norm_panel, text=get_locale("—")).grid(row=0, column=3, sticky="ew")
             tk.Entry(norm_panel, textvariable=self.min_norm_entry).grid(row=0, column=2, sticky="ew")
             tk.Entry(norm_panel, textvariable=self.max_norm_entry).grid(row=0, column=4, sticky="ew")
+
+        self.annotation = self.axes.annotate("", xy=(0, 0), xytext=(-25, 20), textcoords="offset points",
+                            bbox=dict(boxstyle="round", fc="w"),
+                            arrowprops=dict(arrowstyle="->"))
+        self.annotation.set_visible(False)
 
     def update_norm(self, low_fallback=None, high_fallback=None):
         if low_fallback is None:
@@ -189,5 +196,25 @@ class GridPlotter(Plotter):
                 if self.on_right_click_callback_outofbounds:
                     self.on_right_click_callback_outofbounds()
 
-        # self.on_right_click_callback
+
+    def on_leave(self, event):
+        self.annotation.set_visible(False)
+        self.figure.canvas.draw_idle()
+
+    def on_hover(self, event):
+        if event.xdata and event.ydata:
+            i = find_index(event.xdata)
+            j = find_index(event.ydata)
+            if i >= 0 and j >= 0:
+                v = self.buffer_matrix[i, j]
+                i+=1
+                j+=1
+                self.annotation.xy = (event.xdata, event.ydata)
+                self.annotation.set_visible(True)
+                self.figure.canvas.draw_idle()
+                self.annotation.set_text(f"[{i}, {j}]\n({round(v,2)})")
+                #print(f"HOVERING over {i},{j}")
+                return
+        self.annotation.set_visible(False)
+        self.figure.canvas.draw_idle()
 
