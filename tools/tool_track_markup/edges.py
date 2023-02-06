@@ -29,8 +29,6 @@ def edged_intervals(array):
     if len(ranges) == 0:
         ranges.append([start_index, len(array), False])
     elif start_index < len(array):
-        print("RANGES:", ranges)
-        print("Last:", ranges[-1])
         ranges.append([start_index, len(array), not ranges[-1][2]])
 
     return ranges
@@ -115,6 +113,15 @@ def fix_ranges(ranges):
             assert n_positive == ranges[i - 1][-1]  # ensure we are stitching same polarity
             ranges[i - 1][1] = n_end
 
+
+nb.njit()
+def splat_select(bool_arg, window):
+    result_arr = np.full(bool_arg.shape[0]+window-1, False)
+    for i in range(bool_arg.shape[0]):
+        result_arr[i:i+window] = np.logical_or(bool_arg[i], result_arr[i:i+window])
+    return result_arr
+
+
 class EdgeProcessor(object):
     def __init__(self,threshold, edge_shift):
         self.threshold = threshold
@@ -129,20 +136,27 @@ class EdgeProcessor(object):
         y_data: np.ndarray = data_source.tf_model.predict(x_data)[:, 1]
 
         booled = y_data > self.threshold
-        assert len(booled)>0
-        print(booled.shape)
-
-        ranges = edged_intervals(booled)
-        if ranges[-1][2]:
-            ranges.append([ranges[-1][1], len(x_data_true), False])
-        else:
-            ranges[-1][1] = len(x_data_true)
-        print("R1", ranges)
-        fix_ranges(ranges)
+        print("R0", booled)
+        booled_full = splat_select(booled, 128)
+        print("R1", booled_full)
+        ranges = edged_intervals(booled_full)
         print("R2", ranges)
-        ranges = shift_positives(np.array(ranges), - self.edge_shift, 128 + self.edge_shift)
-        print("R3", ranges)
-        fix_ranges(ranges)
-        print("R4", ranges)
 
+        # assert len(booled)>0
+        # print(booled.shape)
+        #
+        # ranges = edged_intervals(booled)
+        # print("R0", ranges)
+        # if ranges[-1][2]:
+        #     ranges.append([ranges[-1][1], len(x_data_true), False])
+        # else:
+        #     ranges[-1][1] = len(x_data_true)
+        # print("R1", ranges)
+        # fix_ranges(ranges)
+        # print("R2", ranges)
+        # # ranges = shift_positives(np.array(ranges), - self.edge_shift, 128 + self.edge_shift)
+        # # print("R3", ranges)
+        # fix_ranges(ranges)
+        # print("R4", ranges)
+        #
         return split_intervals(np.array(ranges), event_start)
