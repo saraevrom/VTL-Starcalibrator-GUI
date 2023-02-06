@@ -162,6 +162,7 @@ class DatasetGenerator(ToolBase):
             self.close_mat_file()
             with h5py.File(remembered_filename, "a") as rw_file:
                 overwrite_with_numpy(rw_file, "marked_intervals", self.interval_editor.marked_intervals)
+                overwrite_with_numpy(rw_file, "broken", np.logical_not(self.plotter.alive_pixels_matrix))
 
             self.reload_mat_file(remembered_filename)
             messagebox.showinfo(title=get_locale("datasetgen.messagebox.save_success.title"),

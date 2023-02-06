@@ -220,7 +220,7 @@ class ToolTeacher(ToolBase):
         cycle_forever = amount is None
         preprocessor = conf.get_preprocessor()
         while cycle_forever or i < amount:
-            bg_sample, (bg_start, bg_end) = self.bg_pool.random_access()
+            bg_sample, (bg_start, bg_end), broken = self.bg_pool.random_access()
             if np.abs(bg_end-bg_start) < frame_size:
                 continue
             if bg_start==bg_end-frame_size:
@@ -251,6 +251,7 @@ class ToolTeacher(ToolBase):
                     fg[:, 8:, 8:] = conf.process_fg(self.fg_pool.random_access())
                 x_data = x_data + fg
             i += 1
+            x_data[:, broken] = 0
             yield x_data, y_data
 
     def batch_generator(self, conf, frame_size=128):
@@ -271,7 +272,7 @@ class ToolTeacher(ToolBase):
 
     def check_files(self):
         self.check_passed = True
-        self.check_pool("teacher.status.msg_bg", self.bg_pool, ["data0", "marked_intervals"])
+        self.check_pool("teacher.status.msg_bg", self.bg_pool, ["data0", "marked_intervals", "broken"])
         self.check_pool("teacher.status.msg_fg", self.fg_pool, ["EventsIJ"])
         self.check_pool("teacher.status.msg_it", self.interference_pool, ["EventsIJ"], True)
 

@@ -131,7 +131,7 @@ class RandomIntervalAccess(FilePool):
         super().__init__(master, title_key, "*.mat *.hdf *.h5", allow_clear=allow_clear)
 
     def random_access(self):
-        intervals, data0 = self.pull_fields_from_random_file(["marked_intervals", "data0"])
+        intervals, data0, broken = self.pull_fields_from_random_file(["marked_intervals", "data0", "broken"])
         weights = intervals[:, 2]
         p = weights/np.sum(weights)
         length = intervals.shape[0]
@@ -141,4 +141,4 @@ class RandomIntervalAccess(FilePool):
         end = sample_interval[1]
         #print(start, end)
         #sample = data0[int(start):int(end)]
-        return data0, (int(start), int(end))
+        return data0, (int(start), int(end)), broken
