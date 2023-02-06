@@ -159,6 +159,7 @@
   "track_markup.form.trigger": "Триггер",
   "track_markup.form.trigger.threshold": "Порог вероятности",
   "track_markup.form.trigger.edge_shift": "Сдвиг краёв диапазона",
+  "track_markup.form.auto_continue": "Продолжить автоматическую разметку",
   "track_markup.label.accepted": "Интервалы без треков",
   "track_markup.label.rejected": "Интервалы с треками",
   "track_markup.form.noise_suppress_use": "Использовать подавление шума",

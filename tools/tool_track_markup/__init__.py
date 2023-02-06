@@ -308,6 +308,7 @@ class TrackMarkup(ToolBase):
         self.update_highlight_button()
 
     def on_auto(self):
+        self.sync_form()
         if self.tf_model is None:
             self.on_load_tf()
         if self.tf_model is None:
@@ -332,6 +333,8 @@ class TrackMarkup(ToolBase):
 
         self.show_next_event()
         self.update_answer_panel()
+        if self.form_data["auto_cont"]:
+            self.after(1000, self.on_auto)
 
     def on_poll(self, result):
         self.sync_form()

@@ -168,6 +168,7 @@
   "track_markup.form.noise_suppress_use": "Use noise suppression",
   "track_markup.form.flash_suppress_use": "Use flash suppression",
   "track_markup.form.noise_suppress_window": "Noise suppression MSTD window",
+  "track_markup.form.auto_continue": "Continue auto markup",
   "track_markup.btn.spawn_window": "Create new figure for tracks",
   "track_markup.btn.start": "Start",
   "track_markup.dialog.reset": "Block parameters",

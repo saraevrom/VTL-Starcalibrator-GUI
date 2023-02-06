@@ -26,3 +26,4 @@ class TrackMarkupForm(FormNode):
     FIELD__min_frame = create_value_field(IntNode, get_locale("track_markup.form.min_frame"), 256)
     FIELD__pmt_select = PmtSelect
     FIELD__trigger = TriggerParameters
+    FIELD__auto_cont = create_value_field(BoolNode, get_locale("track_markup.form.auto_continue"), False)
