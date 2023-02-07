@@ -4,7 +4,7 @@ Model with independent for every pmt and common layers
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 from ..model_wrapper import ModelWrapper
-
+import numba as nb
 
 from common_GUI.tk_forms_assist import FormNode
 from common_GUI.tk_forms_assist.factory import create_value_field
@@ -14,6 +14,12 @@ import tensorflow as tf
 from .model import SingleProcessor
 from .default_configuration import DEFAULT_CONF
 
+nb.njit()
+def splat_select(bool_arg, window):
+    result_arr = np.full(bool_arg.shape[0]+window-1, False)
+    for i in range(bool_arg.shape[0]):
+        result_arr[i:i+window] = np.logical_or(bool_arg[i], result_arr[i:i+window])
+    return result_arr
 
 class SplitMergeModel(ModelWrapper):
     def create_dataset_ydata_for_item(self, y_data_parameters):
@@ -25,21 +31,33 @@ class SplitMergeModel(ModelWrapper):
     def trigger(self, x, threshold):
         x_data = sliding_window_view(x, 128, axis=0)
         x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
-        y_data = self.model.predict(x)
+        y_data = self.model.predict(x_data)
         y_data = y_data[:, 1]
-        return y_data > threshold
+        booled =  y_data > threshold
+
+        print("R0", booled)
+        booled_full = splat_select(booled, 128)
+        return booled_full
 
     def plot_over_data(self, x, start, end, axes):
         x_data = sliding_window_view(x, 128, axis=0)
         x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
         y_data: np.ndarray = self.model.predict(x_data)[:, 1]
         xs = np.arange(start, end - 127)
-        axes.plot(xs, y_data, color="black")
+        print("PLOT!")
+        axes.plot(xs, y_data+20, "-", color="black")
+
+
+class IndependentGetter(LayerSequenceConstructor):
+    DISPLAY_NAME = get_locale("models.splitmerge.independent")
+    
+    def get_data(self):
+        return super().get_data(), super().get_data(), super().get_data(), super().get_data()
 
 class SplitMergeForm(FormNode):
     DEFAULT_VALUE = DEFAULT_CONF
     DISPLAY_NAME = "SplitMerge"
-    FIELD__independent = create_value_field(LayerSequenceConstructor, get_locale("models.splitmerge.independent"))
+    FIELD__independent = IndependentGetter
     FIELD__common = create_value_field(LayerSequenceConstructor, get_locale("models.splitmerge.common"))
 
     def get_data(self):

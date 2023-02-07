@@ -23,8 +23,10 @@ def apply_layer_array(inputs, layer_array):
 class SingleProcessor(object):
     def __init__(self, independent, common):
         self.pmt_layers = []
+        j = 0
         for i in [0, 1, 10, 11]:
-            self.pmt_layers.append([create_lambda(i)]+independent)
+            self.pmt_layers.append([create_lambda(i)]+independent[j])
+            j += 1
 
         self.common_layers = [tf.keras.layers.Concatenate()]+common+[tf.keras.layers.Dense(2, activation="softmax")]
 

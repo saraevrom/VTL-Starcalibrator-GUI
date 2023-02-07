@@ -114,12 +114,7 @@ def fix_ranges(ranges):
             ranges[i - 1][1] = n_end
 
 
-nb.njit()
-def splat_select(bool_arg, window):
-    result_arr = np.full(bool_arg.shape[0]+window-1, False)
-    for i in range(bool_arg.shape[0]):
-        result_arr[i:i+window] = np.logical_or(bool_arg[i], result_arr[i:i+window])
-    return result_arr
+
 
 
 class EdgeProcessor(object):
@@ -136,20 +131,18 @@ class EdgeProcessor(object):
         # x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
         # y_data: np.ndarray = data_source.tf_model.predict(x_data)[:, 1]
         # xs = np.arange(event_start, event_end-127)
-        data_source.tf_model.plot_over_data(x_data, ax)
+        data_source.tf_model.plot_over_data(x_data,event_start, event_end, ax)
 
     def apply(self, data_source):
         event_start, event_end = data_source.current_event
         x_data_true = data_source.file["data0"][event_start:event_end]
         x_data = data_source.apply_filter(x_data_true)
-        booled = data_source.tf_model.trigger(x_data, self.threshold)
+        booled_full = data_source.tf_model.trigger(x_data, self.threshold)
         # x_data = sliding_window_view(x_data, 128, axis=0)
         # x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
         # y_data: np.ndarray = data_source.tf_model.predict(x_data)[:, 1]
         #
         # booled = y_data > self.threshold
-        print("R0", booled)
-        booled_full = splat_select(booled, 128)
         print("R1", booled_full)
         ranges = edged_intervals(booled_full)
         print("R2", ranges)

@@ -6,7 +6,7 @@ import tensorflow as tf
 
 
 class Activation(ComboNode):
-    DISPLAY_NAME = get_locale("app.model_create.form.dense_activation")
+    DISPLAY_NAME = get_locale("app.model_builder.activation")
     SELECTION_READONLY = True
     DEFAULT_VALUE = "linear"
     VALUES = list(sorted(["linear", "relu", "sigmoid", "softplus", "softsign", "tanh", "selu", "elu"]))

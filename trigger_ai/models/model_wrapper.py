@@ -24,7 +24,7 @@ class ModelWrapper(object):
     def save_model(self, file_path):
         self.model.save(file_path)
         with h5py.File(file_path, "a") as fp:
-            fp[CUSTOM_FIELD] = type(self).__name__.encode("utf-8")
+            fp.attrs[CUSTOM_FIELD] = type(self).__name__.encode("utf-8")
 
 
     @staticmethod
@@ -32,7 +32,8 @@ class ModelWrapper(object):
         if ModelWrapper.SUBCLASSES is None:
             ModelWrapper.SUBCLASSES = {cls.__name__: cls for cls in ModelWrapper.__subclasses__()}
         with h5py.File(file_path, "r") as fp:
-            instance_class = ModelWrapper.SUBCLASSES[fp[CUSTOM_FIELD]].encode("utf-8")
+            print(fp.keys())
+            instance_class = ModelWrapper.SUBCLASSES[fp.attrs[CUSTOM_FIELD]]
 
         model = keras.models.load_model(file_path)
         return instance_class(model)

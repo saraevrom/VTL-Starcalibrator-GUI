@@ -279,6 +279,7 @@
 
   "app.filedialog_formats.settings_json": "JSON with settings",
   "app.filedialog_formats.ff_json": "JSON with FF parameters",
+  "app.filedialog_formats.form_json": "JSON with form data",
   "app.filedialog_formats.processed_mat": "Converted data files",
   "app.filedialog_formats.raw_mat": "Raw data",
   "app.filedialog_formats.model": "Model",
