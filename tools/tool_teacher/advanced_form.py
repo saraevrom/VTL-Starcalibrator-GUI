@@ -48,7 +48,7 @@ class Augmentation(FormNode):
 
 class PregenerateDataset(OptionNode):
     DISPLAY_NAME = get_locale("teacher.form.pregenerate_dataset")
-    ITEM_TYPE = create_value_field(IntNode, get_locale("teacher.advform.amount"), 40000)
+    ITEM_TYPE = create_value_field(IntNode, get_locale("teacher.advform.amount"), 1000)
     DEFAULT_VALUE = None
 
 class SettingForm(FormNode):
@@ -65,8 +65,8 @@ class SettingForm(FormNode):
                                  get_locale("teacher.status.msg_it")
                                  )
     FIELD__label_teaching = create_label(get_locale("teacher.form.separator.model_teaching"), True)
-    FIELD__epochs = create_value_field(IntNode, get_locale("teacher.form.epochs"), 10)
-    FIELD__steps_per_epoch = create_value_field(IntNode, get_locale("teacher.form.steps_per_epoch"), 100)
+    FIELD__epochs = create_value_field(IntNode, get_locale("teacher.form.epochs"), 1)
+    FIELD__steps_per_epoch = create_value_field(IntNode, get_locale("teacher.form.steps_per_epoch"), 10)
     FIELD__batch_size = create_value_field(IntNode, get_locale("teacher.form.batch_size"), 32)
     FIELD__workers = create_value_field(IntNode, get_locale("teacher.form.workers"), 1)
     FIELD__fastcache = create_value_field(BoolNode, get_locale("teacher.form.fastcache"), False)
