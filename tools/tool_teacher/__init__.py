@@ -147,9 +147,9 @@ class ToolTeacher(ToolBase):
                     trainY = np.zeros((N, 2))
                     gen = self.data_generator(conf)
                     for i in tqdm.tqdm(range(N)):
-                        x,y = next(gen)
+                        x,y_par = next(gen)
                         trainX[i] = x
-                        trainY[i] = y
+                        trainY[i] = self.workon_model.create_dataset_ydata_for_item(y_par)
                     self.workon_model.model.fit(trainX, trainY, **conf.get_fit_parameters_finite())
                 else:
                     dataset = Dataset.from_generator(
@@ -177,11 +177,11 @@ class ToolTeacher(ToolBase):
             conf = self.settings_form.get_data()
             gc.collect()
             gen = self.data_generator(conf)
-            x, y = next(gen)
+            x, y_par = next(gen)
             fig, ax = plt.subplots()
             display_data = np.max(x, axis=0)
             ax.matshow(display_data.T)
-            if y[1] > 0:
+            if y_par.has_track():
                 ax.set_title(get_locale("teacher.sampleplot.title_true"))
             else:
                 ax.set_title(get_locale("teacher.sampleplot.title_false"))
@@ -245,20 +245,20 @@ class ToolTeacher(ToolBase):
                 if rng_append % 2 == 1:
                     y_params.pmt_bottom_left = True
                     fg[:, :8, :8] = conf.process_fg(self.fg_pool.random_access())
-                if rng_append / 2 % 2 == 1:
+                if rng_append // 2 % 2 == 1:
                     y_params.pmt_bottom_right = True
                     fg[:, 8:, :8] = conf.process_fg(self.fg_pool.random_access())
-                if rng_append / 4 % 2 == 1:
+                if rng_append // 4 % 2 == 1:
                     y_params.pmt_top_left = True
                     fg[:, :8, 8:] = conf.process_fg(self.fg_pool.random_access())
-                if rng_append / 8 % 2 == 1:
+                if rng_append // 8 % 2 == 1:
                     y_params.pmt_top_right = True
                     fg[:, 8:, 8:] = conf.process_fg(self.fg_pool.random_access())
                 x_data = x_data + fg
             i += 1
             x_data[:, broken] = 0
-            y_data = self.workon_model.create_dataset_ydata_for_item(y_params)
-            yield x_data, y_data
+            #y_data = self.workon_model.create_dataset_ydata_for_item(y_params)
+            yield x_data, y_params
 
     def batch_generator(self, conf, frame_size=128):
         generator = self.data_generator(conf, frame_size)
@@ -270,9 +270,9 @@ class ToolTeacher(ToolBase):
             batchX.clear()
             batchY.clear()
             for _ in range(batch_size):
-                X, Y = next(generator)
+                X, Y_par = next(generator)
                 batchX.append(X)
-                batchY.append(Y)
+                batchY.append(self.workon_model.create_dataset_ydata_for_item(Y_par))
             yield np.array(batchX), np.array(batchY)
 
 
