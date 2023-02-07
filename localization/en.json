@@ -193,6 +193,9 @@
   "mat_converter.messagebox.conversion.title": "Conversion",
   "mat_converter.messagebox.conversion.msg": "A file with {frames} frames will be created. Continue?",
 
+  "mat_converter.label.l_cut": "Cutoff start",
+  "mat_converter.label.r_cut": "Cutoff end",
+
   "mat_converter.downloader.title": "Downloader",
   "mat_converter.downloader.addr": "Address",
   "mat_converter.downloader.login": "Login",

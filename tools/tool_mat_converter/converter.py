@@ -9,6 +9,7 @@ import scipy.io as scipio
 from localization import get_locale, format_locale
 from tools.tool_base import ToolBase
 import os.path as ospath
+from .single_copy import average_single_file
 
 class Converter(tk.Frame):
     def __init__(self, master, controller=None):
@@ -38,10 +39,23 @@ class Converter(tk.Frame):
             .grid(row=0, column=1, sticky="ew")
         self.average_window = tk.StringVar(right_panel)
         self.average_window.set("1000")
+
         tk.Label(right_panel, text=get_locale("mat_converter.label.averaging")).grid(row=1, column=0, sticky="ew")
         tk.Entry(right_panel, textvariable=self.average_window).grid(row=1, column=1, sticky="ew")
+
+        self.lcut = tk.StringVar(self)
+        self.lcut.set("0")
+        self.rcut = tk.StringVar(self)
+        self.rcut.set("0")
+
+        tk.Label(right_panel, text=get_locale("mat_converter.label.l_cut")).grid(row=2, column=0, sticky="ew")
+        tk.Entry(right_panel, textvariable=self.lcut).grid(row=2, column=1, sticky="ew")
+
+        tk.Label(right_panel, text=get_locale("mat_converter.label.r_cut")).grid(row=3, column=0, sticky="ew")
+        tk.Entry(right_panel, textvariable=self.rcut).grid(row=3, column=1, sticky="ew")
+
         tk.Button(right_panel, command=self.on_convert, text=get_locale("mat_converter.btn.convert"))\
-            .grid(row=2, column=0, sticky="ew", columnspan=2)
+            .grid(row=4, column=0, sticky="ew", columnspan=2)
 
         self.rowconfigure(1, weight=1)
         self.columnconfigure(0, weight=2)
@@ -82,6 +96,8 @@ class Converter(tk.Frame):
     def on_convert(self):
         try:
             average_window = int(self.average_window.get())
+            lcut = int(self.lcut.get())
+            rcut = int(self.rcut.get())
         #Average window test
         except ValueError:
             messagebox.showerror(title=get_locale("mat_converter.messagebox.input_error.title"),
@@ -107,6 +123,14 @@ class Converter(tk.Frame):
             messagebox.showerror(title=get_locale("mat_converter.messagebox.input_error.title"),
                                  message=get_locale("mat_converter.messagebox.input_error.overwrite_attempt"),
                                  parent=self)
+            return
+
+        if len(input_filenames) == 1:
+            print("Shorten file")
+            self.controller.close_mat_file()
+            average_single_file(src=input_filenames[0], dst=output_filename,
+                                lcut=lcut, rcut=rcut,
+                                average_window=average_window)
             return
 
         frames = 0
