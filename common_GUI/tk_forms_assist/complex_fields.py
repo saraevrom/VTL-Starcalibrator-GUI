@@ -133,7 +133,7 @@ class FormNode(Node, metaclass=OrderedClassMembers):
     Call get_configuration_root() for getting root form
     '''
     FIELD_TYPE = "subform"
-    USE_SCROLLVIEW = True
+    USE_SCROLLVIEW = False
 
     def __init__(self):
         self.fields = dict()
