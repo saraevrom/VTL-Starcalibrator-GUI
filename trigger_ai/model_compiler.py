@@ -6,6 +6,7 @@ from localization import get_locale
 from .compiler_form import CompileForm
 from .model_creating_form import NeuralNetworkCreator
 
+from trigger_ai.models import ModelBuilder
 
 class CompileDialog(simpledialog.Dialog):
     def body(self, master):
@@ -32,9 +33,10 @@ class CompileDialog(simpledialog.Dialog):
         model.compile(**kwargs)
         model.summary()
 
+
 class CreateDialog(simpledialog.Dialog):
     def body(self, master):
-        self.form_parser = NeuralNetworkCreator()
+        self.form_parser = ModelBuilder()
         conf = self.form_parser.get_configuration_root()
         self.form = TkDictForm(master, conf, True)
         self.form.pack(fill="both", expand=True)

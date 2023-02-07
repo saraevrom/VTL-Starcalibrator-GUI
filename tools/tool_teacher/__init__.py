@@ -19,6 +19,7 @@ from .advanced_form import SettingForm
 from multiprocessing import Process, Pipe
 from tensorflow.data import Dataset
 import tensorflow as tf
+from trigger_ai.models.model_wrapper import ModelWrapper, TargetParameters
 
 class ToolTeacher(ToolBase):
     def __init__(self, master):
@@ -77,7 +78,7 @@ class ToolTeacher(ToolBase):
 
     def try_recompile_model(self):
         if self.workon_model:
-            compile_model(self.workon_model, self)
+            compile_model(self.workon_model.model, self)
 
     def ensure_model(self):
         if self.workon_model is None:
@@ -87,16 +88,16 @@ class ToolTeacher(ToolBase):
                 return False
 
         self.println_status(get_locale("teacher.status.msg_model_ok"))
-        if self.workon_model._is_compiled:
+        if self.workon_model.model._is_compiled:
             self.println_status(get_locale("teacher.status.msg_model_compiled"))
             return True
         else:
             self.try_recompile_model()
-            if self.workon_model._is_compiled:
+            if self.workon_model.model._is_compiled:
                 self.println_status(get_locale("teacher.status.msg_model_compiled"))
             else:
                 self.println_status(get_locale("teacher.status.msg_model_nocompile"))
-            return self.workon_model._is_compiled
+            return self.workon_model.model._is_compiled
 
 
     def on_save_model(self):
@@ -106,7 +107,7 @@ class ToolTeacher(ToolBase):
                 filetypes=[(get_locale("app.filedialog_formats.model"), "*.h5")]
             )
             if filename:
-                self.workon_model.save(filename)
+                self.workon_model.save_model(filename)
 
     def on_load_model(self):
         filename = filedialog.askopenfilename(
@@ -114,8 +115,8 @@ class ToolTeacher(ToolBase):
             filetypes=[(get_locale("app.filedialog_formats.model"), "*.h5")]
         )
         if filename:
-            self.workon_model = keras.models.load_model(filename)
-            self.workon_model.summary()
+            self.workon_model = ModelWrapper.load_model(filename)
+            self.workon_model.model.summary()
 
     def on_reset_model(self):
         self.try_reset_model()
@@ -149,14 +150,14 @@ class ToolTeacher(ToolBase):
                         x,y = next(gen)
                         trainX[i] = x
                         trainY[i] = y
-                    self.workon_model.fit(trainX, trainY, **conf.get_fit_parameters_finite())
+                    self.workon_model.model.fit(trainX, trainY, **conf.get_fit_parameters_finite())
                 else:
                     dataset = Dataset.from_generator(
                         lambda: self.batch_generator(conf),
                         output_signature=(tf.TensorSpec(shape=(None, 128, 16, 16), dtype=tf.double),
                                           tf.TensorSpec(shape=(None, 2), dtype=tf.double))
                     )
-                    self.workon_model.fit(dataset, **conf.get_fit_parameters())
+                    self.workon_model.model.fit(dataset, **conf.get_fit_parameters())
         self.fg_pool.clear_cache()
         self.bg_pool.clear_cache()
         self.interference_pool.clear_cache()
@@ -229,29 +230,34 @@ class ToolTeacher(ToolBase):
                 sample_start = rng.randint(bg_start, bg_end-frame_size)
             bg = bg_sample[sample_start:sample_start+frame_size]
             x_data = preprocessor.three_stage_preprocess(bg)
+            y_params = TargetParameters(False, False, False, False)
             if self.interference_pool.files_list:
                 if rng.random() < 0.5:
                     interference = self.interference_pool.random_access()
                     interference = conf.process_it(interference)
                     x_data = x_data+interference
             if rng.random() < 0.5:
-                y_data = np.array([1., 0.])
+                pass
             else:
-                y_data = np.array([0., 1.])
                 fg = np.zeros(bg.shape)
                 #conf.process_fg(self.fg_pool.random_access)
                 rng_append = rng.randint(1,16)
                 if rng_append % 2 == 1:
+                    y_params.pmt_bottom_left = True
                     fg[:, :8, :8] = conf.process_fg(self.fg_pool.random_access())
                 if rng_append / 2 % 2 == 1:
+                    y_params.pmt_bottom_right = True
                     fg[:, 8:, :8] = conf.process_fg(self.fg_pool.random_access())
                 if rng_append / 4 % 2 == 1:
+                    y_params.pmt_top_left = True
                     fg[:, :8, 8:] = conf.process_fg(self.fg_pool.random_access())
                 if rng_append / 8 % 2 == 1:
+                    y_params.pmt_top_right = True
                     fg[:, 8:, 8:] = conf.process_fg(self.fg_pool.random_access())
                 x_data = x_data + fg
             i += 1
             x_data[:, broken] = 0
+            y_data = self.workon_model.create_dataset_ydata_for_item(y_params)
             yield x_data, y_data
 
     def batch_generator(self, conf, frame_size=128):

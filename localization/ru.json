@@ -72,6 +72,7 @@
   "app.model_create.form.dense_count": "Количество нейронов в полносвязном слое",
   "app.model_create.form.dense_activation": "Активационная функция для полносвязного слоя",
 
+  "app.model_builder.model": "Модель",
   "app.model_builder.layers": "Слои",
   "app.model_builder.layer": "Слой",
   "app.model_builder.activation": "Активация",
@@ -95,6 +96,8 @@
   "app.model_builder.flatten": "Выравнивание",
   "app.model_builder.expand": "Расширение измерений",
 
+  "models.splitmerge.independent": "Независимое",
+  "models.splitmerge.common": "Общее",
 
   "datasetgen.form.separator.display": "Отображение",
   "datasetgen.form.cutoff_start": "Пропуск кадров в начале",

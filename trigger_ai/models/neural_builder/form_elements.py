@@ -22,8 +22,8 @@ class DenseConstructor(FormNode):
         return keras.layers.Dense(**data)
 
 
-class ConvPadding(ComboNode):
-    DISPLAY_NAME = get_locale("app.model_builder.convnd.padding")
+class NNPadding(ComboNode):
+    DISPLAY_NAME = get_locale("app.model_builder.padding")
     SELECTION_READONLY = True
     DEFAULT_VALUE = "valid"
     VALUES = ["valid", "same"]
@@ -37,7 +37,7 @@ class Conv3DConstructor(FormNode):
     FIELD__stride_X = create_value_field(IntNode, get_locale("app.model_builder.stride_X"), 1)
     FIELD__stride_Y = create_value_field(IntNode, get_locale("app.model_builder.stride_Y"), 1)
     FIELD__stride_T = create_value_field(IntNode, get_locale("app.model_builder.stride_T"), 1)
-    FIELD__padding = ConvPadding
+    FIELD__padding = NNPadding
     FIELD__activation = Activation
 
     def get_data(self):
@@ -62,7 +62,7 @@ class Conv2DConstructor(FormNode):
     FIELD__conv_Y = create_value_field(IntNode, get_locale("app.model_builder.convnd.conv_Y"), 3)
     FIELD__stride_X = create_value_field(IntNode, get_locale("app.model_builder.stride_X"), 1)
     FIELD__stride_Y = create_value_field(IntNode, get_locale("app.model_builder.stride_Y"), 1)
-    FIELD__padding = ConvPadding
+    FIELD__padding = NNPadding
     FIELD__activation = Activation
 
     def get_data(self):
@@ -85,7 +85,7 @@ class MaxPooling3DConstructor(FormNode):
     FIELD__stride_X = create_value_field(IntNode, get_locale("app.model_builder.stride_X"), 1)
     FIELD__stride_Y = create_value_field(IntNode, get_locale("app.model_builder.stride_Y"), 1)
     FIELD__stride_T = create_value_field(IntNode, get_locale("app.model_builder.stride_T"), 1)
-    FIELD__padding = ConvPadding
+    FIELD__padding = NNPadding
 
     def get_data(self):
         data = super().get_data()
@@ -106,7 +106,7 @@ class MaxPooling2DConstructor(FormNode):
     FIELD__pool_Y = create_value_field(IntNode, get_locale("app.model_builder.pool.pool_Y"), 2)
     FIELD__stride_X = create_value_field(IntNode, get_locale("app.model_builder.stride_X"), 1)
     FIELD__stride_Y = create_value_field(IntNode, get_locale("app.model_builder.stride_Y"), 1)
-    FIELD__padding = ConvPadding
+    FIELD__padding = NNPadding
 
     def get_data(self):
         data = super().get_data()

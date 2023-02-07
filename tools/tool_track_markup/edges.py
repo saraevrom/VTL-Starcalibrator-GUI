@@ -128,25 +128,26 @@ class EdgeProcessor(object):
         self.edge_shift = edge_shift
 
 
-    def get_prob(self, data_source):
+    def get_prob(self, data_source, ax):
         event_start, event_end = data_source.current_event
         x_data_true = data_source.file["data0"][event_start:event_end]
         x_data = data_source.apply_filter(x_data_true)
-        x_data = sliding_window_view(x_data, 128, axis=0)
-        x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
-        y_data: np.ndarray = data_source.tf_model.predict(x_data)[:, 1]
-        xs = np.arange(event_start, event_end-127)
-        return xs, y_data
+        # x_data = sliding_window_view(x_data, 128, axis=0)
+        # x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
+        # y_data: np.ndarray = data_source.tf_model.predict(x_data)[:, 1]
+        # xs = np.arange(event_start, event_end-127)
+        data_source.tf_model.plot_over_data(x_data, ax)
 
     def apply(self, data_source):
         event_start, event_end = data_source.current_event
         x_data_true = data_source.file["data0"][event_start:event_end]
         x_data = data_source.apply_filter(x_data_true)
-        x_data = sliding_window_view(x_data, 128, axis=0)
-        x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
-        y_data: np.ndarray = data_source.tf_model.predict(x_data)[:, 1]
-
-        booled = y_data > self.threshold
+        booled = data_source.tf_model.trigger(x_data, self.threshold)
+        # x_data = sliding_window_view(x_data, 128, axis=0)
+        # x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
+        # y_data: np.ndarray = data_source.tf_model.predict(x_data)[:, 1]
+        #
+        # booled = y_data > self.threshold
         print("R0", booled)
         booled_full = splat_select(booled, 128)
         print("R1", booled_full)
