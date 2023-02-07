@@ -347,10 +347,13 @@ FIELDTYPES = {
 }
 
 
-def create_field(name,parent,conf, color_index=0):
-    field_type,req_default = FIELDTYPES[conf["type"]]
+def create_field(name,parent,conf, color_index=0,fill_entire=False):
+    field_type, req_default = FIELDTYPES[conf["type"]]
     field = field_type(name,parent,conf, color_index)
-    field.frame.pack(side="top",fill="x", expand=True)
+    if fill_entire:
+        field.frame.pack(side="top", fill="both", expand=True)
+    else:
+        field.frame.pack(side="top", fill="x", expand=True)
     if "default" in conf.keys() or req_default:
         field.set_value(conf["default"])
     return field
@@ -383,12 +386,33 @@ class ArrayEntry(ConfigEntry):
             subconf["display_name"] = str(i)
         name = "{}[{}]".format(self.name, i)
 
-
-        field = create_field(name,self.subframe,subconf,self.color_index+1)
+        def up_press():
+            self.move_up(i)
+        def down_press():
+            self.move_down(i)
+        field = create_field(name, self.subframe, subconf, self.color_index+1)
+        upbtn = tk.Button(field.frame,text="^", command=up_press)
+        upbtn.pack(side="top", anchor="ne")
+        downbtn = tk.Button(field.frame, text="v", command=down_press)
+        downbtn.pack(side="top", anchor="ne")
 
         if value_to_set is not None:
             field.set_value(value_to_set)
         self.subfields.append(field)
+
+
+    def _swap_indices(self, i1, i2):
+        field_tmp = self.subfields[i1].get_value()
+        self.subfields[i1].set_value(self.subfields[i2].get_value())
+        self.subfields[i2].set_value(field_tmp)
+
+    def move_up(self, index):
+        if index != 0:
+            self._swap_indices(index, index-1)
+
+    def move_down(self, index):
+        if index < len(self.subfields)-1:
+            self._swap_indices(index, index+1)
 
     def delfield(self):
         if self.subfields:
