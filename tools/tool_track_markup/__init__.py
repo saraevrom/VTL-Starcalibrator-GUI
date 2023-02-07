@@ -170,6 +170,13 @@ class TrackMarkup(ToolBase):
             fig.canvas.mpl_connect('close_event', self.handle_mpl_close)
             self.last_single_plot_data = fig, ax
             ax.set_title("Pixels")
+            if self.current_event and self.tf_model:
+                e_start, e_end = self.current_event
+                if abs(e_end-e_start) >= 128:
+                    self.sync_form()
+                    xs, ys = self.form_data["trigger"].get_prob(self)
+                    ax.plot(xs, ys+10, color="black")
+
         return self.last_single_plot_data
 
 
