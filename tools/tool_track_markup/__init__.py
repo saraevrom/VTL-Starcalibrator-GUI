@@ -469,7 +469,8 @@ class TrackMarkup(ToolBase):
     def apply_filter(self, signal):
         self.sync_form()
         preprocessor = self.form_data["preprocessing"]
-        plot_data = preprocessor.three_stage_preprocess(signal)
+        broken = np.logical_not(self.plotter.alive_pixels_matrix)
+        plot_data = preprocessor.three_stage_preprocess(signal, broken=broken)
         return plot_data
 
     def popup_draw_all(self):

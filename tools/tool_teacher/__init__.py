@@ -229,7 +229,7 @@ class ToolTeacher(ToolBase):
             else:
                 sample_start = rng.randint(bg_start, bg_end-frame_size)
             bg = bg_sample[sample_start:sample_start+frame_size]
-            x_data = preprocessor.three_stage_preprocess(bg)
+            x_data = preprocessor.three_stage_preprocess(bg, broken=broken)
             y_params = TargetParameters(False, False, False, False)
             if self.interference_pool.files_list:
                 if rng.random() < 0.5:
@@ -254,9 +254,11 @@ class ToolTeacher(ToolBase):
                 if rng_append // 8 % 2 == 1:
                     y_params.pmt_top_right = True
                     fg[:, 8:, 8:] = conf.process_fg(self.fg_pool.random_access())
+                fg[:, broken] = 0
+                assert type(fg)==np.ndarray
                 x_data = x_data + fg
             i += 1
-            x_data[:, broken] = 0
+            #x_data[:, broken] = 0
             #y_data = self.workon_model.create_dataset_ydata_for_item(y_params)
             yield x_data, y_params
 

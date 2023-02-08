@@ -1,3 +1,5 @@
+import numpy as np
+
 from preprocessing.denoising import reduce_noise, antiflash, moving_average_subtract
 class DataPreProcessor(object):
     def __init__(self, ma_win=10, mstd_win=100, use_antiflash=True):
@@ -5,7 +7,8 @@ class DataPreProcessor(object):
         self.mstd_win = mstd_win
         self.use_antiflash = use_antiflash
 
-    def three_stage_preprocess(self, src, ma_win_override=None, mstd_win_override=None, use_antiflash_override = None):
+    def three_stage_preprocess(self, src, ma_win_override=None, mstd_win_override=None, use_antiflash_override = None,
+                               broken=None):
         if ma_win_override is None:
             ma_win = self.ma_win
         else:
@@ -32,6 +35,14 @@ class DataPreProcessor(object):
             stage2 = stage1
 
         if use_antiflash:
-            return antiflash(stage2)
+            stage3 = antiflash(stage2)
         else:
-            return stage2
+            stage3 = stage2
+
+        if broken is not None:
+            noise = np.std(stage3[:, np.logical_not(broken)])
+            mean = np.mean(stage3[:, np.logical_not(broken)])
+            broken_exp = np.expand_dims(broken,0)
+            np.putmask(stage3, np.repeat(broken_exp, stage3.shape[0], axis=0),
+                                np.random.normal(mean, noise, stage3.shape))
+        return stage3
