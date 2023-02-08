@@ -68,7 +68,7 @@ class ToolTeacher(ToolBase):
 
 
         teachbtn = tk.Button(control_frame, text=get_locale("teacher.button.start"), command=self.on_teach)
-        teachbtn.grid(row=5, column=0, sticky="ew")
+        teachbtn.grid(row=6, column=0, sticky="ew")
 
 
     def try_reset_model(self):
