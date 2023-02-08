@@ -49,26 +49,31 @@ class ToolTeacher(ToolBase):
 
         self.settings_menu = TkDictForm(control_frame, form_conf, True)
         self.settings_menu.commit_action = self.on_teach
-        self.settings_menu.grid(row=0, column=0, sticky="nsew")
+        self.settings_menu.grid(row=0, column=0, columnspan=2, sticky="nsew")
 
-        probe_btn = tk.Button(control_frame, text=get_locale("teacher.button.probe"), command=self.on_probe)
-        probe_btn.grid(row=1, column=0, sticky="ew")
+        probe_btn1 = tk.Button(control_frame, text=get_locale("teacher.button.probe_track"),
+                               command=lambda: self.on_probe(True))
+        probe_btn1.grid(row=1, column=0, sticky="ew")
+
+        probe_btn2 = tk.Button(control_frame, text=get_locale("teacher.button.probe_trackless"),
+                               command=lambda: self.on_probe(False))
+        probe_btn2.grid(row=1, column=1, sticky="ew")
 
         resetbtn = tk.Button(control_frame, text=get_locale("teacher.button.reset"), command=self.on_reset_model)
-        resetbtn.grid(row=2, column=0, sticky="ew")
+        resetbtn.grid(row=2, column=0, columnspan=2, sticky="ew")
 
         recompbtn = tk.Button(control_frame, text=get_locale("teacher.button.recompile"), command=self.on_recompile_model)
-        recompbtn.grid(row=3, column=0, sticky="ew")
+        recompbtn.grid(row=3, column=0, columnspan=2, sticky="ew")
 
         savebtn = tk.Button(control_frame, text=get_locale("teacher.button.save"), command=self.on_save_model)
-        savebtn.grid(row=4, column=0, sticky="ew")
+        savebtn.grid(row=4, column=0, columnspan=2, sticky="ew")
 
         loadbtn = tk.Button(control_frame, text=get_locale("teacher.button.load"), command=self.on_load_model)
-        loadbtn.grid(row=5, column=0, sticky="ew")
+        loadbtn.grid(row=5, column=0, columnspan=2, sticky="ew")
 
 
         teachbtn = tk.Button(control_frame, text=get_locale("teacher.button.start"), command=self.on_teach)
-        teachbtn.grid(row=6, column=0, sticky="ew")
+        teachbtn.grid(row=6, column=0, columnspan=2, sticky="ew")
 
 
     def try_reset_model(self):
@@ -163,7 +168,7 @@ class ToolTeacher(ToolBase):
         self.interference_pool.clear_cache()
 
 
-    def on_probe(self):
+    def on_probe(self, needstrack):
         self.clear_status()
         self.println_status(get_locale("teacher.status.msg_model_ok"))
         self.check_files()
@@ -178,6 +183,8 @@ class ToolTeacher(ToolBase):
             gc.collect()
             gen = self.data_generator(conf)
             x, y_par = next(gen)
+            while y_par.has_track() != needstrack:
+                x, y_par = next(gen)
             fig, ax = plt.subplots()
             display_data = np.max(x, axis=0)
             ax.matshow(display_data.T)
