@@ -58,6 +58,7 @@
 
   "app.preprocess.form.preprocess.title": "Preprocessing",
   "app.preprocess.form.preprocess.tsf.title": "Three stage filter",
+  "app.preprocess.form.preprocess.robust": "Robust",
   "app.preprocess.form.preprocess.mn.title": "Median normalization",
   "app.preprocess.form.preprocess.stage1": "Apply MA",
   "app.preprocess.form.preprocess.stage2": "Apply MSTD",

@@ -18,21 +18,24 @@ class DataThreeStagesFilter(FormNode):
     FIELD__ma_win = create_value_field(create_int_option(10), get_locale("app.preprocess.form.preprocess.stage1"))
     FIELD__mstd_win = create_value_field(create_int_option(100), get_locale("app.preprocess.form.preprocess.stage2"))
     FIELD__use_antiflash = create_value_field(BoolNode, get_locale("app.preprocess.form.preprocess.stage3"), True)
+    FIELD__use_robust = create_value_field(BoolNode, get_locale("app.preprocess.form.preprocess.robust"), False)
 
     def get_data(self):
         raw_data = super().get_data()
         return DataThreeStagePreProcessor(**raw_data)
 
 
-class DataMedianNormForm(FormNode):
-    DISPLAY_NAME = get_locale("app.preprocess.form.preprocess.mn.title")
-    FIELD__median_window = create_value_field(IntNode, get_locale("app.preprocess.advform.win"), 10)
+# class DataMedianNormForm(FormNode):
+#     DISPLAY_NAME = get_locale("app.preprocess.form.preprocess.mn.title")
+#     FIELD__median_window = create_value_field(IntNode, get_locale("app.preprocess.advform.win"), 10)
+#
+#     def get_data(self):
+#         raw_data = super().get_data()
+#         return SlidingMedianNormalizer(**raw_data)
+#
+# class DataPreProcessorField(AlternatingNode):
+#     DISPLAY_NAME = get_locale("app.preprocess.form.preprocess.title")
+#     SEL__three_stages_filter = DataThreeStagesFilter
+#     SEL__median_norm = DataMedianNormForm
 
-    def get_data(self):
-        raw_data = super().get_data()
-        return SlidingMedianNormalizer(**raw_data)
-
-class DataPreProcessorField(AlternatingNode):
-    DISPLAY_NAME = get_locale("app.preprocess.form.preprocess.title")
-    SEL__three_stages_filter = DataThreeStagesFilter
-    SEL__median_norm = DataMedianNormForm
+DataPreProcessorField = DataThreeStagesFilter

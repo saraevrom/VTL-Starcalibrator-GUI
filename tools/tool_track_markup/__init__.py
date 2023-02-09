@@ -235,6 +235,8 @@ class TrackMarkup(ToolBase):
 
 
     def retract_event(self):
+        if self.current_event is None:
+            self.retractable_event = False
         if self.retractable_event:
             self.queue.insert(0, list(self.current_event))
             self.retractable_event = False
