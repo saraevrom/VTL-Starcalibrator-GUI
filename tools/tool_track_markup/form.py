@@ -2,7 +2,7 @@ from common_GUI import TkDictForm
 from common_GUI.tk_forms_assist import FormNode, IntNode, ComboNode, BoolNode, FloatNode
 from common_GUI.tk_forms_assist.factory import create_value_field
 from localization import get_locale
-from preprocessing.forms import DataPreProcessorForm
+from preprocessing.forms import DataPreProcessorField
 from .edges import EdgeProcessor
 
 class PmtSelect(ComboNode):
@@ -22,7 +22,7 @@ class TriggerParameters(FormNode):
         return EdgeProcessor(**super().get_data())
 
 class TrackMarkupForm(FormNode):
-    FIELD__preprocessing = DataPreProcessorForm
+    FIELD__preprocessing = DataPreProcessorField
     FIELD__min_frame = create_value_field(IntNode, get_locale("track_markup.form.min_frame"), 256)
     FIELD__pmt_select = PmtSelect
     FIELD__trigger = TriggerParameters

@@ -3,7 +3,7 @@ from common_GUI.tk_forms_assist import BoolNode, OptionNode
 from common_GUI.tk_forms_assist.factory import create_value_field, create_label
 from localization import get_locale
 from .parameters_processing import Augmenter, DualProcessing, LearnParameters
-from preprocessing import DataPreProcessorForm
+from preprocessing import DataPreProcessorField
 from .signal_modulator import ProcessingSubform
 
 
@@ -53,7 +53,7 @@ class PregenerateDataset(OptionNode):
 
 class SettingForm(FormNode):
     FIELD__label_dataset_parameters = create_label(get_locale("teacher.form.separator.dataset_parameters"), True)
-    FIELD__preprocessing = DataPreProcessorForm
+    FIELD__preprocessing = DataPreProcessorField
     FIELD__modification = create_dual(ProcessingSubform,
                                       get_locale("teacher.form.dataset_modification"),
                                       get_locale("teacher.status.msg_fg"),
@@ -65,6 +65,7 @@ class SettingForm(FormNode):
                                  get_locale("teacher.status.msg_it")
                                  )
     FIELD__label_teaching = create_label(get_locale("teacher.form.separator.model_teaching"), True)
+    FIELD__track_probability = create_value_field(FloatNode, get_locale("teacher.form.track_probability"), 0.9375)
     FIELD__epochs = create_value_field(IntNode, get_locale("teacher.form.epochs"), 1)
     FIELD__steps_per_epoch = create_value_field(IntNode, get_locale("teacher.form.steps_per_epoch"), 10)
     FIELD__batch_size = create_value_field(IntNode, get_locale("teacher.form.batch_size"), 32)

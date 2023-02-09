@@ -470,7 +470,7 @@ class TrackMarkup(ToolBase):
         self.sync_form()
         preprocessor = self.form_data["preprocessing"]
         broken = np.logical_not(self.plotter.alive_pixels_matrix)
-        plot_data = preprocessor.three_stage_preprocess(signal, broken=broken)
+        plot_data = preprocessor.preprocess(signal, broken=broken)
         return plot_data
 
     def popup_draw_all(self):

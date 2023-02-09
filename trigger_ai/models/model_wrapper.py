@@ -1,5 +1,6 @@
 import h5py
 from tensorflow import keras
+import tensorflow as tf
 
 CUSTOM_FIELD = "CUSTOM_MODEL_WRAPPER"
 
@@ -45,4 +46,10 @@ class ModelWrapper(object):
         raise NotImplementedError()
 
     def plot_over_data(self, x, start, end, axes):
+        raise NotImplementedError()
+
+    def get_y_spec(self):
+        raise NotImplementedError()
+
+    def get_y_signature(self, n):
         raise NotImplementedError()

@@ -37,6 +37,7 @@
   "teacher.form.batch_size" : "Batch size",
   "teacher.form.fastcache": "Fast cache",
   "teacher.form.pregenerate_dataset": "Pregenerate dataset",
+  "teacher.form.track_probability": "Track probability",
 
   "teacher.advform.constant": "Constant",
   "teacher.advform.amount": "Amount",
@@ -56,6 +57,8 @@
 
 
   "app.preprocess.form.preprocess.title": "Preprocessing",
+  "app.preprocess.form.preprocess.tsf.title": "Three stage filter",
+  "app.preprocess.form.preprocess.mn.title": "Median normalization",
   "app.preprocess.form.preprocess.stage1": "Apply MA",
   "app.preprocess.form.preprocess.stage2": "Apply MSTD",
   "app.preprocess.form.preprocess.stage3": "Apply antiflash",
@@ -284,6 +287,7 @@
   "app.filedialog_formats.processed_mat": "Converted data files",
   "app.filedialog_formats.raw_mat": "Raw data",
   "app.filedialog_formats.model": "Model",
+  "app.filedialog_formats.png": "PNG image",
   "app.filedialog_formats.txt": "Text file",
   "app.filedialog_formats.csv": "Comma separated values",
 
@@ -293,10 +297,12 @@
   "app.loaded_file": "Loaded File {}",
 
   "app.menu.extension": "Extension",
-  "app.extension.action_install_tf": "Install tensorflow",
+  "app.extension.action_install_pkg": "Install {}",
   "app.extension.action_install_tf_desc": "This will unlock ANN utilities. Continue?",
-  "app.extension.action_install_tf_info_ok": "Tensorflow installed. Restart app to take effect.",
-  "app.extension.action_install_tf_info_err": "Tensorflow installation error. Check console for details",
+  "app.extension.action_install_pydot_desc": "This will allow saving models as images. Continue?",
+  "app.extension.action_install_pkg_info_ok": "Package {} installed. Restart app to take effect.",
+  "app.extension.action_install_pkg_info_err": "Package {} installation error. Check console for details",
+
 
 
   "app.menu.help": "Help",

@@ -35,7 +35,8 @@
   "teacher.form.workers": "Потоки",
   "teacher.form.batch_size" : "Размер группы",
   "teacher.form.fastcache": "Быстрый кэш",
-  "teacher.form.pregenerate_dataset": "Pregenerate dataset",
+  "teacher.form.pregenerate_dataset": "Прегенерация данных",
+  "teacher.form.track_probability": "Вероятность трека",
   "teacher.advform.constant": "Константа",
   "teacher.advform.amount": "Количество",
   "teacher.advform.lower": "Минимальное зн.",
@@ -53,6 +54,8 @@
 
 
   "app.preprocess.form.preprocess.title": "Предобработка",
+  "app.preprocess.form.preprocess.tsf.title": "Трёхступенчатый фильтр",
+  "app.preprocess.form.preprocess.mn.title": "Нормировка по медиане",
   "app.preprocess.form.preprocess.stage1": "Скользящее среднее",
   "app.preprocess.form.preprocess.stage2": "Скользящее стандартное отклонение",
   "app.preprocess.form.preprocess.stage3": "Подавление вспышек",
@@ -281,6 +284,7 @@
   "app.filedialog_formats.processed_mat": "Обработанные mat файлы",
   "app.filedialog_formats.raw_mat": "Файл с сырыми данными",
   "app.filedialog_formats.model": "Модель",
+  "app.filedialog_formats.png": "Изображение PNG",
   "app.filedialog_formats.txt": "Текстовый документ",
   "app.filedialog_formats.csv": "Значения, разделённые запятыми",
 
@@ -290,10 +294,13 @@
   "app.loaded_file": "Загружен файл {}",
 
   "app.menu.extension": "Расширения",
-  "app.extension.action_install_tf": "Установить tensorflow",
+  "app.extension.action_install_pkg": "Установить {}",
   "app.extension.action_install_tf_desc": "Данное действие разблокирует возможность исполльзования нейросетей. Продолжить?",
-  "app.extension.action_install_tf_info_ok": "Tensorflow установлен. Перезапустите приложение для применения изменений.",
-  "app.extension.action_install_tf_info_err": "Ошибка установки tensorflow. Подробности в консоли.",
+  "app.extension.action_install_pydot_desc": "Данное действие позволит сохранять нейросети как изображения. Продолжить?",
+  "app.extension.action_install_pkg_info_ok": "Пакет {} установлен. Перезапустите приложение для применения изменений.",
+  "app.extension.action_install_pkg_info_err": "Ошибка установки {}. Подробности в консоли.",
+
+
 
   "app.menu.help": "Помощь",
   "app.help.datetime_hint": "Ввод даты/времени"

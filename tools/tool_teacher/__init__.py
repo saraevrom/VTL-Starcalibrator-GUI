@@ -18,8 +18,10 @@ from common_GUI import TkDictForm
 from .advanced_form import SettingForm
 from multiprocessing import Process, Pipe
 from tensorflow.data import Dataset
+from tensorflow.keras.utils import plot_model
 import tensorflow as tf
 from trigger_ai.models.model_wrapper import ModelWrapper, TargetParameters
+from extension.optional_pydot import PYDOT_INSTALLED
 
 class ToolTeacher(ToolBase):
     def __init__(self, master):
@@ -107,12 +109,22 @@ class ToolTeacher(ToolBase):
 
     def on_save_model(self):
         if self.workon_model:
+            file_types = [(get_locale("app.filedialog_formats.model"), "*.h5")]
+            if PYDOT_INSTALLED:
+                file_types.append((get_locale("app.filedialog_formats.png"), "*.png"))
             filename = filedialog.asksaveasfilename(
                 title=get_locale("app.filedialog.save_model.title"),
-                filetypes=[(get_locale("app.filedialog_formats.model"), "*.h5")]
+                filetypes=file_types
             )
             if filename:
-                self.workon_model.save_model(filename)
+                if filename.endswith(".png") and PYDOT_INSTALLED:
+                    plot_model(self.workon_model.model, to_file=filename,
+                               show_shapes=True,
+                               show_dtype=True,
+                               show_layer_activations=True,
+                              )
+                else:
+                    self.workon_model.save_model(filename)
 
     def on_load_model(self):
         filename = filedialog.askopenfilename(
@@ -149,7 +161,7 @@ class ToolTeacher(ToolBase):
                 if conf.config["pregenerate"] is not None:
                     N = conf.config["pregenerate"]
                     trainX = np.zeros((N, 128, 16, 16))
-                    trainY = np.zeros((N, 2))
+                    trainY = np.zeros(self.workon_model.get_y_signature(N))
                     gen = self.data_generator(conf)
                     for i in tqdm.tqdm(range(N)):
                         x,y_par = next(gen)
@@ -160,7 +172,7 @@ class ToolTeacher(ToolBase):
                     dataset = Dataset.from_generator(
                         lambda: self.batch_generator(conf),
                         output_signature=(tf.TensorSpec(shape=(None, 128, 16, 16), dtype=tf.double),
-                                          tf.TensorSpec(shape=(None, 2), dtype=tf.double))
+                                          self.workon_model.get_y_spec())
                     )
                     self.workon_model.model.fit(dataset, **conf.get_fit_parameters())
         self.fg_pool.clear_cache()
@@ -236,14 +248,14 @@ class ToolTeacher(ToolBase):
             else:
                 sample_start = rng.randint(bg_start, bg_end-frame_size)
             bg = bg_sample[sample_start:sample_start+frame_size]
-            x_data = preprocessor.three_stage_preprocess(bg, broken=broken)
+            x_data = preprocessor.preprocess(bg, broken=broken)
             y_params = TargetParameters(False, False, False, False)
             if self.interference_pool.files_list:
                 if rng.random() < 0.5:
                     interference = self.interference_pool.random_access()
                     interference = conf.process_it(interference)
                     x_data = x_data+interference
-            if rng.random() < 0.5:
+            if rng.random() < conf.config["track_probability"]:
                 pass
             else:
                 fg = np.zeros(bg.shape)
@@ -262,7 +274,6 @@ class ToolTeacher(ToolBase):
                     y_params.pmt_top_right = True
                     fg[:, 8:, 8:] = conf.process_fg(self.fg_pool.random_access())
                 fg[:, broken] = 0
-                assert type(fg)==np.ndarray
                 x_data = x_data + fg
             i += 1
             #x_data[:, broken] = 0
