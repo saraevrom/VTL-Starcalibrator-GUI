@@ -85,7 +85,7 @@ class Converter(tk.Frame):
                 self.file_list.pop(i)
 
     def on_output_file_select(self):
-        filename = filedialog.asksaveasfilename(title="mat_converter.filedialog.export.title",
+        filename = filedialog.asksaveasfilename(title=get_locale("mat_converter.filedialog.export.title"),
                                                 filetypes=[(get_locale("app.filedialog_formats.processed_mat"), "*.mat *.hdf")],
                                                 initialdir=".",
                                                  parent=self)

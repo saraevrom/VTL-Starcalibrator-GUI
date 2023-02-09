@@ -21,7 +21,8 @@
   "teacher.button.save": "Save model",
   "teacher.button.load": "Load model",
   "teacher.button.clear": "Clear",
-  "teacher.button.probe": "Probe data",
+  "teacher.button.probe_track": "Probe track",
+  "teacher.button.probe_trackless": "Probe trackless",
   "teacher.sampleplot.title_false": "No track",
   "teacher.sampleplot.title_true": "Track",
   "teacher.form.separator.dataset_parameters": "Dataset parameters",
@@ -36,6 +37,7 @@
   "teacher.form.batch_size" : "Batch size",
   "teacher.form.fastcache": "Fast cache",
   "teacher.form.pregenerate_dataset": "Pregenerate dataset",
+  "teacher.form.track_probability": "Track probability",
 
   "teacher.advform.constant": "Constant",
   "teacher.advform.amount": "Amount",
@@ -55,6 +57,8 @@
 
 
   "app.preprocess.form.preprocess.title": "Preprocessing",
+  "app.preprocess.form.preprocess.tsf.title": "Three stage filter",
+  "app.preprocess.form.preprocess.mn.title": "Median normalization",
   "app.preprocess.form.preprocess.stage1": "Apply MA",
   "app.preprocess.form.preprocess.stage2": "Apply MSTD",
   "app.preprocess.form.preprocess.stage3": "Apply antiflash",
@@ -76,6 +80,34 @@
   "app.model_create.form.conv_outputs": "Convolution outputs",
   "app.model_create.form.dense_count": "Dense neurons",
   "app.model_create.form.dense_activation": "Dense layer activation",
+
+
+  "app.model_builder.model": "Model",
+  "app.model_builder.layers": "Layers",
+  "app.model_builder.layer": "Layer",
+  "app.model_builder.activation": "Activation",
+  "app.model_builder.dense": "Dense",
+  "app.model_builder.dense.count": "Dense neurons",
+  "app.model_builder.conv3d": "Convolution 3D",
+  "app.model_builder.conv2d": "Convolution 2D",
+  "app.model_builder.maxpool3d": "Max pooling 3D",
+  "app.model_builder.maxpool2d": "Max pooling 2D",
+  "app.model_builder.convnd.outputs": "Convolution outputs",
+  "app.model_builder.convnd.conv_X": "Convolution window X",
+  "app.model_builder.convnd.conv_Y": "Convolution window Y",
+  "app.model_builder.convnd.conv_T": "Convolution window T",
+  "app.model_builder.pool.pool_X": "Pooling X",
+  "app.model_builder.pool.pool_Y": "Pooling Y",
+  "app.model_builder.pool.pool_T": "Pooling T",
+  "app.model_builder.stride_X": "Stride X",
+  "app.model_builder.stride_Y": "Stride Y",
+  "app.model_builder.stride_T": "Stride T",
+  "app.model_builder.padding": "Padding",
+  "app.model_builder.flatten": "Flatten",
+  "app.model_builder.expand": "Expand dim",
+
+  "models.splitmerge.independent": "Independent",
+  "models.splitmerge.common": "Common",
 
   "app.model.form.set_to_default": "Set to default",
 
@@ -254,9 +286,11 @@
 
   "app.filedialog_formats.settings_json": "JSON with settings",
   "app.filedialog_formats.ff_json": "JSON with FF parameters",
+  "app.filedialog_formats.form_json": "JSON with form data",
   "app.filedialog_formats.processed_mat": "Converted data files",
   "app.filedialog_formats.raw_mat": "Raw data",
   "app.filedialog_formats.model": "Model",
+  "app.filedialog_formats.png": "PNG image",
   "app.filedialog_formats.txt": "Text file",
   "app.filedialog_formats.csv": "Comma separated values",
 
@@ -266,10 +300,12 @@
   "app.loaded_file": "Loaded File {}",
 
   "app.menu.extension": "Extension",
-  "app.extension.action_install_tf": "Install tensorflow",
+  "app.extension.action_install_pkg": "Install {}",
   "app.extension.action_install_tf_desc": "This will unlock ANN utilities. Continue?",
-  "app.extension.action_install_tf_info_ok": "Tensorflow installed. Restart app to take effect.",
-  "app.extension.action_install_tf_info_err": "Tensorflow installation error. Check console for details",
+  "app.extension.action_install_pydot_desc": "This will allow saving models as images. Continue?",
+  "app.extension.action_install_pkg_info_ok": "Package {} installed. Restart app to take effect.",
+  "app.extension.action_install_pkg_info_err": "Package {} installation error. Check console for details",
+
 
 
   "app.menu.help": "Help",

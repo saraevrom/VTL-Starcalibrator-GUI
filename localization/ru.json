@@ -20,7 +20,8 @@
   "teacher.button.save": "Сохранить модель",
   "teacher.button.load": "Загрузить модель",
   "teacher.button.clear": "Очистить",
-  "teacher.button.probe": "Проба данных",
+  "teacher.button.probe_track": "Посмотреть трек",
+  "teacher.button.probe_trackless": "Посмотреть фон",
   "teacher.sampleplot.title_false": "Нет трека",
   "teacher.sampleplot.title_true": "Трек",
   "teacher.form.separator.dataset_parameters": "Параметры набора данныхs",
@@ -34,7 +35,8 @@
   "teacher.form.workers": "Потоки",
   "teacher.form.batch_size" : "Размер группы",
   "teacher.form.fastcache": "Быстрый кэш",
-  "teacher.form.pregenerate_dataset": "Pregenerate dataset",
+  "teacher.form.pregenerate_dataset": "Прегенерация данных",
+  "teacher.form.track_probability": "Вероятность трека",
   "teacher.advform.constant": "Константа",
   "teacher.advform.amount": "Количество",
   "teacher.advform.lower": "Минимальное зн.",
@@ -52,6 +54,8 @@
 
 
   "app.preprocess.form.preprocess.title": "Предобработка",
+  "app.preprocess.form.preprocess.tsf.title": "Трёхступенчатый фильтр",
+  "app.preprocess.form.preprocess.mn.title": "Нормировка по медиане",
   "app.preprocess.form.preprocess.stage1": "Скользящее среднее",
   "app.preprocess.form.preprocess.stage2": "Скользящее стандартное отклонение",
   "app.preprocess.form.preprocess.stage3": "Подавление вспышек",
@@ -71,6 +75,33 @@
   "app.model_create.form.conv_outputs": "Выводы свёртки",
   "app.model_create.form.dense_count": "Количество нейронов в полносвязном слое",
   "app.model_create.form.dense_activation": "Активационная функция для полносвязного слоя",
+
+  "app.model_builder.model": "Модель",
+  "app.model_builder.layers": "Слои",
+  "app.model_builder.layer": "Слой",
+  "app.model_builder.activation": "Активация",
+  "app.model_builder.dense": "Полносвязный слой",
+  "app.model_builder.dense.count": "Количество нейронов",
+  "app.model_builder.conv3d": "Свёртка 3D",
+  "app.model_builder.conv2d": "Свёртка 2D",
+  "app.model_builder.maxpool3d": "Объединение по максимуму 3D",
+  "app.model_builder.maxpool2d": "Объединение по максимуму 2D",
+  "app.model_builder.convnd.outputs": "Выводы свёртки",
+  "app.model_builder.convnd.conv_X": "Свёртка по X",
+  "app.model_builder.convnd.conv_Y": "Свёртка по Y",
+  "app.model_builder.convnd.conv_T": "Свёртка по T",
+  "app.model_builder.pool.pool_X": "Объединение по X",
+  "app.model_builder.pool.pool_Y": "Объединение по Y",
+  "app.model_builder.pool.pool_T": "Объединение по T",
+  "app.model_builder.stride_X": "Скачок по X",
+  "app.model_builder.stride_Y": "Скачок по Y",
+  "app.model_builder.stride_T": "Скачок по T",
+  "app.model_builder.padding": "Заполнение",
+  "app.model_builder.flatten": "Выравнивание",
+  "app.model_builder.expand": "Расширение измерений",
+
+  "models.splitmerge.independent": "Независимое",
+  "models.splitmerge.common": "Общее",
 
   "datasetgen.form.separator.display": "Отображение",
   "datasetgen.form.cutoff_start": "Пропуск кадров в начале",
@@ -253,6 +284,7 @@
   "app.filedialog_formats.processed_mat": "Обработанные mat файлы",
   "app.filedialog_formats.raw_mat": "Файл с сырыми данными",
   "app.filedialog_formats.model": "Модель",
+  "app.filedialog_formats.png": "Изображение PNG",
   "app.filedialog_formats.txt": "Текстовый документ",
   "app.filedialog_formats.csv": "Значения, разделённые запятыми",
 
@@ -262,10 +294,13 @@
   "app.loaded_file": "Загружен файл {}",
 
   "app.menu.extension": "Расширения",
-  "app.extension.action_install_tf": "Установить tensorflow",
+  "app.extension.action_install_pkg": "Установить {}",
   "app.extension.action_install_tf_desc": "Данное действие разблокирует возможность исполльзования нейросетей. Продолжить?",
-  "app.extension.action_install_tf_info_ok": "Tensorflow установлен. Перезапустите приложение для применения изменений.",
-  "app.extension.action_install_tf_info_err": "Ошибка установки tensorflow. Подробности в консоли.",
+  "app.extension.action_install_pydot_desc": "Данное действие позволит сохранять нейросети как изображения. Продолжить?",
+  "app.extension.action_install_pkg_info_ok": "Пакет {} установлен. Перезапустите приложение для применения изменений.",
+  "app.extension.action_install_pkg_info_err": "Ошибка установки {}. Подробности в консоли.",
+
+
 
   "app.menu.help": "Помощь",
   "app.help.datetime_hint": "Ввод даты/времени"

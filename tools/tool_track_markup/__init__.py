@@ -14,8 +14,10 @@ from .form import TrackMarkupForm
 from extension.optional_tensorflow import TENSORFLOW_INSTALLED
 if TENSORFLOW_INSTALLED:
     from tensorflow import keras
+    from trigger_ai.models.model_wrapper import ModelWrapper
 else:
     keras = None
+    ModelWrapper = None
 
 from .edges import edged_intervals
 
@@ -174,8 +176,7 @@ class TrackMarkup(ToolBase):
                 e_start, e_end = self.current_event
                 if abs(e_end-e_start) >= 128:
                     self.sync_form()
-                    xs, ys = self.form_data["trigger"].get_prob(self)
-                    ax.plot(xs, ys+10, color="black")
+                    self.form_data["trigger"].get_prob(self, ax)
 
         return self.last_single_plot_data
 
@@ -437,7 +438,7 @@ class TrackMarkup(ToolBase):
             filetypes=[(get_locale("app.filedialog_formats.model"), "*.h5")]
         )
         if filename:
-            self.tf_model = keras.models.load_model(filename)
+            self.tf_model = ModelWrapper.load_model(filename)
 
     def on_review_trackless_select(self, evt):
         return self.on_review_select_universal(evt, True)
@@ -468,7 +469,8 @@ class TrackMarkup(ToolBase):
     def apply_filter(self, signal):
         self.sync_form()
         preprocessor = self.form_data["preprocessing"]
-        plot_data = preprocessor.three_stage_preprocess(signal)
+        broken = np.logical_not(self.plotter.alive_pixels_matrix)
+        plot_data = preprocessor.preprocess(signal, broken=broken)
         return plot_data
 
     def popup_draw_all(self):

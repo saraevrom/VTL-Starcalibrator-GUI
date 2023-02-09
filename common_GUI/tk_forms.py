@@ -392,9 +392,9 @@ class ArrayEntry(ConfigEntry):
             self.move_down(i)
         field = create_field(name, self.subframe, subconf, self.color_index+1)
         upbtn = tk.Button(field.frame,text="^", command=up_press)
-        upbtn.pack(side="top", anchor="ne")
+        upbtn.pack(side="right", anchor="ne")
         downbtn = tk.Button(field.frame, text="v", command=down_press)
-        downbtn.pack(side="top", anchor="ne")
+        downbtn.pack(side="right", anchor="ne")
 
         if value_to_set is not None:
             field.set_value(value_to_set)
@@ -504,6 +504,12 @@ class AlternatingEntry(ConfigEntry):
 
         tk.Label(topframe,text=conf["display_name"]).pack(side="left")
 
+        self.visibility_toggle_var = tk.IntVar(self.frame)
+        self.visibility_toggle_var.set(1)
+        self.visibility_toggle_var.trace("w", self.update_visibility)
+        visibility_toggle = tk.Checkbutton(topframe, variable=self.visibility_toggle_var)
+        visibility_toggle.pack(side="right")
+
         self.valnames = [item["name"] for item in conf["values"]]
         self.subconfs = [item["subconf"] for item in conf["values"]]
         self.subfield = None
@@ -528,7 +534,7 @@ class AlternatingEntry(ConfigEntry):
                 print("Restoring", vset, "for", stype)
                 self.subfield.set_value(vset)
 
-    def select_field(self,index):
+    def select_field(self, index):
         if self.last_index == index:
             return False
         old_selection = self.get_value()
@@ -536,7 +542,7 @@ class AlternatingEntry(ConfigEntry):
         if self.last_index is None:
             index_to_remember = index
         self.remembered_selections[self.valnames[index_to_remember]] = old_selection["value"]
-        if self.subfield is not None:
+        if self.subfield:
             self.subfield.frame.destroy()
             self.subfield = None
         subconf =self.subconfs[index]
@@ -549,7 +555,14 @@ class AlternatingEntry(ConfigEntry):
 
         self.subfield=field
         self.last_index=index
+        self.update_visibility()
         return True
+
+    def update_visibility(self,*_):
+        if self.visibility_toggle_var.get():
+            self.subframe.pack(side="bottom",fill="both",expand=True)
+        else:
+            self.subframe.pack_forget()
 
     def set_value(self,newval):
         sel = newval["selection_type"]

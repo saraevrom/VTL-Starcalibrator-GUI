@@ -18,7 +18,10 @@ from common_GUI import TkDictForm
 from .advanced_form import SettingForm
 from multiprocessing import Process, Pipe
 from tensorflow.data import Dataset
+from tensorflow.keras.utils import plot_model
 import tensorflow as tf
+from trigger_ai.models.model_wrapper import ModelWrapper, TargetParameters
+from extension.optional_pydot import PYDOT_INSTALLED
 
 class ToolTeacher(ToolBase):
     def __init__(self, master):
@@ -48,26 +51,31 @@ class ToolTeacher(ToolBase):
 
         self.settings_menu = TkDictForm(control_frame, form_conf, True)
         self.settings_menu.commit_action = self.on_teach
-        self.settings_menu.grid(row=0, column=0, sticky="nsew")
+        self.settings_menu.grid(row=0, column=0, columnspan=2, sticky="nsew")
 
-        probe_btn = tk.Button(control_frame, text=get_locale("teacher.button.probe"), command=self.on_probe)
-        probe_btn.grid(row=1, column=0, sticky="ew")
+        probe_btn1 = tk.Button(control_frame, text=get_locale("teacher.button.probe_track"),
+                               command=lambda: self.on_probe(True))
+        probe_btn1.grid(row=1, column=0, sticky="ew")
+
+        probe_btn2 = tk.Button(control_frame, text=get_locale("teacher.button.probe_trackless"),
+                               command=lambda: self.on_probe(False))
+        probe_btn2.grid(row=1, column=1, sticky="ew")
 
         resetbtn = tk.Button(control_frame, text=get_locale("teacher.button.reset"), command=self.on_reset_model)
-        resetbtn.grid(row=2, column=0, sticky="ew")
+        resetbtn.grid(row=2, column=0, columnspan=2, sticky="ew")
 
         recompbtn = tk.Button(control_frame, text=get_locale("teacher.button.recompile"), command=self.on_recompile_model)
-        recompbtn.grid(row=3, column=0, sticky="ew")
+        recompbtn.grid(row=3, column=0, columnspan=2, sticky="ew")
 
         savebtn = tk.Button(control_frame, text=get_locale("teacher.button.save"), command=self.on_save_model)
-        savebtn.grid(row=4, column=0, sticky="ew")
+        savebtn.grid(row=4, column=0, columnspan=2, sticky="ew")
 
         loadbtn = tk.Button(control_frame, text=get_locale("teacher.button.load"), command=self.on_load_model)
-        loadbtn.grid(row=5, column=0, sticky="ew")
+        loadbtn.grid(row=5, column=0, columnspan=2, sticky="ew")
 
 
         teachbtn = tk.Button(control_frame, text=get_locale("teacher.button.start"), command=self.on_teach)
-        teachbtn.grid(row=5, column=0, sticky="ew")
+        teachbtn.grid(row=6, column=0, columnspan=2, sticky="ew")
 
 
     def try_reset_model(self):
@@ -77,7 +85,7 @@ class ToolTeacher(ToolBase):
 
     def try_recompile_model(self):
         if self.workon_model:
-            compile_model(self.workon_model, self)
+            compile_model(self.workon_model.model, self)
 
     def ensure_model(self):
         if self.workon_model is None:
@@ -87,26 +95,36 @@ class ToolTeacher(ToolBase):
                 return False
 
         self.println_status(get_locale("teacher.status.msg_model_ok"))
-        if self.workon_model._is_compiled:
+        if self.workon_model.model._is_compiled:
             self.println_status(get_locale("teacher.status.msg_model_compiled"))
             return True
         else:
             self.try_recompile_model()
-            if self.workon_model._is_compiled:
+            if self.workon_model.model._is_compiled:
                 self.println_status(get_locale("teacher.status.msg_model_compiled"))
             else:
                 self.println_status(get_locale("teacher.status.msg_model_nocompile"))
-            return self.workon_model._is_compiled
+            return self.workon_model.model._is_compiled
 
 
     def on_save_model(self):
         if self.workon_model:
+            file_types = [(get_locale("app.filedialog_formats.model"), "*.h5")]
+            if PYDOT_INSTALLED:
+                file_types.append((get_locale("app.filedialog_formats.png"), "*.png"))
             filename = filedialog.asksaveasfilename(
                 title=get_locale("app.filedialog.save_model.title"),
-                filetypes=[(get_locale("app.filedialog_formats.model"), "*.h5")]
+                filetypes=file_types
             )
             if filename:
-                self.workon_model.save(filename)
+                if filename.endswith(".png") and PYDOT_INSTALLED:
+                    plot_model(self.workon_model.model, to_file=filename,
+                               show_shapes=True,
+                               show_dtype=True,
+                               show_layer_activations=True,
+                              )
+                else:
+                    self.workon_model.save_model(filename)
 
     def on_load_model(self):
         filename = filedialog.askopenfilename(
@@ -114,8 +132,8 @@ class ToolTeacher(ToolBase):
             filetypes=[(get_locale("app.filedialog_formats.model"), "*.h5")]
         )
         if filename:
-            self.workon_model = keras.models.load_model(filename)
-            self.workon_model.summary()
+            self.workon_model = ModelWrapper.load_model(filename)
+            self.workon_model.model.summary()
 
     def on_reset_model(self):
         self.try_reset_model()
@@ -143,26 +161,26 @@ class ToolTeacher(ToolBase):
                 if conf.config["pregenerate"] is not None:
                     N = conf.config["pregenerate"]
                     trainX = np.zeros((N, 128, 16, 16))
-                    trainY = np.zeros((N, 2))
+                    trainY = np.zeros(self.workon_model.get_y_signature(N))
                     gen = self.data_generator(conf)
                     for i in tqdm.tqdm(range(N)):
-                        x,y = next(gen)
+                        x,y_par = next(gen)
                         trainX[i] = x
-                        trainY[i] = y
-                    self.workon_model.fit(trainX, trainY, **conf.get_fit_parameters_finite())
+                        trainY[i] = self.workon_model.create_dataset_ydata_for_item(y_par)
+                    self.workon_model.model.fit(trainX, trainY, **conf.get_fit_parameters_finite())
                 else:
                     dataset = Dataset.from_generator(
                         lambda: self.batch_generator(conf),
                         output_signature=(tf.TensorSpec(shape=(None, 128, 16, 16), dtype=tf.double),
-                                          tf.TensorSpec(shape=(None, 2), dtype=tf.double))
+                                          self.workon_model.get_y_spec())
                     )
-                    self.workon_model.fit(dataset, **conf.get_fit_parameters())
+                    self.workon_model.model.fit(dataset, **conf.get_fit_parameters())
         self.fg_pool.clear_cache()
         self.bg_pool.clear_cache()
         self.interference_pool.clear_cache()
 
 
-    def on_probe(self):
+    def on_probe(self, needstrack):
         self.clear_status()
         self.println_status(get_locale("teacher.status.msg_model_ok"))
         self.check_files()
@@ -176,11 +194,13 @@ class ToolTeacher(ToolBase):
             conf = self.settings_form.get_data()
             gc.collect()
             gen = self.data_generator(conf)
-            x, y = next(gen)
+            x, y_par = next(gen)
+            while y_par.has_track() != needstrack:
+                x, y_par = next(gen)
             fig, ax = plt.subplots()
             display_data = np.max(x, axis=0)
             ax.matshow(display_data.T)
-            if y[1] > 0:
+            if y_par.has_track():
                 ax.set_title(get_locale("teacher.sampleplot.title_true"))
             else:
                 ax.set_title(get_locale("teacher.sampleplot.title_false"))
@@ -228,31 +248,37 @@ class ToolTeacher(ToolBase):
             else:
                 sample_start = rng.randint(bg_start, bg_end-frame_size)
             bg = bg_sample[sample_start:sample_start+frame_size]
-            x_data = preprocessor.three_stage_preprocess(bg)
+            x_data = preprocessor.preprocess(bg, broken=broken)
+            y_params = TargetParameters(False, False, False, False)
             if self.interference_pool.files_list:
                 if rng.random() < 0.5:
                     interference = self.interference_pool.random_access()
                     interference = conf.process_it(interference)
                     x_data = x_data+interference
-            if rng.random() < 0.5:
-                y_data = np.array([1., 0.])
+            if rng.random() < conf.config["track_probability"]:
+                pass
             else:
-                y_data = np.array([0., 1.])
                 fg = np.zeros(bg.shape)
                 #conf.process_fg(self.fg_pool.random_access)
                 rng_append = rng.randint(1,16)
                 if rng_append % 2 == 1:
+                    y_params.pmt_bottom_left = True
                     fg[:, :8, :8] = conf.process_fg(self.fg_pool.random_access())
-                if rng_append / 2 % 2 == 1:
+                if rng_append // 2 % 2 == 1:
+                    y_params.pmt_bottom_right = True
                     fg[:, 8:, :8] = conf.process_fg(self.fg_pool.random_access())
-                if rng_append / 4 % 2 == 1:
+                if rng_append // 4 % 2 == 1:
+                    y_params.pmt_top_left = True
                     fg[:, :8, 8:] = conf.process_fg(self.fg_pool.random_access())
-                if rng_append / 8 % 2 == 1:
+                if rng_append // 8 % 2 == 1:
+                    y_params.pmt_top_right = True
                     fg[:, 8:, 8:] = conf.process_fg(self.fg_pool.random_access())
+                fg[:, broken] = 0
                 x_data = x_data + fg
             i += 1
-            x_data[:, broken] = 0
-            yield x_data, y_data
+            #x_data[:, broken] = 0
+            #y_data = self.workon_model.create_dataset_ydata_for_item(y_params)
+            yield x_data, y_params
 
     def batch_generator(self, conf, frame_size=128):
         generator = self.data_generator(conf, frame_size)
@@ -264,9 +290,9 @@ class ToolTeacher(ToolBase):
             batchX.clear()
             batchY.clear()
             for _ in range(batch_size):
-                X, Y = next(generator)
+                X, Y_par = next(generator)
                 batchX.append(X)
-                batchY.append(Y)
+                batchY.append(self.workon_model.create_dataset_ydata_for_item(Y_par))
             yield np.array(batchX), np.array(batchY)
 
 

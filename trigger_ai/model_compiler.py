@@ -4,8 +4,42 @@ import tkinter as tk
 import tkinter.simpledialog as simpledialog
 from localization import get_locale
 from .compiler_form import CompileForm
-from .model_creating_form import NeuralNetworkCreator
+import json
 
+from trigger_ai.models import ModelBuilder
+from tkinter import filedialog
+
+class TkFormControlPanel(tk.Frame):
+    def __init__(self,master):
+        super().__init__(master)
+        btn1 = tk.Button(self, text=get_locale("app.filedialog.load_settings.title"), command=self.on_load)
+        btn1.pack(side="left", fill="x", expand=True)
+        btn2 = tk.Button(self, text=get_locale("app.filedialog.save_settings.title"), command=self.on_save)
+        btn2.pack(side="right", fill="x", expand=True)
+        self.connected_form = None
+
+    def connect_form(self, form):
+        self.connected_form = form
+
+    def on_save(self):
+        filename = filedialog.asksaveasfilename(title=get_locale("app.filedialog.save_settings.title"),
+                                     filetypes=[(get_locale("app.filedialog_formats.form_json"), "*.json")],
+                                     initialdir=".",
+                                     parent=self)
+        if filename and self.connected_form:
+            jsd = self.connected_form.get_values()
+            with open(filename, "w") as fp:
+                json.dump(jsd, fp, indent=4)
+
+    def on_load(self):
+        filename = filedialog.askopenfilename(title=get_locale("app.filedialog.save_settings.title"),
+                                                filetypes=[(get_locale("app.filedialog_formats.form_json"), "*.json")],
+                                                initialdir=".",
+                                                parent=self)
+        if filename and self.connected_form:
+            with open(filename, "r") as fp:
+                jsd = json.load(fp)
+            self.connected_form.set_values(jsd)
 
 class CompileDialog(simpledialog.Dialog):
     def body(self, master):
@@ -15,6 +49,10 @@ class CompileDialog(simpledialog.Dialog):
         self.form.pack(fill="both", expand=True)
         self.result = None
         self.title(get_locale("app.model.form.title_compile"))
+
+        controller = TkFormControlPanel(master)
+        controller.pack(side="bottom", fill="x")
+        controller.connect_form(self.form)
 
         # Due to inconsistency of python tk.simpledialog implementations, this fix should enable rescaling.
         master.pack_forget()
@@ -32,14 +70,19 @@ class CompileDialog(simpledialog.Dialog):
         model.compile(**kwargs)
         model.summary()
 
+
 class CreateDialog(simpledialog.Dialog):
     def body(self, master):
-        self.form_parser = NeuralNetworkCreator()
+        self.form_parser = ModelBuilder()
         conf = self.form_parser.get_configuration_root()
         self.form = TkDictForm(master, conf, True)
         self.form.pack(fill="both", expand=True)
         self.result = None
         self.title(get_locale("app.model.form.title_create"))
+
+        controller = TkFormControlPanel(master)
+        controller.pack(side="bottom", fill="x")
+        controller.connect_form(self.form)
 
         # Due to inconsistency of python tk.simpledialog implementations, this fix should enable rescaling.
         master.pack_forget()
