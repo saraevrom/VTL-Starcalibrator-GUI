@@ -155,6 +155,8 @@ class ToolTeacher(ToolBase):
                 self.bg_pool.fast_cache = conf["fastcache"]
                 self.interference_pool.fast_cache = conf["fastcache"]
                 self.settings_form.parse_formdata(conf)
+                preferred_filter = conf["preprocessing"]
+                self.workon_model.set_preferred_filter_data(preferred_filter)
                 conf = self.settings_form.get_data()
                 gc.collect()
 
