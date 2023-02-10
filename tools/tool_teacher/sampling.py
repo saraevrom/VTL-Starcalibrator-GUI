@@ -23,10 +23,12 @@ class SamplerUniform(Sampler):
         self.high = high
 
     def sample(self, shape=None):
+        low = self.low.sample()
+        high = self.high.sample()
         if shape is None:
-            return rng.random()*(self.high-self.low)+self.low
+            return rng.random()*(high-low)+low
         else:
-            return rng.random(*shape) * (self.high - self.low) + self.low
+            return rng.random(*shape) * (high - low) + low
 
 class SamplerGauss(Sampler):
 
@@ -35,7 +37,9 @@ class SamplerGauss(Sampler):
         self.stdev = stdev
 
     def sample(self, shape=None):
-        return rng.normal(self.mean, self.stdev, size=shape)
+        mean = self.mean.sample()
+        stdev = self.stdev.sample()
+        return rng.normal(mean, stdev, size=shape)
 
 
 SQRT_2 = np.sqrt(2)
@@ -48,5 +52,7 @@ class SamplerLaplace(Sampler):
         self.stdev = stdev
 
     def sample(self, shape=None):
-        return rng.laplace(self.mean, self.stdev/SQRT_2, size=shape)
+        mean = self.mean.sample()
+        stdev = self.stdev.sample()
+        return rng.laplace(mean, stdev/SQRT_2, size=shape)
 

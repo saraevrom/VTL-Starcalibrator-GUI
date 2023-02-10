@@ -17,8 +17,13 @@ class Augmenter(Appliance):
         data1 = data
         if self.use_transpose and rng.random()<0.5:
             data1 = np.swapaxes(data, 1, 2)
-        if self.use_reverse and rng.random()<0.5:
-            data1 = np.flip(data1, axis=0)
+        if self.use_reverse:
+            if rng.random() < 0.5:
+                data1 = np.flip(data1, axis=0)
+            if rng.random() < 0.5:
+                data1 = np.flip(data1, axis=1)
+            if rng.random() < 0.5:
+                data1 = np.flip(data1, axis=2)
         return data1
 class DualProcessing(object):
     def __init__(self, primary, secondary):

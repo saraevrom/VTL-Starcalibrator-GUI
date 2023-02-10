@@ -10,12 +10,18 @@ class Constant(FloatNode):
         return SamplerConstant(data)
 
 
-LowerEnd = create_value_field(FloatNode, get_locale("teacher.advform.lower"))
-HigherEnd = create_value_field(FloatNode, get_locale("teacher.advform.higher"))
+class FloatDistributedAlter(AlternatingNode):
+    SEL__const = Constant
 
-Mean = create_value_field(FloatNode, get_locale("teacher.advform.mean"))
-Stdev = create_value_field(FloatNode, get_locale("teacher.advform.stdev"), 1.0)
 
+
+LowerEnd = create_value_field(FloatDistributedAlter, get_locale("teacher.advform.lower"))
+HigherEnd = create_value_field(FloatDistributedAlter, get_locale("teacher.advform.higher"))
+
+Mean = create_value_field(FloatDistributedAlter, get_locale("teacher.advform.mean"))
+Stdev = create_value_field(FloatDistributedAlter, get_locale("teacher.advform.stdev"),
+                           dict(value=1.0, selection_type="const")
+                           )
 
 
 class UniformValue(FormNode):
@@ -50,8 +56,6 @@ class LaplaceValue(DistributedValue):
         return SamplerLaplace(data["mean"], data["std"])
 
 
-class FloatDistributedAlter(AlternatingNode):
-    SEL__const = Constant
-    SEL__uniform = UniformValue
-    SEL__gauss = GaussValue
-    SEL__laplace = LaplaceValue
+FloatDistributedAlter.SEL__uniform = UniformValue
+FloatDistributedAlter.SEL__gauss = GaussValue
+FloatDistributedAlter.SEL__laplace = LaplaceValue

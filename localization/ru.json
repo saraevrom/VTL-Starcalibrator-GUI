@@ -46,6 +46,7 @@
   "teacher.advform.uniform": "Однородно",
   "teacher.advform.gauss": "Гаусс",
   "teacher.advform.laplace": "Лаплас",
+  "teacher.advform.poisson": "Пуассон",
   "teacher.advform.none": "Ничего не задано",
   "teacher.advform.same": "Такие же",
   "teacher.advform.multiplier": "Множитель",

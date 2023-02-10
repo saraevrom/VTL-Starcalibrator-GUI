@@ -48,10 +48,11 @@
   "teacher.advform.uniform": "Uniform",
   "teacher.advform.gauss": "Gauss",
   "teacher.advform.laplace": "Laplace",
+  "teacher.advform.poisson": "Poisson",
   "teacher.advform.none": "None",
   "teacher.advform.same": "Same",
   "teacher.advform.multiplier": "Multiplier",
-  "teacher.advform.offset": "Offset",
+  "teacher.advform.offset": "Fluctuations",
   "teacher.advform.parameters": "Parameters",
 
 
