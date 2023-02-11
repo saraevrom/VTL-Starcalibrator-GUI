@@ -251,17 +251,27 @@ class ToolTeacher(ToolBase):
                 sample_start = rng.randint(bg_start, bg_end-frame_size)
             bg = bg_sample[sample_start:sample_start+frame_size]
             x_data = preprocessor.preprocess(bg, broken=broken)
-            y_params = TargetParameters(False, False, False, False)
+            y_params = TargetParameters()
             if self.interference_pool.files_list:
                 if rng.random() < 0.5:
-                    interference = self.interference_pool.random_access()
-                    interference = conf.process_it(interference)
-                    x_data = x_data+interference
+                    interf = np.zeros(bg.shape)
+                    rng_append = rng.randint(1, 16)
+                    if rng_append % 2 == 1:
+                        y_params.interference_bottom_left = True
+                        interf[:, :8, :8] = conf.process_it(self.interference_pool.random_access())
+                    if rng_append // 2 % 2 == 1:
+                        y_params.interference_bottom_right = True
+                        interf[:, 8:, :8] = conf.process_it(self.interference_pool.random_access())
+                    if rng_append // 4 % 2 == 1:
+                        y_params.interference_top_left = True
+                        interf[:, :8, 8:] = conf.process_it(self.interference_pool.random_access())
+                    if rng_append // 8 % 2 == 1:
+                        y_params.interference_top_right = True
+                        interf[:, 8:, 8:] = conf.process_it(self.interference_pool.random_access())
             if rng.random() < conf.config["track_probability"]:
                 pass
             else:
                 fg = np.zeros(bg.shape)
-                #conf.process_fg(self.fg_pool.random_access)
                 rng_append = rng.randint(1,16)
                 if rng_append % 2 == 1:
                     y_params.pmt_bottom_left = True
@@ -278,8 +288,9 @@ class ToolTeacher(ToolBase):
                 fg[:, broken] = 0
                 x_data = x_data + fg
             i += 1
-            #x_data[:, broken] = 0
-            #y_data = self.workon_model.create_dataset_ydata_for_item(y_params)
+            # obfuscating neural network,
+            # so it won't use changing noise for track detection
+            x_data = conf.process_bg(x_data, y_params)
             yield x_data, y_params
 
     def batch_generator(self, conf, frame_size=128):

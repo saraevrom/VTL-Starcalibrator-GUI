@@ -13,6 +13,9 @@ class SignalModifier(Appliance):
     def apply(self, data):
         return self.multiplier.sample()*data + self.offset.sample(data.shape)
 
+    def apply_aux(self, data):
+        return self.offset.sample(data.shape)
+
 
 
 class ProcessingSubform(FormNode):

@@ -1,4 +1,5 @@
 import h5py
+import numpy as np
 from tensorflow import keras
 import tensorflow as tf
 import json
@@ -7,15 +8,32 @@ CUSTOM_FIELD = "CUSTOM_MODEL_WRAPPER"
 FILTER_FIELD = "CUSTOM_PREFERRED_FILTER"
 
 class TargetParameters(object):
-    def __init__(self, pmt_bottom_left, pmt_bottom_right, pmt_top_left, pmt_top_right):
-        self.pmt_bottom_left = pmt_bottom_left
-        self.pmt_bottom_right = pmt_bottom_right
-        self.pmt_top_left = pmt_top_left
-        self.pmt_top_right = pmt_top_right
+    def __init__(self):
+        self.pmt_bottom_left = False
+        self.pmt_bottom_right = False
+        self.pmt_top_left = False
+        self.pmt_top_right = False
+        self.interference_bottom_left = False
+        self.interference_bottom_right = False
+        self.interference_top_left = False
+        self.interference_top_right = False
+
 
     def has_track(self):
         return self.pmt_top_right or self.pmt_bottom_right \
                 or self.pmt_top_left or self.pmt_bottom_left
+
+    def create_mask(self):
+        mask = np.full(False, (16,16))
+        if self.pmt_bottom_left or self.interference_bottom_left:
+            mask[:8, :8] = True
+        if self.pmt_bottom_right or self.interference_bottom_right:
+            mask[8:, :8] = True
+        if self.pmt_top_left or self.interference_top_left:
+            mask[:8, 8:] = True
+        if self.pmt_top_right or self.interference_top_right:
+            mask[8:, 8:] = True
+        return mask
 
 class ModelWrapper(object):
     SUBCLASSES = None

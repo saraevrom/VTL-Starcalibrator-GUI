@@ -1,10 +1,13 @@
 import numpy.random as rng
 import numpy as np
+from trigger_ai.models.model_wrapper import TargetParameters
 
 class Appliance(object):
     def apply(self, data):
         raise NotImplementedError()
 
+    def apply_aux(self, data):
+        return data
 
 
 
@@ -39,8 +42,14 @@ class DualProcessing(object):
     def apply_primary(self, data):
         return self.primary.apply(data)
 
+    def apply_aux_primary(self, data):
+        return self.primary.apply_aux(data)
+
     def apply_secondary(self, data):
         return self.get_secondary().apply(data)
+
+    def apply_aux_secondary(self, data):
+        return self.get_secondary().apply_aux(data)
 
     def sample_primary(self):
         return self.primary.sample()
@@ -78,3 +87,12 @@ class LearnParameters(object):
         data1 = modifier.apply_secondary(data)
         data1 = augmenter.apply_secondary(data1)
         return data1
+
+    def process_bg(self, x_data, y_info):
+        modifier = self.config["modification"]
+        res = x_data.copy()
+        mask = y_info.create_mask()
+        bg_mod = modifier.apply_aux_primary(x_data)
+        np.putmask(res, mask, bg_mod)
+        return res
+
