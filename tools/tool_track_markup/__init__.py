@@ -6,7 +6,8 @@ from ..tool_base import ToolBase
 from .sorted_queue import SortedQueue
 import numpy as np
 import tkinter.messagebox
-import tkinter.filedialog
+#import tkinter.filedialog
+from workspace_manager import Workspace
 import json
 from localization import get_locale
 import matplotlib.pyplot as plt
@@ -25,6 +26,8 @@ from .edges import edged_intervals
 OFF = get_locale("app.state_off")
 ON = get_locale("app.state_on")
 
+MARKUP_WORKSPACE = Workspace("marked_up_tracks")
+TENSORFLOW_MODELS_WORKSPACE = Workspace("ann_models")
 
 def try_append_event(target_list,start,end):
     ok = True
@@ -401,7 +404,7 @@ class TrackMarkup(ToolBase):
             return self.tracked_events.pop(index)
 
     def on_save_data(self):
-        save_path = tkinter.filedialog.asksaveasfilename(initialdir=".",filetypes=(("JSON", "*.json"),),
+        save_path = MARKUP_WORKSPACE.asksaveasfilename(initialdir=".",filetypes=(("JSON", "*.json"),),
                                                          initialfile="progress.json", parent=self)
         if save_path:
             current_queue = self.queue.copy()
@@ -418,7 +421,7 @@ class TrackMarkup(ToolBase):
                 json.dump(save_data, fp)
 
     def on_load_data(self):
-        load_path = tkinter.filedialog.askopenfilename(initialdir=".", filetypes=(("JSON", "*.json"),),
+        load_path = MARKUP_WORKSPACE.askopenfilename(initialdir=".", filetypes=(("JSON", "*.json"),),
                                                          initialfile="progress.json", parent=self)
         if load_path:
             self.clear_events()
@@ -436,7 +439,7 @@ class TrackMarkup(ToolBase):
                 self.update_answer_panel()
 
     def on_load_tf(self):
-        filename = tkinter.filedialog.askopenfilename(
+        filename = TENSORFLOW_MODELS_WORKSPACE.askopenfilename(
             title=get_locale("app.filedialog.load_model.title"),
             filetypes=[(get_locale("app.filedialog_formats.model"), "*.h5")]
         )

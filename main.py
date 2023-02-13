@@ -13,9 +13,14 @@ import os.path as ospath
 from extension import expand_app
 from helper import add_help_menu
 import parameters
+from workspace_manager import Workspace
 
 
 parameters.localize_parameters_fields()
+
+
+MDATA_WORKSPACE = Workspace("merged_data")
+FF_WORKSPACE = Workspace("ff_calibration")
 
 class App(tk.Tk):
 
@@ -47,6 +52,7 @@ class App(tk.Tk):
         self.bind("<1>", self.set_focus)
         add_tools(self.add_tool)
         self.update_title()
+        Workspace.initialize_workspace()
 
     def update_title(self):
         title = get_locale("app.title")
@@ -67,7 +73,7 @@ class App(tk.Tk):
         #self.toolsmenu.add_command(label=get_locale(label_key), command=tool_inst)
 
     def on_open_mat_file(self):
-        filename = filedialog.askopenfilename(title=get_locale("app.filedialog.load_mat.title"),
+        filename = MDATA_WORKSPACE.askopenfilename(title=get_locale("app.filedialog.load_mat.title"),
                                               filetypes=[
                                                   (get_locale("app.filedialog_formats.processed_mat"), "*.mat *.hdf")
                                               ])
@@ -95,7 +101,7 @@ class App(tk.Tk):
         self.update_title()
 
     def on_open_ffmodel(self):
-        filename = filedialog.askopenfilename(title=get_locale("app.filedialog.load_ff_settings.title"),
+        filename = FF_WORKSPACE.askopenfilename(title=get_locale("app.filedialog.load_ff_settings.title"),
                                               filetypes=[
                                                   (get_locale("app.filedialog_formats.ff_json"), "*.json")
                                               ])

@@ -335,7 +335,10 @@
   "app.extension.action_install_pkg_info_ok": "Package {} installed. Restart app to take effect.",
   "app.extension.action_install_pkg_info_err": "Package {} installation error. Check console for details",
 
-
+  "app.workspace_manager.greeter.title": "Workspace manager",
+  "app.workspace_manager.greeter.message": "You will be asked to choose workspace directory. Do not select any directory if you want to work with files in conventional way.",
+  "app.workspace_manager.askdir": "Choose directory of workspace",
+  "app.workspace_manager.setup": "Set up workspace",
 
   "app.menu.help": "Help",
   "app.help.datetime_hint": "Datetime entry",

@@ -12,7 +12,7 @@ import gc
 import numpy.random as rng
 import numpy as np
 from common_GUI import SettingMenu
-import tkinter.filedialog as filedialog
+from workspace_manager import Workspace
 from tensorflow import keras
 from localized_GUI import SaveableTkDictForm
 from .advanced_form import SettingForm
@@ -23,6 +23,12 @@ import tensorflow as tf
 from trigger_ai.models.model_wrapper import ModelWrapper, TargetParameters
 from extension.optional_pydot import PYDOT_INSTALLED
 import numba as nb
+
+
+TENSORFLOW_MODELS_WORKSPACE = Workspace("ann_models")
+MDATA_WORKSPACE = Workspace("merged_data")
+MODELED_TRACK_WORKSPACE = Workspace("modelled_tracks")
+EVENTS_PRESET_WORKSPACE = Workspace("ann_event_presets")
 
 nb.njit(nb.float64[:, :, :](nb.float64[:], nb.float64[:, :]))
 def signal_multiply(profile, mask):
@@ -39,11 +45,12 @@ def signal_multiply(profile, mask):
 class ToolTeacher(ToolBase):
     def __init__(self, master):
         super().__init__(master)
-        self.bg_pool = RandomIntervalAccess(self, "teacher.pool_bg.title")
+        self.bg_pool = RandomIntervalAccess(self, "teacher.pool_bg.title", workspace=MDATA_WORKSPACE)
         self.bg_pool.grid(row=0, column=0, sticky="nsew")
-        self.fg_pool = RandomFileAccess(self, "teacher.pool_fg.title")
+        self.fg_pool = RandomFileAccess(self, "teacher.pool_fg.title", workspace=MODELED_TRACK_WORKSPACE)
         self.fg_pool.grid(row=0, column=1, sticky="nsew")
-        self.interference_pool = RandomFileAccess(self, "teacher.pool_interference.title", allow_clear=True)
+        self.interference_pool = RandomFileAccess(self, "teacher.pool_interference.title",
+                                                  workspace=MODELED_TRACK_WORKSPACE, allow_clear=True)
         self.interference_pool.grid(row=0, column=2, sticky="nsew")
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
@@ -62,7 +69,7 @@ class ToolTeacher(ToolBase):
         self.settings_form = SettingForm()
         form_conf = self.settings_form.get_configuration_root()
 
-        self.settings_menu = SaveableTkDictForm(control_frame, form_conf, True)
+        self.settings_menu = SaveableTkDictForm(control_frame, form_conf, True, file_asker=EVENTS_PRESET_WORKSPACE)
         self.settings_menu.commit_action = self.on_teach
         self.settings_menu.grid(row=0, column=0, columnspan=2, sticky="nsew")
 
@@ -125,7 +132,7 @@ class ToolTeacher(ToolBase):
             file_types = [(get_locale("app.filedialog_formats.model"), "*.h5")]
             if PYDOT_INSTALLED:
                 file_types.append((get_locale("app.filedialog_formats.png"), "*.png"))
-            filename = filedialog.asksaveasfilename(
+            filename = TENSORFLOW_MODELS_WORKSPACE.asksaveasfilename(
                 title=get_locale("app.filedialog.save_model.title"),
                 filetypes=file_types
             )
@@ -140,7 +147,7 @@ class ToolTeacher(ToolBase):
                     self.workon_model.save_model(filename)
 
     def on_load_model(self):
-        filename = filedialog.askopenfilename(
+        filename = TENSORFLOW_MODELS_WORKSPACE.askopenfilename(
             title=get_locale("app.filedialog.load_model.title"),
             filetypes=[(get_locale("app.filedialog_formats.model"), "*.h5")]
         )

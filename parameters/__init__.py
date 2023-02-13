@@ -55,11 +55,16 @@ class SettingsDialog(Dialog):
 
 
 def add_parameters_menu(app_menu: tk.Menu):
+    from workspace_manager import Workspace
     from localization import get_locale
     menu = tk.Menu(app_menu, tearoff=0)
 
     def settings_wrapper():
         SettingsDialog(app_menu.winfo_toplevel(), get_locale("app.parameters"))
 
+    def workspace_wrapper():
+        Workspace.initialize_workspace(True)
+
     menu.add_command(label=get_locale("app.parameters"), command=settings_wrapper)
+    menu.add_command(label=get_locale("app.workspace_manager.setup"), command=workspace_wrapper)
     app_menu.add_cascade(label=get_locale("app.menu.settings"), menu=menu)

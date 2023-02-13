@@ -4,19 +4,19 @@ from .create_settings import build_menu
 import gc
 import numpy as np
 import numba as nb
-from ..tool_flatfielder import FlatFieldingModel
 from common_GUI import SettingMenu
 from localized_GUI import GridPlotter
 from localization import get_locale, format_locale
 import json
-import tkinter.filedialog as filedialog
 import tkinter.messagebox as messagebox
 import h5py
 from .hdf5_utils import overwrite_with_numpy
 from datetime import datetime
 from parameters import DATETIME_FORMAT
-
+from workspace_manager import Workspace
 import tkinter as tk
+
+MARKUP_WORKSPACE = Workspace("marked_up_tracks")
 
 @nb.njit()
 def putmask_max(arr1,arr2):
@@ -147,7 +147,7 @@ class DatasetGenerator(ToolBase):
 
     def on_load(self):
         if self.file:
-            load_path = filedialog.askopenfilename(initialdir=".", filetypes=(("JSON", "*.json"),),
+            load_path = MARKUP_WORKSPACE.askopenfilename(initialdir=".", filetypes=(("JSON", "*.json"),),
                                                              initialfile="progress.json", parent=self)
             if load_path:
                 with open(load_path,"r") as fp:

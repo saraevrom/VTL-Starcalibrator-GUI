@@ -4,7 +4,8 @@ from common_GUI import SettingMenu
 from .vtl_settings_build import build_menu
 from .starlist import Starlist
 from .starplotter import StarGridPlotter
-import tkinter.filedialog as filedialog
+# import tkinter.filedialog as filedialog
+from workspace_manager import Workspace
 import numpy as np
 import pandas as pd
 from numpy.lib.stride_tricks import sliding_window_view
@@ -19,6 +20,8 @@ import matplotlib.pyplot as plt
 from parameters import MAIN_LATITUDE, MAIN_LONGITUDE
 from localization import get_locale
 from ..tool_base import ToolBase
+
+ORIENTATION_WORKSPACE = Workspace("orientation")
 
 class StarCalibrator(ToolBase):
     def __init__(self, master):
@@ -233,7 +236,7 @@ class StarCalibrator(ToolBase):
         self.refresh_fg()
 
     def on_settings_load(self):
-        filename = filedialog.askopenfilename(title=get_locale("app.filedialog.load_settings.title"),
+        filename = ORIENTATION_WORKSPACE.askopenfilename(title=get_locale("app.filedialog.load_settings.title"),
                                               filetypes=[(get_locale("app.filedialog_formats.settings_json"), "*.json")],
                                               parent=self)
         if filename and os.path.isfile(filename):
@@ -242,7 +245,7 @@ class StarCalibrator(ToolBase):
                 self.settings_push()
 
     def on_settings_save(self):
-        filename = filedialog.asksaveasfilename(title=get_locale("app.filedialog.save_settings.title"),
+        filename = ORIENTATION_WORKSPACE.asksaveasfilename(title=get_locale("app.filedialog.save_settings.title"),
                                                 filetypes=[(get_locale("app.filedialog_formats.settings_json"), "*.json")],
                                                 parent=self)
         if filename:

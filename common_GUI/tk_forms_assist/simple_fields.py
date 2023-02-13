@@ -93,14 +93,14 @@ class FileNode(ValueNode):
     Node corresponding to "file" field (choose a filename)
     '''
     FIELD_TYPE = "file"
-    USE_OPEN = False
+    ASK_MODE = "saveas"
     FILE_TYPES = []
     INITIAL_DIR = ""
 
     @classmethod
     def generate_configuration(cls):
         conf = super(FileNode, cls).generate_configuration()
-        conf["use_open"] = cls.USE_OPEN
+        conf["ask_mode"] = cls.ASK_MODE
         conf["filetypes"] = cls.FILE_TYPES
         conf["initialdir"] = cls.INITIAL_DIR
         return conf

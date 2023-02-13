@@ -1,6 +1,4 @@
 import tkinter as tk
-from tkinter import ttk
-import tkinter.filedialog as filedialog
 import tkinter.messagebox as messagebox
 import h5py
 import numpy as np
@@ -10,6 +8,10 @@ from localization import get_locale, format_locale
 from tools.tool_base import ToolBase
 import os.path as ospath
 from .single_copy import average_single_file
+from workspace_manager import Workspace
+
+MDATA_WORKSPACE = Workspace("merged_data")
+UNPROCESSED_DATA_WORKSPACE = Workspace("unprocessed_data")
 
 class Converter(tk.Frame):
     def __init__(self, master, controller=None):
@@ -63,7 +65,7 @@ class Converter(tk.Frame):
 
 
     def on_add_file(self):
-        filenames = filedialog.askopenfilenames(title=get_locale("mat_converter.filedialog.import.title"),
+        filenames = UNPROCESSED_DATA_WORKSPACE.askopenfilenames(title=get_locale("mat_converter.filedialog.import.title"),
                                                 filetypes=[(get_locale("app.filedialog_formats.raw_mat"), "*.mat *.hdf")],
                                                 parent=self)
         if filenames:
@@ -85,7 +87,7 @@ class Converter(tk.Frame):
                 self.file_list.pop(i)
 
     def on_output_file_select(self):
-        filename = filedialog.asksaveasfilename(title=get_locale("mat_converter.filedialog.export.title"),
+        filename = MDATA_WORKSPACE.asksaveasfilename(title=get_locale("mat_converter.filedialog.export.title"),
                                                 filetypes=[(get_locale("app.filedialog_formats.processed_mat"), "*.mat *.hdf")],
                                                 initialdir=".",
                                                  parent=self)

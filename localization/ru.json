@@ -333,7 +333,10 @@
   "app.extension.action_install_pkg_info_ok": "Пакет {} установлен. Перезапустите приложение для применения изменений.",
   "app.extension.action_install_pkg_info_err": "Ошибка установки {}. Подробности в консоли.",
 
-
+  "app.workspace_manager.greeter.title": "Рабочее пространство",
+  "app.workspace_manager.greeter.message": "Сейчас будет предложен выбор папки для работы с данными. Если вы хотите работать с файлами как раньше, просто отмените действие.",
+  "app.workspace_manager.askdir": "Выберите папку рабочего пространства",
+  "app.workspace_manager.setup": "Настроить рабочее пространство",
 
   "app.menu.help": "Помощь",
   "app.help.datetime_hint": "Ввод даты/времени",

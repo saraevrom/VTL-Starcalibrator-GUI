@@ -7,13 +7,16 @@ import json
 
 from trigger_ai.models import ModelBuilder
 from tkinter import filedialog
+from workspace_manager import Workspace
 
+TENSORFLOW_MODEL_TEMPLATES_WORKSPACE = Workspace("ann_templates")
+TENSORFLOW_TRAINERS_TEMPLATES = Workspace("ann_trainer_presets")
 
 class CompileDialog(simpledialog.Dialog):
     def body(self, master):
         self.form_parser = CompileForm()
         conf = self.form_parser.get_configuration_root()
-        self.form = SaveableTkDictForm(master, conf, True)
+        self.form = SaveableTkDictForm(master, conf, True, file_asker=TENSORFLOW_TRAINERS_TEMPLATES)
         self.form.pack(fill="both", expand=True)
         self.result = None
         self.title(get_locale("app.model.form.title_compile"))
@@ -39,7 +42,7 @@ class CreateDialog(simpledialog.Dialog):
     def body(self, master):
         self.form_parser = ModelBuilder()
         conf = self.form_parser.get_configuration_root()
-        self.form = SaveableTkDictForm(master, conf, True)
+        self.form = SaveableTkDictForm(master, conf, True, file_asker=TENSORFLOW_MODEL_TEMPLATES_WORKSPACE)
         self.form.pack(fill="both", expand=True)
         self.result = None
         self.title(get_locale("app.model.form.title_create"))

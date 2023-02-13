@@ -252,7 +252,7 @@ class FileEntry(ConfigEntry):
     type: "file"
     initialdir -- initial director for file dialog
     filetypes -- File types for dialog
-    use_open -- File dialog will be set to "open" instead of "save as"
+    ask_mode -- Valid values are "open","saveas","directory". Mode for loading path. default is saveas
     '''
     def __init__(self,name,master,conf,color_index=0):
         super().__init__(name,master,conf,color_index)
@@ -260,16 +260,20 @@ class FileEntry(ConfigEntry):
         tk.Label(self.frame, text=conf["display_name"]).pack(side="left")
         tk.Button(self.frame, text="Choose file", command=self.command).pack(side="left")
         tk.Label(self.frame, textvariable=self.stringvar).pack(side="left",fill="x")
-        self.use_open = False
-        if "use_open" in conf.keys():
-            self.use_open = conf["use_open"]
+        self.ask_mode = "saveas"
+        if "ask_mode" in conf.keys():
+            self.ask_mode = conf["ask_mode"]
 
 
     def command(self):
-        if self.use_open:
+        if self.ask_mode == "open":
             asker = filedialog.askopenfilename
-        else:
+        elif self.ask_mode == "saveas":
             asker = filedialog.asksaveasfilename
+        elif self.ask_mode == "directory":
+            asker = filedialog.askdirectory
+        else:
+            raise ValueError("ask_mode is set to invalid option " + self.ask_mode)
 
         pth = asker(initialdir=self.conf["initialdir"], filetypes=self.conf["filetypes"])
         if pth:

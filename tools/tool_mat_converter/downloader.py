@@ -5,13 +5,15 @@ from localization import get_locale, format_locale
 from ftplib import FTP, error_perm
 import tkinter.messagebox as messagebox
 import tkinter.simpledialog as simpledialog
-import tkinter.filedialog as filedialog
 import os.path as ospath
 import os
 from multiprocessing import Process, Pipe
 import h5py
 import time
 import gc
+from workspace_manager import Workspace
+
+UNPROCESSED_DATA_WORKSPACE = Workspace("unprocessed_data")
 
 class FtpBrowser(simpledialog.Dialog):
 
@@ -191,7 +193,7 @@ class Downloader(tk.Frame):
             print(ftp.dir())
             ftp_target = FtpBrowser(self, ftp)
             if ftp_target.result_directory:
-                local_target = filedialog.askdirectory(parent=self, mustexist=True,
+                local_target = UNPROCESSED_DATA_WORKSPACE.askdirectory(parent=self, mustexist=True,
                                                        initialdir=".",
                                                        title=get_locale("mat_converter.downloader.fieldialog.title"))
                 if local_target:

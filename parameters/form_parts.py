@@ -13,7 +13,6 @@ class ColormapSetting(ComboNode):
     SELECTION_READONLY = True
     VALUES = list(filter(valid_cmap, dir(plt.cm)))
 
-
     def get_data(self):
         dat = super().get_data()
         try:
@@ -26,4 +25,3 @@ class LocaleSelection(ComboNode):
     SELECTION_READONLY = True
     DEFAULT_VALUE = "en"
     VALUES = ["en", "ru"]
-

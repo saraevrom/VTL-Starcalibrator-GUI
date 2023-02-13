@@ -9,7 +9,10 @@ from .models import Linear, NonlinearSaturation, NonlinearPileup
 from scipy.optimize import minimize, Bounds, LinearConstraint
 import numpy.random as rng
 from localization import get_locale
-import tkinter.filedialog as filedialog
+from workspace_manager import Workspace
+
+CALIBRATION_WORKSPACE = Workspace("calibration")
+
 
 def line_fit_robust(xs, ys):
     k = np.float(weighted_median(ys/xs, xs))
@@ -234,7 +237,7 @@ def pile_up_manual(requested_data0):
     Load coefficients provided by Daniel
     requested_data0 is not used
     '''
-    filename_k = filedialog.askopenfilename(
+    filename_k = CALIBRATION_WORKSPACE.askopenfilename(
                                             title=get_locale("flatfielder.filedialog.open_k.title"),
                                             filetypes=[
                                                 (get_locale("app.filedialog_formats.txt"), "*.txt")
@@ -242,7 +245,7 @@ def pile_up_manual(requested_data0):
                                             initialfile="k_eff.txt"
                                             )
     if filename_k:
-        filename_tau = filedialog.askopenfilename(
+        filename_tau = CALIBRATION_WORKSPACE.askopenfilename(
             title=get_locale("flatfielder.filedialog.open_tau.title"),
             filetypes=[
                 (get_locale("app.filedialog_formats.txt"), "*.txt")

@@ -9,11 +9,15 @@ from robustats import weighted_median
 from .flat_fielding_methods import ALGO_MAP
 import matplotlib.pyplot as plt
 from localization import get_locale
-import tkinter.filedialog as filedialog
+# import tkinter.filedialog as filedialog
+from workspace_manager import Workspace
 
 from ..tool_base import ToolBase
 from .models import FlatFieldingModel, Chain
 import os.path as ospath
+
+
+FF_WORKSPACE = Workspace("ff_calibration")
 
 def line_fit_robust(xs, ys):
     k = np.float(weighted_median(ys/xs, xs))
@@ -211,7 +215,7 @@ class FlatFielder(ToolBase):
                 initial_filename = f"flat_fielding_src-{fbase}___chain.json"
             else:
                 initial_filename = f"flat_fielding_src-{fbase}___{av}_{t1}-{t2}_{iden}.json"
-            filename = filedialog.asksaveasfilename(parent=self,
+            filename = FF_WORKSPACE.asksaveasfilename(parent=self,
                                                       title=get_locale("flatfielder.filedialog.save_ff_settings.title"),
                                                       filetypes=[
                                                           (get_locale("app.filedialog_formats.ff_json"), "*.json")

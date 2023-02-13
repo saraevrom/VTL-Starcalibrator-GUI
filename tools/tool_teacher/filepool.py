@@ -1,7 +1,7 @@
 import tkinter as tk
-import tkinter.filedialog as filedialog
 
 import numpy as np
+from tkinter import filedialog
 
 from ..tool_base import ToolBase
 from localization import get_locale
@@ -10,8 +10,12 @@ import numpy.random as random
 import h5py
 
 class FilePool(tk.Frame):
-    def __init__(self, master, title_key, src_extension, allow_clear = False):
+    def __init__(self, master, title_key, src_extension, workspace=None, allow_clear = False):
         super().__init__(master)
+        if workspace is None:
+            self.workspace = filedialog
+        else:
+            self.workspace = workspace
         label = tk.Label(self, text=get_locale(title_key))
         label.grid(row=0, column=0, sticky="nsew")
         self.src_extension = src_extension
@@ -41,7 +45,7 @@ class FilePool(tk.Frame):
 
 
     def on_select_sources(self):
-        filenames = filedialog.askopenfilenames(title=get_locale("teacher.filedialog.title"),
+        filenames = self.workspace.askopenfilenames(title=get_locale("teacher.filedialog.title"),
                                                 filetypes=[
                                                     (get_locale("teacher.filedialog.source"), self.src_extension)],
                                                 parent=self)
@@ -113,8 +117,8 @@ class FilePool(tk.Frame):
         raise NotImplementedError("Random access is not implemented")
 
 class RandomFileAccess(FilePool):
-    def __init__(self, master, title_key, reading_field="EventsIJ", allow_clear=False):
-        super().__init__(master, title_key, "*.mat *.hdf *.h5", allow_clear=allow_clear)
+    def __init__(self, master, title_key, reading_field="EventsIJ", workspace=None, allow_clear=False):
+        super().__init__(master, title_key, "*.mat *.hdf *.h5", workspace=workspace, allow_clear=allow_clear)
         self.reading_field = reading_field
 
     def random_access(self):
@@ -127,8 +131,8 @@ class RandomFileAccess(FilePool):
         return None
 
 class RandomIntervalAccess(FilePool):
-    def __init__(self, master, title_key, allow_clear=False):
-        super().__init__(master, title_key, "*.mat *.hdf *.h5", allow_clear=allow_clear)
+    def __init__(self, master, title_key, workspace=None, allow_clear=False):
+        super().__init__(master, title_key, "*.mat *.hdf *.h5", workspace=workspace, allow_clear=allow_clear)
 
     def random_access(self):
         intervals, data0, broken = self.pull_fields_from_random_file(["marked_intervals", "data0", "broken"])

@@ -4,19 +4,23 @@ from localization import get_locale
 import json
 
 class TkFormControlPanel(tk.Frame):
-    def __init__(self,master):
+    def __init__(self,master, file_asker = None):
         super().__init__(master)
         btn1 = tk.Button(self, text=get_locale("app.filedialog.load_settings.title"), command=self.on_load)
         btn1.pack(side="left", fill="x", expand=True)
         btn2 = tk.Button(self, text=get_locale("app.filedialog.save_settings.title"), command=self.on_save)
         btn2.pack(side="right", fill="x", expand=True)
         self.connected_form = None
+        if file_asker is None:
+            self.file_asker = filedialog
+        else:
+            self.file_asker = file_asker
 
     def connect_form(self, form):
         self.connected_form = form
 
     def on_save(self):
-        filename = filedialog.asksaveasfilename(title=get_locale("app.filedialog.save_settings.title"),
+        filename = self.file_asker.asksaveasfilename(title=get_locale("app.filedialog.save_settings.title"),
                                      filetypes=[(get_locale("app.filedialog_formats.form_json"), "*.json")],
                                      initialdir=".",
                                      parent=self)
@@ -26,7 +30,7 @@ class TkFormControlPanel(tk.Frame):
                 json.dump(jsd, fp, indent=4)
 
     def on_load(self):
-        filename = filedialog.askopenfilename(title=get_locale("app.filedialog.save_settings.title"),
+        filename = self.file_asker.askopenfilename(title=get_locale("app.filedialog.save_settings.title"),
                                                 filetypes=[(get_locale("app.filedialog_formats.form_json"), "*.json")],
                                                 initialdir=".",
                                                 parent=self)
