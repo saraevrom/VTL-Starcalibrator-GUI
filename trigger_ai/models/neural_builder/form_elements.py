@@ -13,7 +13,7 @@ class Activation(ComboNode):
 
 
 class DenseConstructor(FormNode):
-    DISPLAY_NAME = get_locale(get_locale("app.model_builder.dense"))
+    DISPLAY_NAME = get_locale("app.model_builder.dense")
     FIELD__units = create_value_field(IntNode, get_locale("app.model_builder.dense.count"), 1)
     FIELD__activation = Activation
 

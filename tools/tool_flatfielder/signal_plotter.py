@@ -1,4 +1,4 @@
-from common_GUI.plotter import Plotter
+from localized_GUI.plotter import Plotter
 import numpy as np
 
 

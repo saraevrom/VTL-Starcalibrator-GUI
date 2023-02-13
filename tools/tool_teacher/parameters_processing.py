@@ -59,8 +59,14 @@ class DualProcessing(object):
 
 
 class LearnParameters(object):
-    def __init__(self,config):
+    def __init__(self, config):
         self.config = config
+
+    def __getattr__(self, item):
+        if item in self.config.keys():
+            return self.config[item]
+        else:
+            raise AttributeError(f" '{type(self).__name__}' object has no attribute '{item}' even in config")
 
     def get_fit_parameters(self):
         return {k: self.config[k] for k in ["epochs", "steps_per_epoch", "workers"]}

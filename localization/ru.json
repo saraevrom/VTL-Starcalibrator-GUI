@@ -53,6 +53,9 @@
   "teacher.advform.offset": "Сдвиг",
   "teacher.advform.parameters": "Параметры",
   "teacher.form.artificial_interference": "Искусственная помеха",
+  "teacher.form.quick_track_probability": "Вероятность быстрого трека",
+  "teacher.form.quick_track_attempts": "Количество попыток сгенерировать быстрый трек",
+  "teacher.form.flash_probability": "Вероятность вспышки",
 
 
   "app.preprocess.form.preprocess.title": "Предобработка",
@@ -77,6 +80,9 @@
   "app.model_create.form.title": "Нейросеть",
   "app.model_create.form.conv_outputs": "Выводы свёртки",
   "app.model_create.form.dense_count": "Количество нейронов в полносвязном слое",
+  "app.model_create.form.conv_X": "Свёртка по X",
+  "app.model_create.form.conv_Y": "Свёртка по Y",
+  "app.model_create.form.conv_T": "Свёртка по T",
   "app.model_create.form.dense_activation": "Активационная функция для полносвязного слоя",
 
   "app.model_builder.model": "Модель",
@@ -229,6 +235,8 @@
   "mat_converter.downloader.password": "Пароль",
   "mat_converter.downloader.button.access": "Войти",
 
+  "mat_converter.label.l_cut": "Обрезка в начале",
+  "mat_converter.label.r_cut": "Оббрезка в конце",
 
   "mat_converter.downloader.messagebox.login_error.title": "Доступ",
   "mat_converter.downloader.messagebox.login_error.msg": "Не удалось соединиться с сервером {server}",
@@ -273,6 +281,28 @@
   "app.menu.tools.starcalibrator": "Ориентация",
   "app.menu.tools.dataset_generator": "Генерация данных обучения",
   "app.menu.tools.teacher": "Обучение модели",
+  "app.menu.settings": "Настройки",
+
+  "app.parameters.MAIN_LATITUDE": "Широта обсерватории [°]",
+  "app.parameters.MAIN_LONGITUDE": "Долгота обсерватории [°]",
+  "app.parameters.PIXEL_SIZE": "Размер пикселя [мм]",
+  "app.parameters.HALF_GAP_SIZE": "Размер зазора между ФЭУ [мм]",
+  "app.parameters.HALF_PIXELS": "Количество пикселей в ряду одного ФЭУ",
+  "app.parameters.PLOT_COLORMAP": "Карта цветов для матрицы",
+  "app.parameters.PLOT_BROKEN_COLOR": "Цвет нерабочих пикселей",
+  "app.parameters.PLOT_HIGHLIGHT_COLOR": "Цвет выделенных пикселей",
+  "app.parameters.NPROC": "Количество потоков для параллельной обработки",
+  "app.parameters.LOCALE": "Язык",
+  "app.parameters.SCALE_FLOATING_POINT_FORMAT": "Формат плавающей точки для матрицы",
+  "app.parameters.DATETIME_FORMAT": "Формат даты/времени",
+  "app.parameters.USE_VIEWER": "Включить инструмент просмотра",
+  "app.parameters.USE_CONVERTER": "Включить инструмент преобразования",
+  "app.parameters.USE_FLATFIELDER": "Включить инструмент выравнивания пикселей",
+  "app.parameters.USE_STARCALIBRATOR": "Включить инструмент для звёздной калибровки",
+  "app.parameters.USE_BACKGROUND_EXTRACTOR": "Включить инструмент разметки фона",
+  "app.parameters.USE_DATASET_CREATOR": "Включить инструмент создания обучающих выборок",
+  "app.parameters.USE_TRAINER": "Включить инструмент обучения нейросети",
+  "app.parameters": "Параметры",
 
   "app.filedialog.save_settings.title": "Сохранение настроек",
   "app.filedialog.load_settings.title": "Загрузка настроек",
@@ -306,5 +336,8 @@
 
 
   "app.menu.help": "Помощь",
-  "app.help.datetime_hint": "Ввод даты/времени"
+  "app.help.datetime_hint": "Ввод даты/времени",
+
+  "app.state_off": "ВЫКЛ",
+  "app.state_on": "ВКЛ"
 }

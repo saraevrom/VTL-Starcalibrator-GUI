@@ -12,16 +12,10 @@ import warnings
 import os.path as ospath
 from extension import expand_app
 from helper import add_help_menu
-
-class Tool(object):
-    def __init__(self,master,tool_class):
-        self.master = master
-        self.tool_class = tool_class
-
-    def __call__(self):
-        return self.tool_class(self.master)
+import parameters
 
 
+parameters.localize_parameters_fields()
 
 class App(tk.Tk):
 
@@ -40,6 +34,7 @@ class App(tk.Tk):
         #self.toolsmenu = tk.Menu(self.topmenu, tearoff=0)
         self.topmenu.add_cascade(label=get_locale("app.menu.file"), menu=self.filemenu)
         expand_app(self.topmenu)
+        parameters.add_parameters_menu(self.topmenu)
         add_help_menu(self.topmenu)
         #self.topmenu.add_cascade(label=get_locale("app.menu.tools"), menu=self.toolsmenu)
         self.config(menu=self.topmenu)

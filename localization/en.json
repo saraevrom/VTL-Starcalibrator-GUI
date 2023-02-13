@@ -39,6 +39,9 @@
   "teacher.form.pregenerate_dataset": "Pregenerate dataset",
   "teacher.form.track_probability": "Track probability",
   "teacher.form.artificial_interference": "Artificial interference",
+  "teacher.form.quick_track_probability": "Quick track probability",
+  "teacher.form.quick_track_attempts": "Quick track attempts count",
+  "teacher.form.flash_probability": "Flash probability",
 
   "teacher.advform.constant": "Constant",
   "teacher.advform.amount": "Amount",
@@ -279,6 +282,29 @@
   "app.menu.tools.starcalibrator": "Orientation",
   "app.menu.tools.dataset_generator": "Dataset generator",
   "app.menu.tools.teacher": "Model training",
+  "app.menu.settings": "Settings",
+
+  "app.parameters.MAIN_LATITUDE": "Observatory latitude [°]",
+  "app.parameters.MAIN_LONGITUDE": "Observatory longitude [°]",
+  "app.parameters.PIXEL_SIZE": "Pixel size [mm]",
+  "app.parameters.HALF_GAP_SIZE": "Gap size [mm]",
+  "app.parameters.HALF_PIXELS": "One PMT pixels count",
+  "app.parameters.PLOT_COLORMAP": "Grid plotter colormap",
+  "app.parameters.PLOT_BROKEN_COLOR": "Grid plotter broken pixel color",
+  "app.parameters.PLOT_HIGHLIGHT_COLOR": "Grid plotter highlighted pixel color",
+  "app.parameters.NPROC": "Parallel computation processes",
+  "app.parameters.LOCALE": "Language",
+  "app.parameters.SCALE_FLOATING_POINT_FORMAT": "Floating point format for grid plotter scale",
+  "app.parameters.DATETIME_FORMAT": "Datetime format",
+  "app.parameters.USE_VIEWER": "Enable viewer tool",
+  "app.parameters.USE_CONVERTER": "Enable converter tool",
+  "app.parameters.USE_FLATFIELDER": "Enable flatfielder tool",
+  "app.parameters.USE_STARCALIBRATOR": "Enable star calibrator tool",
+  "app.parameters.USE_BACKGROUND_EXTRACTOR": "Enable background markup tool",
+  "app.parameters.USE_DATASET_CREATOR": "Enable dataset creation tool",
+  "app.parameters.USE_TRAINER": "Enable trainer tool",
+  "app.parameters": "Parameters",
+
 
   "app.filedialog.save_settings.title": "Save settings",
   "app.filedialog.load_settings.title": "Load settings",
@@ -312,5 +338,8 @@
 
 
   "app.menu.help": "Help",
-  "app.help.datetime_hint": "Datetime entry"
+  "app.help.datetime_hint": "Datetime entry",
+
+  "app.state_off": "OFF",
+  "app.state_on": "ON"
 }

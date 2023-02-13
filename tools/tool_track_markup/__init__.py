@@ -1,6 +1,7 @@
 import tkinter as tk
 
-from common_GUI import GridPlotter, TkDictForm
+from common_GUI import TkDictForm
+from localized_GUI import GridPlotter
 from ..tool_base import ToolBase
 from .sorted_queue import SortedQueue
 import numpy as np

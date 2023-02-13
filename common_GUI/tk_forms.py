@@ -3,10 +3,10 @@
 
 import tkinter as tk
 from tkinter import ttk
-from tkinter import filedialog, messagebox
-import json
+from tkinter import filedialog
 import os.path
 from .modified_base import EntryWithEnterKey
+
 
 def get_kwarg(kwdict,key,defval):
     if key in kwdict.keys():
@@ -660,4 +660,6 @@ class TkDictForm(tk.Frame):
         #print("Available values:",list(self.fields.keys()))
         for i in keys:
             self.fields[i].set_value(values[i])
+
+
 

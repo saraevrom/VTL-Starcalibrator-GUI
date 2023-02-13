@@ -5,7 +5,8 @@ import gc
 import numpy as np
 import numba as nb
 from ..tool_flatfielder import FlatFieldingModel
-from common_GUI import GridPlotter, SettingMenu
+from common_GUI import SettingMenu
+from localized_GUI import GridPlotter
 from localization import get_locale, format_locale
 import json
 import tkinter.filedialog as filedialog

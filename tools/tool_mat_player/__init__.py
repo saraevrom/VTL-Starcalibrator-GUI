@@ -1,5 +1,5 @@
 import tkinter as tk
-from common_GUI.plotter import GridPlotter
+from localized_GUI.plotter import GridPlotter
 from .player_controls import PlayerControls
 import numpy as np
 from datetime import datetime

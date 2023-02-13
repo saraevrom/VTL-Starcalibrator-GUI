@@ -14,7 +14,7 @@ import numpy as np
 from common_GUI import SettingMenu
 import tkinter.filedialog as filedialog
 from tensorflow import keras
-from common_GUI import TkDictForm
+from localized_GUI import SaveableTkDictForm
 from .advanced_form import SettingForm
 from multiprocessing import Process, Pipe
 from tensorflow.data import Dataset
@@ -22,6 +22,19 @@ from tensorflow.keras.utils import plot_model
 import tensorflow as tf
 from trigger_ai.models.model_wrapper import ModelWrapper, TargetParameters
 from extension.optional_pydot import PYDOT_INSTALLED
+import numba as nb
+
+nb.njit(nb.float64[:, :, :](nb.float64[:], nb.float64[:, :]))
+def signal_multiply(profile, mask):
+    T = profile.shape[0]
+    W, H = mask.shape
+    result = np.zeros((T, W, H))
+    for k in range(T):
+        for i in range(W):
+            for j in range(H):
+                result[k, i, j] = profile[k] * mask[i, j]
+    return result
+
 
 class ToolTeacher(ToolBase):
     def __init__(self, master):
@@ -49,7 +62,7 @@ class ToolTeacher(ToolBase):
         self.settings_form = SettingForm()
         form_conf = self.settings_form.get_configuration_root()
 
-        self.settings_menu = TkDictForm(control_frame, form_conf, True)
+        self.settings_menu = SaveableTkDictForm(control_frame, form_conf, True)
         self.settings_menu.commit_action = self.on_teach
         self.settings_menu.grid(row=0, column=0, columnspan=2, sticky="nsew")
 
@@ -160,8 +173,8 @@ class ToolTeacher(ToolBase):
                 conf = self.settings_form.get_data()
                 gc.collect()
 
-                if conf.config["pregenerate"] is not None:
-                    N = conf.config["pregenerate"]
+                if conf.pregenerate is not None:
+                    N = conf.pregenerate
                     trainX = np.zeros((N, 128, 16, 16))
                     trainY = np.zeros(self.workon_model.get_y_signature(N))
                     gen = self.data_generator(conf)
@@ -241,10 +254,20 @@ class ToolTeacher(ToolBase):
             else:
                 self.println_status(get_locale("teacher.status.msg_ok"), 1)
 
+
+    def generate_artificial_flash(self, conf):
+        # There is another type of interference: flashes.
+        # It can also confuse ANN. We can craft it from light curve of foreground signal
+        source_foreground = self.fg_pool.random_access()
+        lightcurve = np.sum(source_foreground, axis=(1, 2))
+        flash_mask = rng.random((16, 16)) * 2 - 1
+        flash_interference = signal_multiply(lightcurve, flash_mask)
+        return conf.process_it(flash_interference)
+
     def get_interference(self,conf, use_artificial):
         if use_artificial:
-            # We can create our very own interference signal from foreground signal!
             source_foreground = self.fg_pool.random_access()
+            # We can create artificial "meteor" interference signal from foreground signal
             flattened = np.sum(source_foreground, axis=0)
             interference = np.zeros(source_foreground.shape)
             interference[rng.randint(source_foreground.shape[0])] = flattened
@@ -269,27 +292,28 @@ class ToolTeacher(ToolBase):
             y_params = TargetParameters()
             artificial_interference = conf.intergerence_artificial()
             if artificial_interference or self.interference_pool.files_list:
-                if rng.random() < 0.5:
-                    interf = np.zeros(bg.shape)
-                    rng_append = rng.randint(1, 16)
-                    if rng_append % 2 == 1:
+                interf = np.zeros(bg.shape)
+                for _ in range(conf.quick_track_attempts):
+                    if rng.random() < conf.quick_track_probability:
                         y_params.interference_bottom_left = True
-                        interf[:, :8, :8] = self.get_interference(conf, artificial_interference)
-                    if rng_append // 2 % 2 == 1:
+                        interf[:, :8, :8] = interf[:, :8, :8] + self.get_interference(conf, artificial_interference)
+                    if rng.random() < conf.quick_track_probability:
                         y_params.interference_bottom_right = True
-                        interf[:, 8:, :8] = self.get_interference(conf, artificial_interference)
-                    if rng_append // 4 % 2 == 1:
+                        interf[:, 8:, :8] = interf[:, 8:, :8] + self.get_interference(conf, artificial_interference)
+                    if rng.random() < conf.quick_track_probability:
                         y_params.interference_top_left = True
-                        interf[:, :8, 8:] = self.get_interference(conf, artificial_interference)
-                    if rng_append // 8 % 2 == 1:
+                        interf[:, :8, 8:] = interf[:, :8, 8:] + self.get_interference(conf, artificial_interference)
+                    if rng.random() < conf.quick_track_probability:
                         y_params.interference_top_right = True
-                        interf[:, 8:, 8:] = self.get_interference(conf, artificial_interference)
-                    x_data = x_data + interf
-            if rng.random() < conf.config["track_probability"]:
+                        interf[:, 8:, 8:] = interf[:, 8:, 8:] + self.get_interference(conf, artificial_interference)
+                if artificial_interference and rng.random() < conf.flash_probability:
+                    interf = interf + self.generate_artificial_flash(conf)
+                x_data = x_data + interf
+            if rng.random() < conf.track_probability:
                 pass
             else:
                 fg = np.zeros(bg.shape)
-                rng_append = rng.randint(1,16)
+                rng_append = rng.randint(1, 16)
                 if rng_append % 2 == 1:
                     y_params.pmt_bottom_left = True
                     fg[:, :8, :8] = conf.process_fg(self.fg_pool.random_access())

@@ -15,7 +15,6 @@ from parameters import SCALE_FLOATING_POINT_FORMAT
 
 LOWER_EDGES = np.arange(HALF_PIXELS)*PIXEL_SIZE+HALF_GAP_SIZE
 LOWER_EDGES = np.concatenate([-np.flip(LOWER_EDGES)-PIXEL_SIZE, LOWER_EDGES])
-print(LOWER_EDGES)
 
 
 
@@ -90,7 +89,7 @@ class GridPlotter(Plotter):
                                              variable=self.use_autoscale_var)
             autoscale_check.grid(row=0, column=0, columnspan=4, sticky="w")
             tk.Label(norm_panel, text=get_locale("app.widgets.gridplotter.scale")).grid(row=0, column=1, sticky="ew")
-            tk.Label(norm_panel, text=get_locale("—")).grid(row=0, column=3, sticky="ew")
+            tk.Label(norm_panel, text="—").grid(row=0, column=3, sticky="ew")
             tk.Entry(norm_panel, textvariable=self.min_norm_entry).grid(row=0, column=2, sticky="ew")
             tk.Entry(norm_panel, textvariable=self.max_norm_entry).grid(row=0, column=4, sticky="ew")
 

@@ -56,6 +56,12 @@ class SettingForm(FormNode):
     FIELD__preprocessing = DataPreProcessorField
     FIELD__artificial_interference = create_value_field(BoolNode,
                                                         get_locale("teacher.form.artificial_interference"), False)
+    FIELD__quick_track_probability = create_value_field(FloatNode,
+                                                        get_locale("teacher.form.quick_track_probability"), 0.5)
+    FIELD__quick_track_attempts = create_value_field(IntNode,
+                                                     get_locale("teacher.form.quick_track_attempts"), 5)
+    FIELD__flash_probability = create_value_field(FloatNode,
+                                                  get_locale("teacher.form.flash_probability"), 0.0)
     FIELD__modification = create_dual(ProcessingSubform,
                                       get_locale("teacher.form.dataset_modification"),
                                       get_locale("teacher.status.msg_fg"),

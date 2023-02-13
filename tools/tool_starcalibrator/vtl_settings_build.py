@@ -26,7 +26,7 @@ def build_menu(menu: SettingMenu):
                      step=1.0, fmt="%.2f")
     menu.add_separator(get_locale("app.settings.separator.optimizer_parameters"))
     menu.add_setting(CheckboxValue, "optimizer_descent", get_locale("app.settings.field.optimizer_descent"), False)
-    menu.add_setting(ComboboxValue, "optimizer_descent_mode", get_locale("optimizer_descent_mode"), "nelder-mead", options=[
+    menu.add_setting(ComboboxValue, "optimizer_descent_mode", get_locale("app.settings.field.optimizer_descent_mode"), "nelder-mead", options=[
         "nelder-mead",
         "powell"
     ])
