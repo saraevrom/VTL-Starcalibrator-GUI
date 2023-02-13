@@ -54,6 +54,8 @@ class PregenerateDataset(OptionNode):
 class SettingForm(FormNode):
     FIELD__label_dataset_parameters = create_label(get_locale("teacher.form.separator.dataset_parameters"), True)
     FIELD__preprocessing = DataPreProcessorField
+    FIELD__artificial_interference = create_value_field(BoolNode,
+                                                        get_locale("teacher.form.artificial_interference"), False)
     FIELD__modification = create_dual(ProcessingSubform,
                                       get_locale("teacher.form.dataset_modification"),
                                       get_locale("teacher.status.msg_fg"),

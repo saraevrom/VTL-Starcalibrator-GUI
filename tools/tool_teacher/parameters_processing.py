@@ -71,6 +71,9 @@ class LearnParameters(object):
     def generator_params(self):
         return {k: self.config[k] for k in ["batch_size", ]}
 
+    def intergerence_artificial(self):
+        return self.config["artificial_interference"]
+
     def get_preprocessor(self):
         return self.config["preprocessing"]
 

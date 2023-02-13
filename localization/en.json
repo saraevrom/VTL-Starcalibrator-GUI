@@ -38,6 +38,7 @@
   "teacher.form.fastcache": "Fast cache",
   "teacher.form.pregenerate_dataset": "Pregenerate dataset",
   "teacher.form.track_probability": "Track probability",
+  "teacher.form.artificial_interference": "Artificial interference",
 
   "teacher.advform.constant": "Constant",
   "teacher.advform.amount": "Amount",

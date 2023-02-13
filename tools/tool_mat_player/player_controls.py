@@ -129,6 +129,7 @@ class ValuedSlider(ttk.Frame):
     def set_limit(self, upper):
         self.play_slider.high_end = upper
         self.upper_limit = upper
+        self.set_value(0)
 
     def on_ask_datetime(self):
         if self.ut0_explorer is not None:

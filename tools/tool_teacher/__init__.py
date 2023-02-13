@@ -241,6 +241,16 @@ class ToolTeacher(ToolBase):
             else:
                 self.println_status(get_locale("teacher.status.msg_ok"), 1)
 
+    def get_interference(self,conf, use_artificial):
+        if use_artificial:
+            # We can create our very own interference signal from foreground signal!
+            source_foreground = self.fg_pool.random_access()
+            flattened = np.sum(source_foreground, axis=0)
+            interference = np.zeros(source_foreground.shape)
+            interference[rng.randint(source_foreground.shape[0])] = flattened
+            return conf.process_it(interference)
+        else:
+            return conf.process_it(self.interference_pool.random_access())
 
     def data_generator(self, conf, frame_size=128, amount=None):
         i = 0
@@ -257,22 +267,24 @@ class ToolTeacher(ToolBase):
             bg = bg_sample[sample_start:sample_start+frame_size]
             x_data = preprocessor.preprocess(bg, broken=broken)
             y_params = TargetParameters()
-            if self.interference_pool.files_list:
+            artificial_interference = conf.intergerence_artificial()
+            if artificial_interference or self.interference_pool.files_list:
                 if rng.random() < 0.5:
                     interf = np.zeros(bg.shape)
                     rng_append = rng.randint(1, 16)
                     if rng_append % 2 == 1:
                         y_params.interference_bottom_left = True
-                        interf[:, :8, :8] = conf.process_it(self.interference_pool.random_access())
+                        interf[:, :8, :8] = self.get_interference(conf, artificial_interference)
                     if rng_append // 2 % 2 == 1:
                         y_params.interference_bottom_right = True
-                        interf[:, 8:, :8] = conf.process_it(self.interference_pool.random_access())
+                        interf[:, 8:, :8] = self.get_interference(conf, artificial_interference)
                     if rng_append // 4 % 2 == 1:
                         y_params.interference_top_left = True
-                        interf[:, :8, 8:] = conf.process_it(self.interference_pool.random_access())
+                        interf[:, :8, 8:] = self.get_interference(conf, artificial_interference)
                     if rng_append // 8 % 2 == 1:
                         y_params.interference_top_right = True
-                        interf[:, 8:, 8:] = conf.process_it(self.interference_pool.random_access())
+                        interf[:, 8:, 8:] = self.get_interference(conf, artificial_interference)
+                    x_data = x_data + interf
             if rng.random() < conf.config["track_probability"]:
                 pass
             else:
