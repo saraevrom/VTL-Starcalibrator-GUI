@@ -90,9 +90,6 @@ class LearnParameters(object):
 
     def process_bg(self, x_data, y_info):
         modifier = self.config["modification"]
-        res = x_data.copy()
-        mask = y_info.create_mask()
         bg_mod = modifier.apply_aux_primary(x_data)
-        np.putmask(res, mask, bg_mod)
-        return res
+        return bg_mod
 

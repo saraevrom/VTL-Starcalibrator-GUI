@@ -1,5 +1,5 @@
 '''
-Model with independent for every pmt
+Model shared for every pmt
 '''
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
@@ -11,12 +11,12 @@ from common_GUI.tk_forms_assist.factory import create_value_field
 from ..neural_builder.form_elements import LayerSequenceConstructor
 from localization import get_locale
 import tensorflow as tf
-from .model import SingleProcessor
+from .model import create_sequential_classifier
 from .default_configuration import DEFAULT_CONF
 from ..common import splat_select
 
 
-class SplitedModel(ModelWrapper):
+class NoSplitModel(ModelWrapper):
     def create_dataset_ydata_for_item(self, y_data_parameters):
         ydata = np.array([0., 0., 0., 0.])
         if y_data_parameters.pmt_bottom_left:
@@ -64,19 +64,15 @@ class IndependentGetter(LayerSequenceConstructor):
         return super().get_data(), super().get_data(), super().get_data(), super().get_data()
 
 
-class SplitedForm(FormNode):
+class NoSplitModelForm(FormNode):
     DEFAULT_VALUE = DEFAULT_CONF
-    DISPLAY_NAME = "Splited"
-    FIELD__independent = IndependentGetter
+    DISPLAY_NAME = "NoSplit"
+    FIELD__common = create_value_field(LayerSequenceConstructor, get_locale("models.splitmerge.common"))
 
     def get_data(self):
         data = super().get_data()
-        inputs = tf.keras.Input(shape=(128, 16, 16))
-        processor = SingleProcessor(**data)
-        output = processor.apply(inputs)
-        model = tf.keras.Model(inputs, output)
-        return SplitedModel(model)
+        model = create_sequential_classifier(data["common"])
+        return NoSplitModel(model)
 
 
-SplitedModel.MODEL_FORM = SplitedForm
-
+NoSplitModel.MODEL_FORM = NoSplitModelForm

@@ -13,13 +13,8 @@ from localization import get_locale
 import tensorflow as tf
 from .model import SingleProcessor
 from .default_configuration import DEFAULT_CONF
+from ..common import splat_select
 
-nb.njit()
-def splat_select(bool_arg, window):
-    result_arr = np.full(bool_arg.shape[0]+window-1, False)
-    for i in range(bool_arg.shape[0]):
-        result_arr[i:i+window] = np.logical_or(bool_arg[i], result_arr[i:i+window])
-    return result_arr
 
 class SplitMergeModel(ModelWrapper):
     def create_dataset_ydata_for_item(self, y_data_parameters):

@@ -1,13 +1,13 @@
 import tensorflow as tf
 
 def create_lambda(index, *args, **kwrags):
-    if index==0:
+    if index==0: # bottom left
         return tf.keras.layers.Lambda(lambda x: x[:, :, :8, :8], *args, **kwrags)
-    elif index==1:
+    elif index==1: # top left
         return tf.keras.layers.Lambda(lambda x: x[:, :, :8, 8:], *args, **kwrags)
-    elif index==10:
+    elif index==10: # bottom right
         return tf.keras.layers.Lambda(lambda x: x[:, :, 8:, :8], *args, **kwrags)
-    elif index==11:
+    elif index==11: # top right
         return tf.keras.layers.Lambda(lambda x: x[:, :, 8:, 8:], *args, **kwrags)
 
 
@@ -25,11 +25,15 @@ class SingleProcessor(object):
     def __init__(self, independent):
         self.pmt_layers = []
         j = 0
-        for i in [0, 1, 10, 11]:
+        for i in [0, 10, 1, 11]:
             self.pmt_layers.append([create_lambda(i)]+independent[j]+[tf.keras.layers.Dense(1, activation="sigmoid")])
             j += 1
 
-        self.common_layers = [tf.keras.layers.Concatenate(), tf.keras.layers.Flatten()]
+        self.common_layers = [tf.keras.layers.Concatenate(),
+                              # In case labels are messed up one dense layer fixes issue.
+                              # tf.keras.layers.Dense(4, use_bias=False, activation="linear"),
+                              tf.keras.layers.Flatten()
+                              ]
 
     def apply(self, inputs):
         workon = [apply_layer_array(inputs, pmt_layer) for pmt_layer in self.pmt_layers]

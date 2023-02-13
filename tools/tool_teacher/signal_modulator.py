@@ -11,10 +11,10 @@ class SignalModifier(Appliance):
         self.offset = offset
 
     def apply(self, data):
-        return self.multiplier.sample()*data + self.offset.sample(data.shape)
+        return self.multiplier.sample()*data
 
     def apply_aux(self, data):
-        return self.offset.sample(data.shape)
+        return self.offset.sample(data.shape)+data
 
 
 

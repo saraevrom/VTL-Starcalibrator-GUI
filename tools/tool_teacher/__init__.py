@@ -196,12 +196,17 @@ class ToolTeacher(ToolBase):
             conf = self.settings_form.get_data()
             gc.collect()
             gen = self.data_generator(conf)
-            x, y_par = next(gen)
+            x_gen, y_par = next(gen)
             while y_par.has_track() != needstrack:
-                x, y_par = next(gen)
+                x_gen, y_par = next(gen)
+            print("GENERATE_SUCCESS:", (x_gen!=0).any())
             fig, ax = plt.subplots()
-            display_data = np.max(x, axis=0)
-            ax.matshow(display_data.T)
+            # display_data = np.max(x_gen, axis=0)
+            # ax.matshow(display_data.T)
+            plot_xs = np.arange(x_gen.shape[0])
+            for i in range(16):
+                for j in range(16):
+                    ax.plot(plot_xs, x_gen[:, i, j])
             if y_par.has_track():
                 ax.set_title(get_locale("teacher.sampleplot.title_true"))
             else:
