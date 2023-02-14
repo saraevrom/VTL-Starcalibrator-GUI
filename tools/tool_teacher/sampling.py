@@ -1,8 +1,8 @@
 import numpy as np
-import numpy.random as rng
+
 
 class Sampler(object):
-    def sample(self, shape=None):
+    def sample(self, rng, shape=None):
         raise NotImplementedError()
 
 
@@ -10,7 +10,7 @@ class SamplerConstant(Sampler):
     def __init__(self, value):
         self.value = value
 
-    def sample(self, shape=None):
+    def sample(self, rng, shape=None):
         if shape is None:
             return self.value
         else:
@@ -18,27 +18,28 @@ class SamplerConstant(Sampler):
 
 
 class SamplerUniform(Sampler):
-    def __init__(self, low, high):
+    def __init__(self, low: Sampler, high: Sampler):
         self.low = low
         self.high = high
 
-    def sample(self, shape=None):
-        low = self.low.sample()
-        high = self.high.sample()
+    def sample(self, rng, shape=None):
+        low = self.low.sample(rng)
+        high = self.high.sample(rng)
         if shape is None:
             return rng.random()*(high-low)+low
         else:
             return rng.random(*shape) * (high - low) + low
 
+
 class SamplerGauss(Sampler):
 
-    def __init__(self, mean, stdev):
+    def __init__(self, mean: Sampler, stdev: Sampler):
         self.mean = mean
         self.stdev = stdev
 
-    def sample(self, shape=None):
-        mean = self.mean.sample()
-        stdev = self.stdev.sample()
+    def sample(self, rng, shape=None):
+        mean = self.mean.sample(rng)
+        stdev = self.stdev.sample(rng)
         return rng.normal(mean, stdev, size=shape)
 
 
@@ -47,12 +48,12 @@ SQRT_2 = np.sqrt(2)
 
 class SamplerLaplace(Sampler):
 
-    def __init__(self, mean, stdev):
+    def __init__(self, mean: Sampler, stdev: Sampler):
         self.mean = mean
         self.stdev = stdev
 
-    def sample(self, shape=None):
-        mean = self.mean.sample()
-        stdev = self.stdev.sample()
+    def sample(self, rng, shape=None):
+        mean = self.mean.sample(rng)
+        stdev = self.stdev.sample(rng)
         return rng.laplace(mean, stdev/SQRT_2, size=shape)
 

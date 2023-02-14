@@ -16,6 +16,7 @@
   "teacher.status.msg_empty": "Пуст",
   "teacher.button.start": "Начать обучение",
   "teacher.button.reset": "Сбросить модель",
+  "teacher.button.reset_seed": "Сбросить зерно",
   "teacher.button.recompile": "Перекомпилировать модель",
   "teacher.button.save": "Сохранить модель",
   "teacher.button.load": "Загрузить модель",
@@ -58,6 +59,7 @@
   "teacher.form.flash_probability": "Вероятность вспышки",
   "teacher.form.flash_maxsize": "Максимальная длина вспышки",
   "teacher.form.flash_attempts": "Количество попыток сгенерировать вспышку",
+  "teacher.form.seed": "Зерно",
 
 
   "app.preprocess.form.preprocess.title": "Предобработка",

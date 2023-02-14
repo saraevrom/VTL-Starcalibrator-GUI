@@ -77,6 +77,7 @@ class SettingForm(FormNode):
 
     FIELD__postprocess = create_value_field(PostprocessingSubform, get_locale("teacher.advform.offset"))
     FIELD__label_teaching = create_label(get_locale("teacher.form.separator.model_teaching"), True)
+    FIELD__seed = create_value_field(IntNode, get_locale("teacher.form.seed"), 42)
     FIELD__track_probability = create_value_field(FloatNode, get_locale("teacher.form.track_probability"), 0.9375)
     FIELD__epochs = create_value_field(IntNode, get_locale("teacher.form.epochs"), 1)
     FIELD__steps_per_epoch = create_value_field(IntNode, get_locale("teacher.form.steps_per_epoch"), 10)

@@ -9,16 +9,16 @@ class SignalModifier(Appliance):
     def __init__(self, multiplier):
         self.multiplier = multiplier
 
-    def apply(self, data):
-        return self.multiplier.sample()*data
+    def apply(self, data, rng):
+        return self.multiplier.sample(rng)*data
 
 
 class PostProcessor(Appliance):
     def __init__(self, offset):
         self.offset = offset
 
-    def apply(self, data):
-        return self.offset.sample(data.shape)+data
+    def apply(self, data, rng):
+        return self.offset.sample(rng, data.shape)+data
 
 class ProcessingSubform(FormNode):
     USE_SCROLLVIEW = False

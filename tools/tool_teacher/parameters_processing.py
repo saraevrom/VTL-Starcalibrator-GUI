@@ -1,13 +1,10 @@
-import numpy.random as rng
 import numpy as np
 from trigger_ai.models.model_wrapper import TargetParameters
 
 class Appliance(object):
-    def apply(self, data):
+    def apply(self, data, rng):
         raise NotImplementedError()
 
-    def apply_aux(self, data):
-        return data
 
 
 
@@ -16,7 +13,7 @@ class Augmenter(Appliance):
         self.use_transpose = use_transpose
         self.use_reverse = use_reverse
 
-    def apply(self, data):
+    def apply(self, data, rng):
         data1 = data
         if self.use_transpose and rng.random()<0.5:
             data1 = np.swapaxes(data, 1, 2)
@@ -39,23 +36,12 @@ class DualProcessing(object):
         else:
             return self.secondary
 
-    def apply_primary(self, data):
-        return self.primary.apply(data)
+    def apply_primary(self, data, rng):
+        return self.primary.apply(data, rng)
 
-    def apply_aux_primary(self, data):
-        return self.primary.apply_aux(data)
+    def apply_secondary(self, data, rng):
+        return self.get_secondary().apply(data, rng)
 
-    def apply_secondary(self, data):
-        return self.get_secondary().apply(data)
-
-    def apply_aux_secondary(self, data):
-        return self.get_secondary().apply_aux(data)
-
-    def sample_primary(self):
-        return self.primary.sample()
-
-    def sample_secondary(self):
-        return self.get_secondary().sample()
 
 
 class LearnParameters(object):
@@ -83,21 +69,21 @@ class LearnParameters(object):
     def get_preprocessor(self):
         return self.config["preprocessing"]
 
-    def process_fg(self, data):
+    def process_fg(self, data, rng):
         modifier = self.config["modification"]
         augmenter = self.config["augment"]
-        data1 = modifier.apply_primary(data)
-        data1 = augmenter.apply_primary(data1)
+        data1 = modifier.apply_primary(data, rng)
+        data1 = augmenter.apply_primary(data1, rng)
         return data1
 
-    def process_it(self, data):
+    def process_it(self, data, rng):
         modifier = self.config["modification"]
         augmenter = self.config["augment"]
-        data1 = modifier.apply_secondary(data)
-        data1 = augmenter.apply_secondary(data1)
+        data1 = modifier.apply_secondary(data, rng)
+        data1 = augmenter.apply_secondary(data1, rng)
         return data1
 
-    def process_bg(self, x_data, y_info):
-        bg_mod = self.postprocess.apply(x_data)
+    def process_bg(self, x_data, y_info, rng):
+        bg_mod = self.postprocess.apply(x_data, rng)
         return bg_mod
 

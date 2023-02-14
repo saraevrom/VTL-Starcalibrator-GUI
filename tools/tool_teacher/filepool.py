@@ -3,10 +3,8 @@ import tkinter as tk
 import numpy as np
 from tkinter import filedialog
 
-from ..tool_base import ToolBase
 from localization import get_locale
 import os.path as ospath
-import numpy.random as random
 import h5py
 
 class FilePool(tk.Frame):
@@ -64,13 +62,13 @@ class FilePool(tk.Frame):
             self.open_files_cache[filename] = obj
             return obj
 
-    def pull_random_file(self):
-        filename = random.choice(self.files_list)
+    def pull_random_file(self, rng):
+        filename = rng.choice(self.files_list)
         obj = self.get_cached_fileaccess(filename)
         return obj
 
-    def pull_fields_from_random_file(self, fields):
-        filename = random.choice(self.files_list)
+    def pull_fields_from_random_file(self, fields, rng):
+        filename = rng.choice(self.files_list)
         if self.fast_cache:
             result = []
             obj = None
@@ -113,7 +111,7 @@ class FilePool(tk.Frame):
                         })
         return failed
 
-    def random_access(self):
+    def random_access(self, rng):
         raise NotImplementedError("Random access is not implemented")
 
 class RandomFileAccess(FilePool):
@@ -121,11 +119,11 @@ class RandomFileAccess(FilePool):
         super().__init__(master, title_key, "*.mat *.hdf *.h5", workspace=workspace, allow_clear=allow_clear)
         self.reading_field = reading_field
 
-    def random_access(self):
-        dataset, = self.pull_fields_from_random_file([self.reading_field])
+    def random_access(self, rng):
+        dataset, = self.pull_fields_from_random_file([self.reading_field], rng)
         length = dataset.shape[0]
         if length > 0:
-            i = random.randint(0, length)
+            i = rng.integers(0, length)
             sample = dataset[i]
             return sample
         return None
@@ -134,12 +132,12 @@ class RandomIntervalAccess(FilePool):
     def __init__(self, master, title_key, workspace=None, allow_clear=False):
         super().__init__(master, title_key, "*.mat *.hdf *.h5", workspace=workspace, allow_clear=allow_clear)
 
-    def random_access(self):
-        intervals, data0, broken = self.pull_fields_from_random_file(["marked_intervals", "data0", "broken"])
+    def random_access(self, rng):
+        intervals, data0, broken = self.pull_fields_from_random_file(["marked_intervals", "data0", "broken"], rng)
         weights = intervals[:, 2]
         p = weights/np.sum(weights)
         length = intervals.shape[0]
-        i = random.choice(np.arange(length), p=p)
+        i = rng.choice(np.arange(length), p=p)
         sample_interval = intervals[i]
         start = sample_interval[0]
         end = sample_interval[1]

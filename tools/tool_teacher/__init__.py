@@ -9,7 +9,7 @@ from tkinter.scrolledtext import ScrolledText
 from localization import get_locale, format_locale
 from trigger_ai import compile_model, create_model
 import gc
-import numpy.random as rng
+import numpy.random as numpy_rng
 import numpy as np
 from common_GUI import SettingMenu
 from workspace_manager import Workspace
@@ -69,6 +69,7 @@ class ToolTeacher(ToolBase):
         self.status_display.config(state=tk.DISABLED)
         self.check_passed = False
         self.workon_model = None
+        self.rng = None
 
         control_frame = tk.Frame(self)
         control_frame.grid(row=0, column=3, sticky="nsew")
@@ -105,6 +106,17 @@ class ToolTeacher(ToolBase):
         teachbtn = tk.Button(control_frame, text=get_locale("teacher.button.start"), command=self.on_teach)
         teachbtn.grid(row=6, column=0, columnspan=2, sticky="ew")
 
+        seedreset = tk.Button(control_frame, text=get_locale("teacher.button.reset_seed"), command=self.reset_generator)
+        seedreset.grid(row=7, column=0, columnspan=2, sticky="ew")
+
+        self.reset_generator()
+
+
+    def reset_generator(self):
+        conf = self.settings_menu.get_values()
+        self.settings_form.parse_formdata(conf)
+        conf = self.settings_form.get_data()
+        self.rng = numpy_rng.Generator(numpy_rng.MT19937(seed=conf.seed))
 
     def try_reset_model(self):
         new_model = create_model(self)
@@ -280,7 +292,7 @@ class ToolTeacher(ToolBase):
         length = None
         first = None
         while searching:
-            source_foreground = self.fg_pool.random_access()
+            source_foreground = self.fg_pool.random_access(self.rng)
             lightcurve = np.sum(source_foreground, axis=(1, 2))
             signal_present = lightcurve > 0
             length = np.count_nonzero(signal_present)
@@ -295,39 +307,39 @@ class ToolTeacher(ToolBase):
 
         if length<128:
             lc_cut = lightcurve[first:first+length]
-            new_start = rng.randint(0, 128 - length)
+            new_start = self.rng.integers(0, 128 - length)
             new_lightcurve = np.zeros(shape=lightcurve.shape)
             new_lightcurve[new_start:new_start+length] = lc_cut
             lightcurve = new_lightcurve
 
 
-        flash_mask = rng.random((16, 16)) * 2 - 1
+        flash_mask = self.rng.random((16, 16)) * 2 - 1
         flash_interference = signal_multiply(lightcurve, flash_mask)
-        return conf.process_it(flash_interference)
+        return conf.process_it(flash_interference, rng=self.rng)
 
-    def get_interference(self,conf, use_artificial):
+    def get_interference(self, conf, use_artificial):
         if use_artificial:
-            source_foreground = self.fg_pool.random_access()
+            source_foreground = self.fg_pool.random_access(self.rng)
             # We can create artificial "meteor" interference signal from foreground signal
             flattened = np.sum(source_foreground, axis=0)
             interference = np.zeros(source_foreground.shape)
-            interference[rng.randint(source_foreground.shape[0])] = flattened
-            return conf.process_it(interference/np.max(interference)*np.max(source_foreground))
+            interference[self.rng.integers(source_foreground.shape[0])] = flattened
+            return conf.process_it(interference/np.max(interference)*np.max(source_foreground), rng=self.rng)
         else:
-            return conf.process_it(self.interference_pool.random_access())
+            return conf.process_it(self.interference_pool.random_access(self.rng), rng=self.rng)
 
     def data_generator(self, conf, frame_size=128, amount=None):
         i = 0
         cycle_forever = amount is None
         preprocessor = conf.get_preprocessor()
         while cycle_forever or i < amount:
-            bg_sample, (bg_start, bg_end), broken = self.bg_pool.random_access()
+            bg_sample, (bg_start, bg_end), broken = self.bg_pool.random_access(self.rng)
             if np.abs(bg_end-bg_start) < frame_size:
                 continue
             if bg_start==bg_end-frame_size:
                 sample_start = bg_start
             else:
-                sample_start = rng.randint(bg_start, bg_end-frame_size)
+                sample_start = self.rng.integers(bg_start, bg_end-frame_size)
             bg = bg_sample[sample_start:sample_start+frame_size]
             x_data = preprocessor.preprocess(bg, broken=broken)
             y_params = TargetParameters()
@@ -335,45 +347,45 @@ class ToolTeacher(ToolBase):
             if artificial_interference or self.interference_pool.files_list:
                 interf = np.zeros(bg.shape)
                 for _ in range(conf.quick_track_attempts):
-                    if rng.random() < conf.quick_track_probability:
+                    if self.rng.random() < conf.quick_track_probability:
                         y_params.interference_bottom_left = True
                         interf[:, :8, :8] = interf[:, :8, :8] + self.get_interference(conf, artificial_interference)
-                    if rng.random() < conf.quick_track_probability:
+                    if self.rng.random() < conf.quick_track_probability:
                         y_params.interference_bottom_right = True
                         interf[:, 8:, :8] = interf[:, 8:, :8] + self.get_interference(conf, artificial_interference)
-                    if rng.random() < conf.quick_track_probability:
+                    if self.rng.random() < conf.quick_track_probability:
                         y_params.interference_top_left = True
                         interf[:, :8, 8:] = interf[:, :8, 8:] + self.get_interference(conf, artificial_interference)
-                    if rng.random() < conf.quick_track_probability:
+                    if self.rng.random() < conf.quick_track_probability:
                         y_params.interference_top_right = True
                         interf[:, 8:, 8:] = interf[:, 8:, 8:] + self.get_interference(conf, artificial_interference)
 
-                if artificial_interference and rng.random() < conf.flash_probability:
+                if artificial_interference and self.rng.random() < conf.flash_probability:
                     interf = interf + self.generate_artificial_flash(conf)
                 x_data = x_data + interf
-            if rng.random() < conf.track_probability:
+            if self.rng.random() < conf.track_probability:
                 pass
             else:
                 fg = np.zeros(bg.shape)
-                rng_append = rng.randint(1, 16)
+                rng_append = self.rng.integers(1, 16)
                 if rng_append % 2 == 1:
                     y_params.pmt_bottom_left = True
-                    fg[:, :8, :8] = conf.process_fg(self.fg_pool.random_access())
+                    fg[:, :8, :8] = conf.process_fg(self.fg_pool.random_access(self.rng), rng=self.rng)
                 if rng_append // 2 % 2 == 1:
                     y_params.pmt_bottom_right = True
-                    fg[:, 8:, :8] = conf.process_fg(self.fg_pool.random_access())
+                    fg[:, 8:, :8] = conf.process_fg(self.fg_pool.random_access(self.rng), rng=self.rng)
                 if rng_append // 4 % 2 == 1:
                     y_params.pmt_top_left = True
-                    fg[:, :8, 8:] = conf.process_fg(self.fg_pool.random_access())
+                    fg[:, :8, 8:] = conf.process_fg(self.fg_pool.random_access(self.rng), rng=self.rng)
                 if rng_append // 8 % 2 == 1:
                     y_params.pmt_top_right = True
-                    fg[:, 8:, 8:] = conf.process_fg(self.fg_pool.random_access())
+                    fg[:, 8:, 8:] = conf.process_fg(self.fg_pool.random_access(self.rng), rng=self.rng)
                 fg[:, broken] = 0
                 x_data = x_data + fg
             i += 1
             # obfuscating neural network,
             # so it won't use changing noise for track detection
-            x_data = conf.process_bg(x_data, y_params)
+            x_data = conf.process_bg(x_data, y_params, rng=self.rng)
             yield x_data, y_params
 
     def batch_generator(self, conf, frame_size=128):

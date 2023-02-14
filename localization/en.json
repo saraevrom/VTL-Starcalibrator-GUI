@@ -17,6 +17,7 @@
   "teacher.status.msg_empty": "Pool empty",
   "teacher.button.start": "Start fit",
   "teacher.button.reset": "Reset model",
+  "teacher.button.reset_seed": "Reset seed",
   "teacher.button.recompile": "Recompile model",
   "teacher.button.save": "Save model",
   "teacher.button.load": "Load model",
@@ -44,6 +45,7 @@
   "teacher.form.flash_probability": "Flash probability",
   "teacher.form.flash_maxsize": "Flash maximum length",
   "teacher.form.flash_attempts": "Flash attempts",
+  "teacher.form.seed": "Seed",
 
   "teacher.advform.constant": "Constant",
   "teacher.advform.amount": "Amount",
