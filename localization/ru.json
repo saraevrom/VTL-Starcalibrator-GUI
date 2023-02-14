@@ -56,6 +56,8 @@
   "teacher.form.quick_track_probability": "Вероятность быстрого трека",
   "teacher.form.quick_track_attempts": "Количество попыток сгенерировать быстрый трек",
   "teacher.form.flash_probability": "Вероятность вспышки",
+  "teacher.form.flash_maxsize": "Максимальная длина вспышки",
+  "teacher.form.flash_attempts": "Количество попыток сгенерировать вспышку",
 
 
   "app.preprocess.form.preprocess.title": "Предобработка",

@@ -40,8 +40,10 @@
   "teacher.form.track_probability": "Track probability",
   "teacher.form.artificial_interference": "Artificial interference",
   "teacher.form.quick_track_probability": "Quick track probability",
-  "teacher.form.quick_track_attempts": "Quick track attempts count",
+  "teacher.form.quick_track_attempts": "Quick track attempts",
   "teacher.form.flash_probability": "Flash probability",
+  "teacher.form.flash_maxsize": "Flash maximum length",
+  "teacher.form.flash_attempts": "Flash attempts",
 
   "teacher.advform.constant": "Constant",
   "teacher.advform.amount": "Amount",

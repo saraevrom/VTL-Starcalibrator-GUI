@@ -4,8 +4,8 @@ from common_GUI.tk_forms_assist.factory import create_value_field, create_label
 from localization import get_locale
 from .parameters_processing import Augmenter, DualProcessing, LearnParameters
 from preprocessing import DataPreProcessorField
-from .signal_modulator import ProcessingSubform
-
+from .signal_modulator import ProcessingSubform, PostprocessingSubform
+from .noising import FloatDistributedAlter
 
 def create_dual(shared_field, common_title, title_master, title_slave):
     class MasterField(shared_field):
@@ -62,6 +62,8 @@ class SettingForm(FormNode):
                                                      get_locale("teacher.form.quick_track_attempts"), 5)
     FIELD__flash_probability = create_value_field(FloatNode,
                                                   get_locale("teacher.form.flash_probability"), 0.0)
+    FIELD__flash_maxsize = create_value_field(IntNode, get_locale("teacher.form.flash_maxsize"), 10)
+    FIELD__flash_attempts = create_value_field(IntNode, get_locale("teacher.form.flash_attempts"), 0)
     FIELD__modification = create_dual(ProcessingSubform,
                                       get_locale("teacher.form.dataset_modification"),
                                       get_locale("teacher.status.msg_fg"),
@@ -72,6 +74,8 @@ class SettingForm(FormNode):
                                  get_locale("teacher.status.msg_fg"),
                                  get_locale("teacher.status.msg_it")
                                  )
+
+    FIELD__postprocess = create_value_field(PostprocessingSubform, get_locale("teacher.advform.offset"))
     FIELD__label_teaching = create_label(get_locale("teacher.form.separator.model_teaching"), True)
     FIELD__track_probability = create_value_field(FloatNode, get_locale("teacher.form.track_probability"), 0.9375)
     FIELD__epochs = create_value_field(IntNode, get_locale("teacher.form.epochs"), 1)

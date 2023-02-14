@@ -30,7 +30,7 @@ MDATA_WORKSPACE = Workspace("merged_data")
 MODELED_TRACK_WORKSPACE = Workspace("modelled_tracks")
 EVENTS_PRESET_WORKSPACE = Workspace("ann_event_presets")
 
-nb.njit(nb.float64[:, :, :](nb.float64[:], nb.float64[:, :]))
+@nb.njit(nb.float64[:, :, :](nb.float64[:], nb.float64[:, :]))
 def signal_multiply(profile, mask):
     T = profile.shape[0]
     W, H = mask.shape
@@ -40,6 +40,14 @@ def signal_multiply(profile, mask):
             for j in range(H):
                 result[k, i, j] = profile[k] * mask[i, j]
     return result
+
+
+@nb.njit(nb.int64(nb.boolean[:]))
+def find_first_true(arr):
+    for i in range(len(arr)):
+        if arr[i]:
+            return i
+    return -1
 
 
 class ToolTeacher(ToolBase):
@@ -265,8 +273,34 @@ class ToolTeacher(ToolBase):
     def generate_artificial_flash(self, conf):
         # There is another type of interference: flashes.
         # It can also confuse ANN. We can craft it from light curve of foreground signal
-        source_foreground = self.fg_pool.random_access()
-        lightcurve = np.sum(source_foreground, axis=(1, 2))
+        searching = True
+        lightcurve = None
+        attempts = 10000
+        min_length = None
+        length = None
+        first = None
+        while searching:
+            source_foreground = self.fg_pool.random_access()
+            lightcurve = np.sum(source_foreground, axis=(1, 2))
+            signal_present = lightcurve > 0
+            length = np.count_nonzero(signal_present)
+            first = find_first_true(signal_present)
+            if (min_length is None) or length < min_length:
+                min_length = length
+
+            attempts -= 1
+            if attempts==0:
+                raise RuntimeError(f"Could not generate artificial flash. Minimal encountered length of track is {min_length}")
+            searching = length > conf.flash_maxsize or first < 0
+
+        if length<128:
+            lc_cut = lightcurve[first:first+length]
+            new_start = rng.randint(0, 128 - length)
+            new_lightcurve = np.zeros(shape=lightcurve.shape)
+            new_lightcurve[new_start:new_start+length] = lc_cut
+            lightcurve = new_lightcurve
+
+
         flash_mask = rng.random((16, 16)) * 2 - 1
         flash_interference = signal_multiply(lightcurve, flash_mask)
         return conf.process_it(flash_interference)
@@ -278,7 +312,7 @@ class ToolTeacher(ToolBase):
             flattened = np.sum(source_foreground, axis=0)
             interference = np.zeros(source_foreground.shape)
             interference[rng.randint(source_foreground.shape[0])] = flattened
-            return conf.process_it(interference)
+            return conf.process_it(interference/np.max(interference)*np.max(source_foreground))
         else:
             return conf.process_it(self.interference_pool.random_access())
 
@@ -313,6 +347,7 @@ class ToolTeacher(ToolBase):
                     if rng.random() < conf.quick_track_probability:
                         y_params.interference_top_right = True
                         interf[:, 8:, 8:] = interf[:, 8:, 8:] + self.get_interference(conf, artificial_interference)
+
                 if artificial_interference and rng.random() < conf.flash_probability:
                     interf = interf + self.generate_artificial_flash(conf)
                 x_data = x_data + interf

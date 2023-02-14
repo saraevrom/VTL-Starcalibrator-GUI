@@ -14,12 +14,22 @@ class OrderedClassMembers(type):
         return type.__new__(self, name, bases, classdict)
 
 
-class OptionNode(ValueNode):
+class OptionNode(Node):
     '''
     Node corresponding to the "option" entry
     '''
     FIELD_TYPE = "option"
     ITEM_TYPE = None
+
+    def __init__(self):
+        self.value = None
+
+    def parse_formdata(self, formdata):
+        if formdata is None:
+            self.value = None
+        else:
+            self.value = self.ITEM_TYPE()
+            self.value.parse_formdata(formdata)
 
     @classmethod
     def generate_configuration(cls):
@@ -33,6 +43,13 @@ class OptionNode(ValueNode):
             cls.ITEM_TYPE.fill_configuration()
             return True
         return False
+
+    def get_data(self):
+        sub_data = self.value
+        if sub_data is not None:
+            return sub_data.get_data()
+
+        return None
 
 class ArrayNode(Node):
     '''

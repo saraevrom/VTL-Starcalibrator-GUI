@@ -98,7 +98,6 @@ class LearnParameters(object):
         return data1
 
     def process_bg(self, x_data, y_info):
-        modifier = self.config["modification"]
-        bg_mod = modifier.apply_aux_primary(x_data)
+        bg_mod = self.postprocess.apply(x_data)
         return bg_mod
 
