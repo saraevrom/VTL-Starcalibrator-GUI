@@ -8,6 +8,7 @@ from .forms import localize_fields as localize_parameters_fields
 import tkinter as tk
 from tkinter.simpledialog import Dialog
 from common_GUI import TkDictForm
+from numba import set_num_threads
 
 cwd = ospath.abspath(__file__)
 settings_path = ospath.join(ospath.dirname(cwd), "parameters.json")
@@ -28,6 +29,8 @@ parser.parse_formdata(LOADED_SETTINGS)
 LOADED_SETTINGS_OBJ = parser.get_data()
 for k in LOADED_SETTINGS_OBJ.keys():
     globals()[k] = LOADED_SETTINGS_OBJ[k]
+
+set_num_threads(LOADED_SETTINGS_OBJ["NPROC"])
 
 del parser
 del LOADED_SETTINGS_OBJ
