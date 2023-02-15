@@ -7,6 +7,15 @@ from localization import get_locale
 import os.path as ospath
 import h5py
 
+import numba as nb
+
+@nb.njit(nb.int64(nb.boolean[:]))
+def find_first_true(arr):
+    for i in range(len(arr)):
+        if arr[i]:
+            return i
+    return -1
+
 class FilePool(tk.Frame):
     def __init__(self, master, title_key, src_extension, workspace=None, allow_clear = False):
         super().__init__(master)
@@ -125,8 +134,20 @@ class RandomFileAccess(FilePool):
         if length > 0:
             i = rng.integers(0, length)
             sample = dataset[i]
-            return sample
+            signal_present = np.logical_or.reduce(sample,axis=(1,2))
+            length = np.count_nonzero(signal_present)
+            if length < 128:
+                first = find_first_true(signal_present)
+                assert first >= 0
+                lc_cut = sample[first:first + length]
+                new_start = rng.integers(0, 128 - length)
+                new_sample = np.zeros(shape=sample.shape)
+                new_sample[new_start:new_start + length] = lc_cut
+                return new_sample, length
+            else:
+                return sample, length
         return None
+
 
 class RandomIntervalAccess(FilePool):
     def __init__(self, master, title_key, workspace=None, allow_clear=False):

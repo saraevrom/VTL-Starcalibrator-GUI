@@ -289,29 +289,15 @@ class ToolTeacher(ToolBase):
         lightcurve = None
         attempts = 10000
         min_length = None
-        length = None
-        first = None
         while searching:
-            source_foreground = self.fg_pool.random_access(self.rng)
+            source_foreground, length = self.fg_pool.random_access(self.rng)
             lightcurve = np.sum(source_foreground, axis=(1, 2))
-            signal_present = lightcurve > 0
-            length = np.count_nonzero(signal_present)
-            first = find_first_true(signal_present)
             if (min_length is None) or length < min_length:
                 min_length = length
-
             attempts -= 1
-            if attempts==0:
+            if attempts == 0:
                 raise RuntimeError(f"Could not generate artificial flash. Minimal encountered length of track is {min_length}")
-            searching = length > conf.flash_maxsize or first < 0
-
-        if length<128:
-            lc_cut = lightcurve[first:first+length]
-            new_start = self.rng.integers(0, 128 - length)
-            new_lightcurve = np.zeros(shape=lightcurve.shape)
-            new_lightcurve[new_start:new_start+length] = lc_cut
-            lightcurve = new_lightcurve
-
+            searching = length > conf.flash_maxsize
 
         flash_mask = self.rng.random((16, 16)) * 2 - 1
         flash_interference = signal_multiply(lightcurve, flash_mask)
@@ -319,14 +305,14 @@ class ToolTeacher(ToolBase):
 
     def get_interference(self, conf, use_artificial):
         if use_artificial:
-            source_foreground = self.fg_pool.random_access(self.rng)
+            source_foreground, e_length = self.fg_pool.random_access(self.rng)
             # We can create artificial "meteor" interference signal from foreground signal
             flattened = np.sum(source_foreground, axis=0)
             interference = np.zeros(source_foreground.shape)
             interference[self.rng.integers(source_foreground.shape[0])] = flattened
             return conf.process_it(interference/np.max(interference)*np.max(source_foreground), rng=self.rng)
         else:
-            return conf.process_it(self.interference_pool.random_access(self.rng), rng=self.rng)
+            return conf.process_it(self.interference_pool.random_access(self.rng)[0], rng=self.rng)
 
     def data_generator(self, conf, frame_size=128, amount=None):
         i = 0
@@ -370,16 +356,16 @@ class ToolTeacher(ToolBase):
                 rng_append = self.rng.integers(1, 16)
                 if rng_append % 2 == 1:
                     y_params.pmt_bottom_left = True
-                    fg[:, :8, :8] = conf.process_fg(self.fg_pool.random_access(self.rng), rng=self.rng)
+                    fg[:, :8, :8] = conf.process_fg(self.fg_pool.random_access(self.rng)[0], rng=self.rng)
                 if rng_append // 2 % 2 == 1:
                     y_params.pmt_bottom_right = True
-                    fg[:, 8:, :8] = conf.process_fg(self.fg_pool.random_access(self.rng), rng=self.rng)
+                    fg[:, 8:, :8] = conf.process_fg(self.fg_pool.random_access(self.rng)[0], rng=self.rng)
                 if rng_append // 4 % 2 == 1:
                     y_params.pmt_top_left = True
-                    fg[:, :8, 8:] = conf.process_fg(self.fg_pool.random_access(self.rng), rng=self.rng)
+                    fg[:, :8, 8:] = conf.process_fg(self.fg_pool.random_access(self.rng)[0], rng=self.rng)
                 if rng_append // 8 % 2 == 1:
                     y_params.pmt_top_right = True
-                    fg[:, 8:, 8:] = conf.process_fg(self.fg_pool.random_access(self.rng), rng=self.rng)
+                    fg[:, 8:, 8:] = conf.process_fg(self.fg_pool.random_access(self.rng)[0], rng=self.rng)
                 fg[:, broken] = 0
                 x_data = x_data + fg
             i += 1
