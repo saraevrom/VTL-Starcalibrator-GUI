@@ -15,6 +15,7 @@ import tqdm
 import io
 import imageio as iio
 import matplotlib.dates as md
+from datetime import datetime
 
 
 WORKSPACE_ANIMATIONS = Workspace("animations")
@@ -136,7 +137,7 @@ class MatPlayer(ToolBase):
 
     def __get_plot_x(self, start, end):
         if self.form_data["use_times"]:
-            return self.ut0_s[start: end+1]
+            return list(map(datetime.utcfromtimestamp, self.ut0_s[start: end+1]))
         else:
             return np.arange(start, end+1)
 
@@ -158,9 +159,6 @@ class MatPlayer(ToolBase):
             if self.fig is None:
                 self.fig, self.ax = plt.subplots()
                 self.fig.canvas.mpl_connect('close_event', self.handle_mpl_close)
-                if self.form_data["use_times"]:
-                    xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
-                    self.ax.xaxis.set_major_formatter(xfmt)
 
             self.ax.plot(xs, ys, label=f"[{i+1},{j+1}]")
             self.ax.legend()
@@ -180,9 +178,6 @@ class MatPlayer(ToolBase):
             if self.form_data["use_filter"]:
                 ys = moving_average_subtract(ys, self.form_data["filter_window"])
             fig, ax = plt.subplots()
-            if self.form_data["use_times"]:
-                xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
-                ax.xaxis.set_major_formatter(xfmt)
             for i in range(16):
                 for j in range(16):
                     ax.plot(xs, ys[:, i, j], label=f"[{i+1},{j+1}]")
