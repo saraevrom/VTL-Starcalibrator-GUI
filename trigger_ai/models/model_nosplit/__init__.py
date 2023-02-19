@@ -13,7 +13,7 @@ from localization import get_locale
 import tensorflow as tf
 from .model import create_sequential_classifier
 from .default_configuration import DEFAULT_CONF
-from ..common import splat_select
+from ..common import splat_select, plot_offset
 
 
 class NoSplitModel(ModelWrapper):
@@ -46,10 +46,10 @@ class NoSplitModel(ModelWrapper):
         y_data: np.ndarray = self.model.predict(x_data)
         xs = np.arange(start, end - 127)
         print("PLOT!")
-        axes.plot(xs, y_data[:, 0] + 20, "-", color="black", label="bottom left")
-        axes.plot(xs, y_data[:, 1] + 22, "--", color="black", label="bottom right")
-        axes.plot(xs, y_data[:, 2] + 24, "-.", color="black", label="top left")
-        axes.plot(xs, y_data[:, 3] + 26, ":", color="black", label="top right")
+        plot_offset(axes, xs, y_data[:, 0], 20, "bottom left", "-")
+        plot_offset(axes, xs, y_data[:, 1], 22, "bottom right", "--")
+        plot_offset(axes, xs, y_data[:, 2], 24, "top left", "-.")
+        plot_offset(axes, xs, y_data[:, 3], 26, "top right", ":")
 
     def get_y_spec(self):
         return tf.TensorSpec(shape=(None, 4), dtype=tf.double)
