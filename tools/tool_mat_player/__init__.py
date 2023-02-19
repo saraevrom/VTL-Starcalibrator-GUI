@@ -9,31 +9,17 @@ from common_GUI import TkDictForm
 from parameters import DATETIME_FORMAT
 from preprocessing.denoising import moving_average_subtract
 import matplotlib.pyplot as plt
+from .form import ViewerForm
 
-FORM_CONF = {
-    "use_filter": {
-        "type": "bool",
-        "default":False,
-        "display_name": get_locale("matplayer.form.use_filter")
-    },
-    "filter_window": {
-        "type": "int",
-        "default": 60,
-        "display_name": get_locale("matplayer.form.filter_window")
-    },
-    "use_flatfielding": {
-        "type": "bool",
-        "default": True,
-        "display_name": get_locale("matplayer.form.use_flatfielding")
-    }
-}
+
 
 class MatPlayer(ToolBase):
     def __init__(self, master):
         super(MatPlayer, self).__init__(master)
         self.title(get_locale("matplayer.title"))
         self.file = None
-        self.form = TkDictForm(self,FORM_CONF)
+        self.form_parser = ViewerForm()
+        self.form = TkDictForm(self, self.form_parser.get_configuration_root())
         self.form.pack(side=tk.RIGHT, fill=tk.Y)
         self.plotter = GridPlotter(self)
         self.plotter.pack(side=tk.TOP, expand=True, fill=tk.BOTH)
@@ -41,8 +27,9 @@ class MatPlayer(ToolBase):
         self.player_controls = PlayerControls(self, self.on_frame_draw, self.click_callback)
         self.player_controls.pack(side=tk.BOTTOM, fill=tk.X)
         self.get_mat_file()
-        self.form_data = self.form.get_values()
+        self.form_data = None
         self.fig, self.ax = None, None
+        self.click_callback()
 
     def on_frame_draw(self, frame_num):
         if self.file:
@@ -60,6 +47,8 @@ class MatPlayer(ToolBase):
                 slide_bg = np.median(self.file["data0"][frame_num:frame_num+window],axis=0)
                 if (ffmodel is not None) and self.form_data["use_flatfielding"]:
                     frame = ffmodel.apply(self.file["data0"][frame_num]) - ffmodel.apply(slide_bg)
+                else:
+                    frame = self.file["data0"][frame_num] - slide_bg
             elif (ffmodel is not None) and self.form_data["use_flatfielding"]:
                 frame = ffmodel.apply(frame)
             self.plotter.buffer_matrix = frame
@@ -70,7 +59,9 @@ class MatPlayer(ToolBase):
             #print("Frame END:", time.time()-frame_start)
 
     def click_callback(self):
-        self.form_data = self.form.get_values()
+         data_raw = self.form.get_values()
+         self.form_parser.parse_formdata(data_raw)
+         self.form_data = self.form_parser.get_data()
 
     def on_loaded_file_success(self):
         self.frames = np.array(self.file["data0"])
