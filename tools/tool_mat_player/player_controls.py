@@ -1,12 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from common_GUI import EntryWithEnterKey
-from common_GUI.double_slider import DoubleSlider
-from localization import get_locale
-from tkinter.simpledialog import askstring
-from .datetime_parser import parse_datetimes
-import numpy as np
-from datetime import datetime
+from .playing_position import PlayingPosition
 
 FAST_FWD_SKIP = 1
 FRAME_DELAY = 1 #ms
@@ -65,113 +59,30 @@ class ControlButtons(ttk.Frame):
         if self.playing_state==self.STEP_L or self.playing_state==self.STEP_R:
             self.stop_playing()
 
-
-class ValuedSlider(ttk.Frame):
-    def __init__(self, master):
-        super(ValuedSlider, self).__init__(master)
-        self.display_variable = tk.StringVar(self)
-        self.display_variable.set("0")
-        #self.play_slider = ttk.Scale(self, orient=tk.HORIZONTAL, from_=0, to=100, variable=self.value_variable)
-        self.play_slider = DoubleSlider(self, low_end=0, high_end=100)
-        self.play_slider.grid(row=0, column=0, sticky="nsew", rowspan=2)
-        self.play_slider.set_slider_callback(self.on_slider_update)
-        entry = EntryWithEnterKey(self, textvariable=self.display_variable, width=10)
-        entry.grid(row=0, column=1, sticky="nsew")
-        entry.on_commit = self.on_display_commit
-
-        dt_asker_btn = tk.Button(self,text=get_locale("matplayer.button.datetime_entry"), command=self.on_ask_datetime)
-        dt_asker_btn.grid(row=1, column=1, sticky="nsew")
-        self.columnconfigure(0, weight=1)
-        self.upper_limit = 100
-        self.slider_callback = None
-        self.real_value = 0
-        self.ut0_explorer = None
-
-    def set_slider_callback(self, callback):
-        self.slider_callback = callback
-
-    def on_slider_update(self, low, high, pos):
-        self.real_value = int(round(pos))
-        self.display_variable.set(str(self.real_value))
-        if self.slider_callback:
-            self.slider_callback()
-
-    def on_display_commit(self):
-        pretending = self.display_variable.get()
-        try:
-            value = int(pretending)
-            if value > self.upper_limit:
-                value = self.upper_limit
-                self.display_variable.set(str(value))
-            self.play_slider.move_slider(value)
-            self.real_value = value
-            self.slider_callback()
-        except ValueError:
-            pass
-
-
-    def get_value(self):
-        # print("GET", self.real_value)
-        return self.real_value
-
-    def get_limits(self):
-        low, high, pos = self.play_slider.get_params()
-        return int(round(low)), int(round(high))
-
-    def set_value(self, v):
-        # print("SET", v)
-        self.real_value = v
-        self.display_variable.set(str(self.real_value))
-        low, high, pos = self.play_slider.get_params()
-        if abs(pos-v)>0.5:
-            self.play_slider.move_slider(v)
-
-    def set_limit(self, upper):
-        self.play_slider.high_end = upper
-        self.upper_limit = upper
-        self.set_value(0)
-
-    def on_ask_datetime(self):
-        if self.ut0_explorer is not None:
-            ans = askstring(title=get_locale("matplayer.button.datetime_entry"),
-                           prompt=get_locale("matplayer.dialog.datetime_prompt"))
-            if ans:
-                start_dt = datetime.utcfromtimestamp(self.ut0_explorer[self.real_value])
-                ut0 = parse_datetimes(ans, start_dt)
-
-                if ut0 < np.min(self.ut0_explorer):
-                    return
-                if ut0 > np.max(self.ut0_explorer):
-                    return
-                frame = np.argmin(np.abs(self.ut0_explorer - ut0))
-                print("INTERVAL OK")
-                self.play_slider.move_slider(frame)
-                self.real_value = frame
-                self.display_variable.set(str(frame))
-                self.slider_callback()
-
-
-
-
 class PlayerControls(ttk.Frame):
     def __init__(self, master, frame_callback, click_callback):
         super(PlayerControls, self).__init__(master)
-        self.play_slider = ValuedSlider(self)
-        self.play_slider.pack(side=tk.TOP,expand=True, fill=tk.X)
+        #self.play_slider = ValuedSlider(self)
+        #self.play_slider.pack(side=tk.TOP,expand=True, fill=tk.X)
+        self.playing_position = PlayingPosition(self)
+        self.playing_position.pack(side=tk.TOP, expand=True, fill=tk.X)
+        self.playing_position.callback = self.on_control_update
         self.control_btns = ControlButtons(self)
         self.control_btns.pack(side=tk.BOTTOM)
-        self.upper_limit = 100
+        self.upper_limit = 0  # To keep it consistent
         self.control_btns.button_callback = self.on_control_update
-        self.play_slider.set_slider_callback(self.on_control_update)
+        #self.play_slider.set_slider_callback(self.on_control_update)
         self.playing = False
         self.frame_callback = frame_callback
         self.click_callback = click_callback
+        self.set_limit(100)
 
     def set_limit(self, upper):
-        self.play_slider.set_limit(upper)
+        #self.play_slider.set_limit(upper)
         self.upper_limit = upper
+        self.playing_position.set_range(0, upper)
 
-    def on_control_update(self, *_):
+    def on_control_update(self):
         self.click_callback()
         self.start_play_checked()
 
@@ -182,8 +93,10 @@ class PlayerControls(ttk.Frame):
 
     def draw_frame(self):
         frame_step = self.control_btns.get_frame_step()
-        low, high = self.play_slider.get_limits()
-        frame_num = self.play_slider.get_value() + frame_step
+        #low, high = self.play_slider.get_limits()
+        #frame_num = self.play_slider.get_value() + frame_step
+        low, high = self.playing_position.get_range_selected()
+        frame_num = self.playing_position.get_frame() + frame_step
         if frame_num >= high:
             frame_num = high
             self.control_btns.stop_playing()
@@ -191,7 +104,8 @@ class PlayerControls(ttk.Frame):
             frame_num = low
             self.control_btns.stop_playing()
         self.frame_callback(frame_num)
-        self.play_slider.set_value(frame_num)
+        self.playing_position.set_frame(frame_num)
+        #self.play_slider.set_value(frame_num)
         self.control_btns.step_single_check()
 
     def playcycle(self):
@@ -203,7 +117,9 @@ class PlayerControls(ttk.Frame):
 
 
     def get_selected_range(self):
-        return self.play_slider.get_limits()
+        return self.playing_position.get_range_selected()
+        # return self.play_slider.get_limits()
 
-    def time_link(self, ut0):
-        self.play_slider.ut0_explorer = ut0
+    def link_time(self, ut0):
+        self.playing_position.link_time(ut0)
+        # self.play_slider.ut0_explorer = ut0

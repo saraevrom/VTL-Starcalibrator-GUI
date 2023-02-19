@@ -10,9 +10,7 @@ class BgPickingEditor(Plotter):
     def __init__(self, master):
         super().__init__(master)
         self.draw_cache = []
-        self.axes.figure.set_size_inches(10, 2)
-        self.axes.get_xaxis().set_visible(False)
-        self.axes.get_yaxis().set_visible(False)
+        self.axes.set_axis_off()
         self.draw_y = None
         self.figure.tight_layout()
         self.toolbar.pack_forget()

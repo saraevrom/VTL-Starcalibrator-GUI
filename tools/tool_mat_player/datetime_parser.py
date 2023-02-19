@@ -44,6 +44,9 @@ def match_string(s, start):
             return {mask[i]: int(groups[i]) for i in range(len(groups))}, mat.end()
     return None, None
 
+def datetime_to_unixtime(dt):
+    return (dt - datetime(1970, 1, 1)).total_seconds()
+
 def parse_datetimes(datetime_string, current_dt: datetime):
     start = 0
     data = {
@@ -53,7 +56,7 @@ def parse_datetimes(datetime_string, current_dt: datetime):
     while start < len(datetime_string):
         parsed, end = match_string(datetime_string, start)
         if end is None:
-            return None
+            return datetime_to_unixtime(current_dt)
         start = end
         if parsed is not None:
             data.update(parsed)
@@ -61,6 +64,6 @@ def parse_datetimes(datetime_string, current_dt: datetime):
         print(data)
         dt = datetime(year=data["Y"], month=data["M"], day=data["D"],
                       hour=data["h"], minute=data["m"],second=data["s"], microsecond=data["ms"]*1000)
-        return (dt - datetime(1970, 1, 1)).total_seconds()
+        return datetime_to_unixtime(dt)
     except ValueError:
-        return None
+        return datetime_to_unixtime(current_dt)

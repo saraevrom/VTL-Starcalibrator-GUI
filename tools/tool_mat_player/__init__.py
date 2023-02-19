@@ -73,10 +73,10 @@ class MatPlayer(ToolBase):
         self.form_data = self.form.get_values()
 
     def on_loaded_file_success(self):
-        self.player_controls.set_limit(len(self.file["UT0"]) - 1)
         self.frames = np.array(self.file["data0"])
         self.ut0_s = np.array(self.file["UT0"])
-        self.player_controls.time_link(self.ut0_s)
+        self.player_controls.link_time(self.ut0_s)
+        self.player_controls.set_limit(len(self.file["UT0"]) - 1)
         #self.plotter.draw()
         self.poke()
 
