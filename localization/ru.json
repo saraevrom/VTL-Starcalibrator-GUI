@@ -335,6 +335,7 @@
   "app.filedialog_formats.txt": "Текстовый документ",
   "app.filedialog_formats.csv": "Значения, разделённые запятыми",
   "app.filedialog_formats.gif": "GIF анимация",
+  "app.filedialog_formats.h5": "Данные в HDF5",
 
   "app.widgets.gridplotter.use_autoscale": "Автоматическая нормировка",
   "app.widgets.gridplotter.scale": "Нормировка",

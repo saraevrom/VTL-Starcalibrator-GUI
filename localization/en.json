@@ -337,6 +337,7 @@
   "app.filedialog_formats.txt": "Text file",
   "app.filedialog_formats.csv": "Comma separated values",
   "app.filedialog_formats.gif": "GIF animation",
+  "app.filedialog_formats.h5": "HDF5 data",
 
   "app.widgets.gridplotter.use_autoscale": "Autoscale",
   "app.widgets.gridplotter.scale": "Scale",
