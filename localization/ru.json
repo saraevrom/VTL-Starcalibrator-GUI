@@ -177,9 +177,17 @@
   "matplayer.form.use_filter": "Использовать фильтр",
   "matplayer.form.filter_window": "Окно фильтра",
   "matplayer.form.use_flatfielding": "Выравнивание пикселей",
+
+  "matplayer.form.gif_renderer": "GIF рендеринг",
+  "matplayer.form.gif_renderer.frame_skip": "Пропуск кадров",
+  "matplayer.form.gif_renderer.fps": "Кадров в секунду",
+  "matplayer.form.use_times": "Использовать время в графиках",
+
   "matplayer.button.datetime_entry": "Ввод даты/времени",
   "matplayer.button.set_start": "Уст. начало",
   "matplayer.button.set_end": "Уст. конец",
+  "matplayer.button.render_gif": "Создать анимацию GIF",
+  "matplayer.dialog.gif_target": "Выберите имя файла для анимации",
 
   "track_markup.title": "Выделение фона",
   "track_markup.btn.remove_selected": "Удалить выбранный элемент",
@@ -326,6 +334,7 @@
   "app.filedialog_formats.png": "Изображение PNG",
   "app.filedialog_formats.txt": "Текстовый документ",
   "app.filedialog_formats.csv": "Значения, разделённые запятыми",
+  "app.filedialog_formats.gif": "GIF анимация",
 
   "app.widgets.gridplotter.use_autoscale": "Автоматическая нормировка",
   "app.widgets.gridplotter.scale": "Нормировка",

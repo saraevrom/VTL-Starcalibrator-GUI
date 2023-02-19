@@ -10,7 +10,14 @@ from parameters import DATETIME_FORMAT
 from preprocessing.denoising import moving_average_subtract
 import matplotlib.pyplot as plt
 from .form import ViewerForm
+from workspace_manager import Workspace
+import tqdm
+import io
+import imageio as iio
+import matplotlib.dates as md
 
+
+WORKSPACE_ANIMATIONS = Workspace("animations")
 
 
 class MatPlayer(ToolBase):
@@ -19,17 +26,55 @@ class MatPlayer(ToolBase):
         self.title(get_locale("matplayer.title"))
         self.file = None
         self.form_parser = ViewerForm()
-        self.form = TkDictForm(self, self.form_parser.get_configuration_root())
-        self.form.pack(side=tk.RIGHT, fill=tk.Y)
+        rframe = tk.Frame(self)
+
+        self.form = TkDictForm(rframe, self.form_parser.get_configuration_root())
+        self.form.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        gif_btn = tk.Button(rframe, text=get_locale("matplayer.button.render_gif"), command=self.on_render_gif)
+        gif_btn.pack(side=tk.TOP, fill=tk.X)
+
+        rframe.pack(side=tk.RIGHT, fill=tk.Y)
         self.plotter = GridPlotter(self)
         self.plotter.pack(side=tk.TOP, expand=True, fill=tk.BOTH)
         self.plotter.on_right_click_callback = self.on_pixel_rmb
+        self.plotter.on_right_click_callback_outofbounds = self.on_common_rmb
         self.player_controls = PlayerControls(self, self.on_frame_draw, self.click_callback)
         self.player_controls.pack(side=tk.BOTTOM, fill=tk.X)
         self.get_mat_file()
         self.form_data = None
         self.fig, self.ax = None, None
         self.click_callback()
+
+
+    def on_render_gif(self):
+        if not self.file:
+            return
+        filename = WORKSPACE_ANIMATIONS.asksaveasfilename(title=get_locale("matplayer.dialog.gif_target"),
+                                              filetypes=[(get_locale("app.filedialog_formats.gif"), "*.gif")],
+                                              parent=self)
+        if filename:
+            renderer = self.form_data["gif_renderer"]
+            if renderer["frame_skip"] < 1:
+                renderer["frame_skip"] = 1
+            self.click_callback()
+            low, high = self.player_controls.get_selected_range()
+            print("GIF RENDER")
+            print("-" * 20)
+            print(f"FROM {low} to {high}")
+            print("-" * 20)
+            print(renderer)
+            print("-" * 20)
+            writer = iio.get_writer(filename, fps=renderer["fps"])
+            for i in tqdm.tqdm(range(low, high+1, renderer["frame_skip"])):
+                self.on_frame_draw(i)
+                buf = io.BytesIO()
+                self.plotter.figure.savefig(buf, format="png")
+                buf.seek(0)
+                frame = iio.v3.imread(buf)
+                writer.append_data(frame)
+            writer.close()
+
 
     def on_frame_draw(self, frame_num):
         if self.file:
@@ -88,18 +133,58 @@ class MatPlayer(ToolBase):
             print("Closed last figure. Figure resetting.")
             self.fig = None
             self.ax = None
+
+    def __get_plot_x(self, start, end):
+        if self.form_data["use_times"]:
+            return self.ut0_s[start: end+1]
+        else:
+            return np.arange(start, end+1)
+
     def on_pixel_rmb(self, i, j):
         if self.file:
+            self.click_callback()
             print("DRAW", i, j)
             start, end = self.player_controls.get_selected_range()
             print("FROM", start, "TO", end)
-            xs = self.ut0_s[start: end+1]
-            ys = self.frames[start: end+1, i, j]
+            xs = self.__get_plot_x(start,end)
+            ys = self.frames[start: end+1]
+            if self.form_data["use_flatfielding"]:
+                ffmodel = self.get_ff_model()
+                if ffmodel:
+                    ys = ffmodel.apply_nobreak(ys)
+            ys = ys[:, i, j]
             if self.form_data["use_filter"]:
                 ys = moving_average_subtract(ys, self.form_data["filter_window"])
             if self.fig is None:
                 self.fig, self.ax = plt.subplots()
                 self.fig.canvas.mpl_connect('close_event', self.handle_mpl_close)
+                if self.form_data["use_times"]:
+                    xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
+                    self.ax.xaxis.set_major_formatter(xfmt)
+
             self.ax.plot(xs, ys, label=f"[{i+1},{j+1}]")
             self.ax.legend()
             self.fig.show()
+
+    def on_common_rmb(self):
+        if self.file:
+            self.click_callback()
+            print("DRAW ALL")
+            start, end = self.player_controls.get_selected_range()
+            xs = self.__get_plot_x(start,end)
+            ys = self.frames[start: end + 1]
+            if self.form_data["use_flatfielding"]:
+                ffmodel = self.get_ff_model()
+                if ffmodel:
+                    ys = ffmodel.apply_nobreak(ys)
+            if self.form_data["use_filter"]:
+                ys = moving_average_subtract(ys, self.form_data["filter_window"])
+            fig, ax = plt.subplots()
+            if self.form_data["use_times"]:
+                xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
+                ax.xaxis.set_major_formatter(xfmt)
+            for i in range(16):
+                for j in range(16):
+                    ax.plot(xs, ys[:, i, j], label=f"[{i+1},{j+1}]")
+            ax.legend()
+            fig.show()

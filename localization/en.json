@@ -178,6 +178,14 @@
   "matplayer.form.use_filter": "Use filter",
   "matplayer.form.filter_window": "MA filter window [frames]",
   "matplayer.form.use_flatfielding": "Use flat fielding",
+  "matplayer.form.use_times": "Use time in plots",
+
+  "matplayer.form.gif_renderer": "GIF renderer",
+  "matplayer.form.gif_renderer.frame_skip": "Frame skip",
+  "matplayer.form.gif_renderer.fps": "FPS",
+  "matplayer.button.render_gif": "Render GIF",
+  "matplayer.dialog.gif_target": "Choose file name for animation",
+
   "matplayer.button.datetime_entry": "Enter date/time",
   "matplayer.dialog.datetime_prompt": "Enter target date and time",
   "matplayer.button.set_start": "Set start",
@@ -328,6 +336,7 @@
   "app.filedialog_formats.png": "PNG image",
   "app.filedialog_formats.txt": "Text file",
   "app.filedialog_formats.csv": "Comma separated values",
+  "app.filedialog_formats.gif": "GIF animation",
 
   "app.widgets.gridplotter.use_autoscale": "Autoscale",
   "app.widgets.gridplotter.scale": "Scale",

@@ -9,4 +9,5 @@ robustats
 scipy
 numexpr
 numba
+imageio
 #tensorflow-cpu
