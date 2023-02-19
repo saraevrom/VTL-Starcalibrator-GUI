@@ -180,6 +180,8 @@
   "matplayer.form.use_flatfielding": "Use flat fielding",
   "matplayer.button.datetime_entry": "Enter date/time",
   "matplayer.dialog.datetime_prompt": "Enter target date and time",
+  "matplayer.button.set_start": "Set start",
+  "matplayer.button.set_end": "Set end",
 
   "track_markup.title": "Background extractor",
   "track_markup.btn.remove_selected": "Remove selected",

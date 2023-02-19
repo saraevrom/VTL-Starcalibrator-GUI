@@ -6,6 +6,7 @@ from common_GUI.modified_base import EntryWithEnterKey
 from datetime import datetime
 from tkinter.simpledialog import askstring
 import numpy as np
+from matplotlib.patches import Rectangle
 
 MARK_LOW = 0
 MARK_HIGH = 1
@@ -100,17 +101,24 @@ class ValueWrapper(tk.Frame):
         if v < v_ref:
             self.set_value(v_ref, validate=False)
 
-    def swap_with_higher(self, reference):
+    def sync_to(self, reference):
         '''
-        If own value is larger than reference, swap values
+        Sets own value to reference
         :param reference:
         :return:
         '''
-        v = self.get_value()
         v_ref = reference.get_value()
-        if v > v_ref:
-            self.set_value(v_ref)
-            reference.set_value(v)
+        self.set_value(v_ref)
+
+
+def set_vlines_position(lines, position):
+    seg_old = lines.get_segments()
+    ymin = seg_old[0][0, 1]
+    ymax = seg_old[0][1, 1]
+
+    seg_new = [np.array([[position, ymin],
+                         [position, ymax]])]
+    lines.set_segments(seg_new)
 
 class PlayingPosition(Plotter):
     def __init__(self, master):
@@ -118,31 +126,77 @@ class PlayingPosition(Plotter):
         self.axes.set_axis_off()
         self.axes.set_ylim(-1, 1)
         self.mpl_canvas.get_tk_widget().configure(height=100)
+        self.figure.tight_layout()
         self.toolbar.pack_forget()
 
         subframe = tk.Frame(self)
         subframe.pack(side="bottom", fill="x")
-        self.min_cutter = ValueWrapper(subframe, self.validate_intervals, MARK_LOW)
-        self.min_cutter.grid(row=0, column=0, sticky="nsew")
-        self.pointer = ValueWrapper(subframe, self.validate_intervals, MARK_PTR)
-        self.pointer.grid(row=0, column=1, sticky="nsew")
-        self.max_cutter = ValueWrapper(subframe, self.validate_intervals, MARK_HIGH)
-        self.max_cutter.grid(row=0, column=2, sticky="nsew")
 
-        self.low = 0
-        self.high = 0
+        starter = tk.Button(subframe, text=get_locale("matplayer.button.set_start"), command=self.on_lcut)
+        starter.grid(row=0, column=0, sticky="ew")
+
+        self.min_cutter = ValueWrapper(subframe, self.validate_intervals, MARK_LOW)
+        self.min_cutter.grid(row=0, column=1, sticky="nsew")
+        self.pointer = ValueWrapper(subframe, self.validate_intervals, MARK_PTR)
+        self.pointer.grid(row=0, column=2, sticky="nsew")
+        self.max_cutter = ValueWrapper(subframe, self.validate_intervals, MARK_HIGH)
+        self.max_cutter.grid(row=0, column=3, sticky="nsew")
+
+        ender = tk.Button(subframe, text=get_locale("matplayer.button.set_end"), command=self.on_rcut)
+        ender.grid(row=0, column=4, sticky="ew")
+
+        self._range_patch = Rectangle((0, -1), 1, 2, color="gray", alpha=0.25)
+        self.axes.add_patch(self._range_patch)
+        self._mouse_pointer = self.axes.vlines(0, -1, 1, color="black")
+        self._frame_pointer = self.axes.vlines(0, -1, 1, color="red")
+        self._mouse_pointer_position = 0
+        self.figure.canvas.mpl_connect("motion_notify_event", self.on_motion)
+        self.figure.canvas.mpl_connect('button_press_event', self.on_mouse_button_press)
+
+        self._low = 0
+        self._high = 0
         self.callback = None
         self.set_range(0, 100)
 
+
+    def on_lcut(self):
+        self.min_cutter.sync_to(self.pointer)
+
+    def on_rcut(self):
+        self.max_cutter.sync_to(self.pointer)
+
+    def set_mouse_pointer(self, new_x):
+        self._mouse_pointer_position = new_x
+        set_vlines_position(self._mouse_pointer, new_x)
+        self.draw()
+
+    def on_motion(self, event):
+        if (event.xdata is not None):
+            x = int(round(event.xdata))
+            self.set_mouse_pointer(x)
+            self.figure.canvas.draw_idle()
+
+    def on_mouse_button_press(self, event):
+        if (event.xdata is not None):
+            x = self._mouse_pointer_position
+            if event.button == 1:
+                self.set_frame(x)
+
+    def update_interval(self):
+        low_v = self.min_cutter.get_value()
+        high_v = self.max_cutter.get_value()
+        self._range_patch.set_x(low_v)
+        self._range_patch.set_width(high_v-low_v)
+
     def set_range(self, low, high):
-        self.low = low
-        self.high = high
+        self._low = low
+        self._high = high
         self.axes.set_xlim(low, high)
         self.min_cutter.set_value(low)
         self.max_cutter.set_value(high)
 
     def get_range_full(self):
-        return self.low, self.high
+        return self._low, self._high
 
     def get_range_selected(self):
         return self.min_cutter.get_value(), self.max_cutter.get_value()
@@ -154,15 +208,32 @@ class PlayingPosition(Plotter):
         self.pointer.set_value(v)
 
     def validate_intervals(self, asker):
-        self.min_cutter.clamp(self.low, self.high)
-        self.max_cutter.clamp(self.low, self.high)
+        self.min_cutter.clamp(self._low, self._high)
+        self.max_cutter.clamp(self._low, self._high)
         if asker == MARK_LOW:
             self.max_cutter.clamp_higher(self.min_cutter)
         elif asker == MARK_HIGH:
             self.min_cutter.clamp_lower(self.max_cutter)
-        self.pointer.clamp(self.low, self.high)
-        self.pointer.clamp_higher(self.min_cutter)
-        self.pointer.clamp_lower(self.max_cutter)
+
+        if asker == MARK_PTR:
+            v_min = self.min_cutter.get_value()
+            v_max = self.max_cutter.get_value()
+            width = v_max - v_min
+            v = self.pointer.get_value()
+            if v > v_max:
+                self.max_cutter.set_value(v, False)
+                #self.min_cutter.set_value(v-width, False)
+            if v < v_min:
+                #self.max_cutter.set_value(v+width, False)
+                self.min_cutter.set_value(v, False)
+        else:
+            self.pointer.clamp(self._low, self._high)
+            self.pointer.clamp_higher(self.min_cutter)
+            self.pointer.clamp_lower(self.max_cutter)
+
+        set_vlines_position(self._frame_pointer, self.pointer.get_value())
+        self.update_interval()
+        self.draw()
         if self.callback:
             self.callback()
 

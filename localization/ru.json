@@ -178,6 +178,8 @@
   "matplayer.form.filter_window": "Окно фильтра",
   "matplayer.form.use_flatfielding": "Выравнивание пикселей",
   "matplayer.button.datetime_entry": "Ввод даты/времени",
+  "matplayer.button.set_start": "Уст. начало",
+  "matplayer.button.set_end": "Уст. конец",
 
   "track_markup.title": "Выделение фона",
   "track_markup.btn.remove_selected": "Удалить выбранный элемент",
