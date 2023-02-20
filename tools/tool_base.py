@@ -42,5 +42,5 @@ class ToolBase(tk.Frame):
     def close_mat_file(self):
         self.winfo_toplevel().close_mat_file()
 
-    def reload_mat_file(self, filename):
-        self.winfo_toplevel().reload_mat_file(filename)
+    def reload_mat_file(self, filename, silent=False):
+        self.winfo_toplevel().reload_mat_file(filename, silent=silent)

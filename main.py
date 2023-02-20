@@ -81,7 +81,7 @@ class App(tk.Tk):
                                               ])
         self.reload_mat_file(filename)
 
-    def reload_mat_file(self, filename):
+    def reload_mat_file(self, filename, silent=False):
         print("Loading file:", filename)
         if filename and os.path.isfile(filename):
             new_file = h5py.File(filename, "r")
@@ -94,8 +94,9 @@ class App(tk.Tk):
                 params = json.loads(ffmodel_raw)
                 model = FlatFieldingModel.create_from_parameters(params)
                 self.set_ffmodel(model)
-                messagebox.showinfo(title=get_locale("app.load_file_with_ff.title"),
-                                    message=get_locale("app.load_file_with_ff.message"))
+                if not silent:
+                    messagebox.showinfo(title=get_locale("app.load_file_with_ff.title"),
+                                        message=get_locale("app.load_file_with_ff.message"))
             for tool in self.tool_list:
                 tool.propagate_mat_file(self.file)
             print("Loaded file:", filename)

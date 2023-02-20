@@ -64,7 +64,7 @@ class MatPlayer(ToolBase):
                 with h5py.File(remembered_filename, "a") as rw_file:
                     rw_file.attrs["ffmodel"] = json.dumps(jsd)
 
-                self.reload_mat_file(remembered_filename)
+                self.reload_mat_file(remembered_filename, silent=True)
 
     def on_render_gif(self):
         if not self.file:

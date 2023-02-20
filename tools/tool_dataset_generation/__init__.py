@@ -165,7 +165,7 @@ class DatasetGenerator(ToolBase):
                 overwrite_with_numpy(rw_file, "marked_intervals", self.interval_editor.marked_intervals)
                 overwrite_with_numpy(rw_file, "broken", np.logical_not(self.plotter.alive_pixels_matrix))
 
-            self.reload_mat_file(remembered_filename)
+            self.reload_mat_file(remembered_filename, silent=True)
             messagebox.showinfo(title=get_locale("datasetgen.messagebox.save_success.title"),
                                    message=get_locale("datasetgen.messagebox.save_success.content"))
 
