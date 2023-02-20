@@ -151,7 +151,6 @@ class PlayingPosition(Plotter):
         self._frame_pointer = self.axes.vlines(0, -1, 1, color="red")
         self._mouse_pointer_position = 0
         self.figure.canvas.mpl_connect("motion_notify_event", self.on_motion)
-        self.figure.canvas.mpl_connect('button_press_event', self.on_mouse_button_press)
 
         self._low = 0
         self._high = 0
@@ -175,10 +174,6 @@ class PlayingPosition(Plotter):
             x = int(round(event.xdata))
             self.set_mouse_pointer(x)
             self.figure.canvas.draw_idle()
-
-    def on_mouse_button_press(self, event):
-        if (event.xdata is not None):
-            x = self._mouse_pointer_position
             if event.button == 1:
                 self.set_frame(x)
 
