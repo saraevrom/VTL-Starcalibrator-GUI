@@ -13,9 +13,9 @@ from workspace_manager import Workspace
 MDATA_WORKSPACE = Workspace("merged_data")
 UNPROCESSED_DATA_WORKSPACE = Workspace("unprocessed_data")
 
-class Converter(tk.Frame):
+class ConverterOld(tk.Frame):
     def __init__(self, master, controller=None):
-        super(Converter, self).__init__(master, highlightthickness=1)
+        super(ConverterOld, self).__init__(master, highlightthickness=1)
         self.config(highlightbackground = "black", highlightcolor= "black")
         if controller is None:
             self.controller = master

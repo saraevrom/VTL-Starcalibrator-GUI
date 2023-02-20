@@ -8,14 +8,14 @@ import tqdm
 import scipy.io as scipio
 from localization import get_locale, format_locale
 from tools.tool_base import ToolBase
+from .converter_old import ConverterOld
 from .converter import Converter
-from .converter_new import ConverterNew
 from .downloader import Downloader
 
 class MatConverter(ToolBase):
     def __init__(self, master):
         super(MatConverter, self).__init__(master)
-        converter = ConverterNew(self,self)
+        converter = Converter(self, self)
         converter.grid(row=0, column=0, sticky="nsew")
         downloader = Downloader(self)
         downloader.grid(row=0, column=1, sticky="nsew")
