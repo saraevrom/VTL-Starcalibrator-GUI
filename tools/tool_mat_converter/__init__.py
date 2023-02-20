@@ -1,12 +1,4 @@
 import tkinter as tk
-from tkinter import ttk
-import tkinter.filedialog as filedialog
-import tkinter.messagebox as messagebox
-import h5py
-import numpy as np
-import tqdm
-import scipy.io as scipio
-from localization import get_locale, format_locale
 from tools.tool_base import ToolBase
 from .converter_old import ConverterOld
 from .converter import Converter
