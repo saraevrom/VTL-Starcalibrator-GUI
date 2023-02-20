@@ -3,6 +3,7 @@ import numpy as np
 from tensorflow import keras
 import tensorflow as tf
 import json
+from preprocessing.forms import DataPreProcessorField
 
 CUSTOM_FIELD = "CUSTOM_MODEL_WRAPPER"
 FILTER_FIELD = "CUSTOM_PREFERRED_FILTER"
@@ -45,6 +46,11 @@ class ModelWrapper(object):
 
     def set_preferred_filter_data(self, data):
         self.preferred_filter_data = data
+
+    def get_filter(self):
+        processor = DataPreProcessorField()
+        processor.parse_formdata(self.preferred_filter_data)
+        return processor.get_data()
 
     def save_model(self, file_path, attach_filter=None):
         self.model.save(file_path)

@@ -16,6 +16,7 @@ import io
 import imageio as iio
 import matplotlib.dates as md
 from datetime import datetime
+import json, h5py
 
 
 WORKSPACE_ANIMATIONS = Workspace("animations")
@@ -35,6 +36,9 @@ class MatPlayer(ToolBase):
         gif_btn = tk.Button(rframe, text=get_locale("matplayer.button.render_gif"), command=self.on_render_gif)
         gif_btn.pack(side=tk.TOP, fill=tk.X)
 
+        attach_btn = tk.Button(rframe, text=get_locale("matplayer.button.attach_ff"), command=self.on_attach_ff)
+        attach_btn.pack(side=tk.TOP, fill=tk.X)
+
         rframe.pack(side=tk.RIGHT, fill=tk.Y)
         self.plotter = GridPlotter(self)
         self.plotter.pack(side=tk.TOP, expand=True, fill=tk.BOTH)
@@ -47,6 +51,20 @@ class MatPlayer(ToolBase):
         self.fig, self.ax = None, None
         self.click_callback()
 
+
+
+    def on_attach_ff(self):
+        if self.file:
+            ffmodel = self.get_ff_model()
+            if ffmodel:
+                jsd = ffmodel.dump()
+
+                remembered_filename = self.get_loaded_filepath()
+                self.close_mat_file()
+                with h5py.File(remembered_filename, "a") as rw_file:
+                    rw_file.attrs["ffmodel"] = json.dumps(jsd)
+
+                self.reload_mat_file(remembered_filename)
 
     def on_render_gif(self):
         if not self.file:

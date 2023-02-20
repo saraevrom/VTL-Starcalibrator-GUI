@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
+import json
 import os
 import tkinter as tk
 from tkinter import ttk
 import tkinter.filedialog as filedialog
+from tkinter import messagebox
 import h5py
 from tools import add_tools
 from tools.tool_flatfielder import FlatFieldingModel
@@ -87,6 +89,13 @@ class App(tk.Tk):
                 self.file.close()
             self.filename = filename
             self.file = new_file
+            if "ffmodel" in new_file.attrs.keys():
+                ffmodel_raw = new_file.attrs["ffmodel"]
+                params = json.loads(ffmodel_raw)
+                model = FlatFieldingModel.create_from_parameters(params)
+                self.set_ffmodel(model)
+                messagebox.showinfo(title=get_locale("app.load_file_with_ff.title"),
+                                    message=get_locale("app.load_file_with_ff.message"))
             for tool in self.tool_list:
                 tool.propagate_mat_file(self.file)
             print("Loaded file:", filename)
@@ -108,10 +117,13 @@ class App(tk.Tk):
         if filename:
             model: FlatFieldingModel
             model = FlatFieldingModel.load(filename)
-            self.ffmodel = model
-            for tool in self.tool_list:
-                tool.on_ff_reload()
+            self.set_ffmodel(model)
         self.update_title()
+
+    def set_ffmodel(self, ffmodel):
+        self.ffmodel = ffmodel
+        for tool in self.tool_list:
+            tool.on_ff_reload()
 
     def reload_ffmodel(self):
         warnings.warn("Flat fielding coefficients are now loaded manually")

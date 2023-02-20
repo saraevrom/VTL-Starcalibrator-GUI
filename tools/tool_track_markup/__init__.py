@@ -472,9 +472,14 @@ class TrackMarkup(ToolBase):
         self.params_form_parser.parse_formdata(raw_form_data)
         self.form_data = self.params_form_parser.get_data()
 
-    def apply_filter(self, signal):
+    def apply_filter(self, signal, use_nn=False):
         self.sync_form()
-        preprocessor = self.form_data["preprocessing"]
+        if self.form_data["override_ann_filter"] or not use_nn or not self.tf_model:
+            preprocessor = self.form_data["preprocessing"]
+
+        else:
+            preprocessor = self.tf_model.get_filter()
+
         broken = np.logical_not(self.plotter.alive_pixels_matrix)
         plot_data = preprocessor.preprocess(signal, broken=broken)
         return plot_data

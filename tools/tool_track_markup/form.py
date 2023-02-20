@@ -15,7 +15,7 @@ class PmtSelect(ComboNode):
 class TriggerParameters(FormNode):
     DISPLAY_NAME = get_locale("track_markup.form.trigger")
     FIELD__threshold = create_value_field(FloatNode, get_locale("track_markup.form.trigger.threshold"), 0.5)
-    FIELD__edge_shift = create_value_field(IntNode, get_locale("track_markup.form.trigger.edge_shift"), 64)
+    #FIELD__edge_shift = create_value_field(IntNode, get_locale("track_markup.form.trigger.edge_shift"), 64)
     USE_SCROLLVIEW = False
     
     def get_data(self):
@@ -26,4 +26,5 @@ class TrackMarkupForm(FormNode):
     FIELD__min_frame = create_value_field(IntNode, get_locale("track_markup.form.min_frame"), 256)
     FIELD__pmt_select = PmtSelect
     FIELD__trigger = TriggerParameters
+    FIELD__override_ann_filter = create_value_field(BoolNode, get_locale("track_markup.form.override_ann"), False)
     FIELD__auto_cont = create_value_field(BoolNode, get_locale("track_markup.form.auto_continue"), False)

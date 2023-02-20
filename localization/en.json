@@ -190,6 +190,7 @@
   "matplayer.dialog.datetime_prompt": "Enter target date and time",
   "matplayer.button.set_start": "Set start",
   "matplayer.button.set_end": "Set end",
+  "matplayer.button.attach_ff": "Attach flat fielding to file",
 
   "track_markup.title": "Background extractor",
   "track_markup.btn.remove_selected": "Remove selected",
@@ -215,6 +216,7 @@
   "track_markup.form.trigger": "Trigger",
   "track_markup.form.trigger.threshold": "Probability threshold",
   "track_markup.form.trigger.edge_shift": "Edge interval shift",
+  "track_markup.form.override_ann": "Override ANN filter",
   "track_markup.label.accepted": "Accepted intervals (without tracks)",
   "track_markup.label.rejected": "Rejected intervals (with tracks)",
   "track_markup.form.noise_suppress_use": "Use noise suppression",
@@ -363,5 +365,8 @@
   "app.help.datetime_hint": "Datetime entry",
 
   "app.state_off": "OFF",
-  "app.state_on": "ON"
+  "app.state_on": "ON",
+
+  "app.load_file_with_ff.title": "Loading data file",
+  "app.load_file_with_ff.message": "This file contains own flat fielding parameters. They will be loaded automatically."
 }
