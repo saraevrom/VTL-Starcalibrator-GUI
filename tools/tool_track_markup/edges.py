@@ -126,7 +126,7 @@ class EdgeProcessor(object):
     def get_prob(self, data_source, ax):
         event_start, event_end = data_source.current_event
         x_data_true = data_source.file["data0"][event_start:event_end]
-        x_data = data_source.apply_filter(x_data_true)
+        x_data = data_source.apply_filter(x_data_true, True)
         # x_data = sliding_window_view(x_data, 128, axis=0)
         # x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
         # y_data: np.ndarray = data_source.tf_model.predict(x_data)[:, 1]
