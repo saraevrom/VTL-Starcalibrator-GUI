@@ -75,7 +75,7 @@ class App(tk.Tk):
     def on_open_mat_file(self):
         filename = MDATA_WORKSPACE.askopenfilename(title=get_locale("app.filedialog.load_mat.title"),
                                               filetypes=[
-                                                  (get_locale("app.filedialog_formats.processed_mat"), "*.mat *.hdf")
+                                                  (get_locale("app.filedialog_formats.processed_mat"), "*.h5 *.mat")
                                               ])
         self.reload_mat_file(filename)
 
