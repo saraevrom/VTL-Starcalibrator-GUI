@@ -65,6 +65,7 @@ class TrackMarkup(ToolBase):
         self.tracked_events = []
         self.last_single_plot_data = None
         self.tf_model = None
+        self.tf_filter = None
 
         self.current_event = None
         self.event_set = False
@@ -87,11 +88,16 @@ class TrackMarkup(ToolBase):
             tk.Button(right_panel, text=get_locale("track_markup.btn.load_tf"),
                       command=self.on_load_tf).grid(row=4, column=0, sticky="ew")
 
+        self.tf_filter_info = tk.StringVar()
+        tk.Label(right_panel, textvariable=self.tf_filter_info, justify=tk.LEFT) \
+            .grid(row=5, column=0, sticky="nw")
+
         self.params_form_parser = TrackMarkupForm()
 
         self.params_form = TkDictForm(right_panel, self.params_form_parser.get_configuration_root())
-        self.params_form.grid(row=5, column=0, sticky="nsew")
-        right_panel.rowconfigure(5, weight=1)
+        self.params_form.grid(row=6, column=0, sticky="nsew")
+        right_panel.rowconfigure(6, weight=1)
+
 
         self.plotter.pack(side="top", expand=True, fill="both")
         bottom_panel = tk.Frame(self)
@@ -445,6 +451,8 @@ class TrackMarkup(ToolBase):
         )
         if filename:
             self.tf_model = ModelWrapper.load_model(filename)
+            self.tf_filter = self.tf_model.get_filter()
+            self.tf_filter_info.set("ANN "+repr(self.tf_filter))
 
     def on_review_trackless_select(self, evt):
         return self.on_review_select_universal(evt, True)
@@ -478,7 +486,7 @@ class TrackMarkup(ToolBase):
             preprocessor = self.form_data["preprocessing"]
 
         else:
-            preprocessor = self.tf_model.get_filter()
+            preprocessor = self.tf_filter
 
         broken = np.logical_not(self.plotter.alive_pixels_matrix)
         plot_data = preprocessor.preprocess(signal, broken=broken)

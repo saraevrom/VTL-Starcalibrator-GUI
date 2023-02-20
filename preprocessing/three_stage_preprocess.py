@@ -9,6 +9,28 @@ class DataThreeStagePreProcessor(Preprocessor):
         self.use_antiflash = use_antiflash
         self.use_robust = use_robust
 
+    def __repr__(self):
+        res = "Filter:\n"
+        off = True
+        if self.ma_win is not None:
+            res += f"\tMA={self.ma_win}\n"
+            off = False
+        if self.mstd_win is not None:
+            res += f"\tMSTD={self.mstd_win}\n"
+            off = False
+        if self.use_antiflash:
+            res += f"\tAntiflash ON\n"
+            off = False
+        if off:
+            res += f"\tOFF\n"
+        elif self.use_robust:
+            res += f"\tRobust mode ON\n"
+        else:
+            res += f"\tRobust mode OFF\n"
+        return res
+
+
+
     def preprocess(self, src, broken=None):
         if self.use_robust:
             stage1_f = moving_median_subtract
