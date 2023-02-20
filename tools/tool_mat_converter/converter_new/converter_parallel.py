@@ -53,8 +53,8 @@ def simplify_files(file_list, lcut, rcut):
             file_len = times.shape[0]
             file_lengths.append(file_len)
             full_len += file_len
-    assert lcut < file_len
-    assert rcut < file_len
+    assert lcut < full_len
+    assert rcut < full_len
     start_i,lcut1 = where_is_index(file_lengths, lcut)
     end_i,rcut1 = where_is_index_inverse(file_lengths, rcut)
     result = []
@@ -144,8 +144,8 @@ class ParallelWorker(Process):
                                     "determinate": True
                                 })
 
-                    if self.conn.poll():
-                        return
+                if self.conn.poll():
+                    break
         self.conn.send({
             "msg": "STOP"
         })
@@ -168,14 +168,20 @@ class ConverterParallel(tk.Toplevel):
         gc.collect() # Free ram for our procedure
         self.converter.start()
         self.alive = True
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.after(10, self.monitor)
+
+    def stop_process(self, force=False):
+        self.conn.send(42)
+        if force:
+            self.converter.terminate()
+            self.converter.kill()
+        # Graceful exit
+        self.converter.join()
 
     def __del__(self):
         if self.converter.is_alive():
-            self.conn.send(42)
-            self.converter.terminate()
-            self.converter.kill()
-            self.converter.join()
+            self.stop_process(True)
             print("Stopped process")
 
     def _add_bar(self):
@@ -212,4 +218,10 @@ class ConverterParallel(tk.Toplevel):
         if self.alive and self.converter.is_alive():
             self.after(10, self.monitor)
         else:
+
+            self.converter.join()
             self.destroy()
+
+    def on_closing(self):
+        self.conn.send(42)
+        print("Stopping process initiated")
