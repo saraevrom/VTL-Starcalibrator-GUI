@@ -14,6 +14,8 @@ def plot_offset(axes, xs, ys, offset, label, style):
     axes.fill_between(xs, offset, ys + offset, color="gray")
 
 def apply_layer_array(inputs, layer_array):
+    if not layer_array:
+        return inputs
     workon = layer_array[0](inputs)
     for layer in layer_array[1:]:
         workon = layer(workon)

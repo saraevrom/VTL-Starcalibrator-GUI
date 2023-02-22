@@ -1,4 +1,5 @@
 import tensorflow as tf
+from ..common import apply_layer_array
 
 def create_lambda(index, *args, **kwrags):
     if index==0: # bottom left
@@ -13,12 +14,6 @@ def create_lambda(index, *args, **kwrags):
 
 def cut_interval(start, end):
     return tf.keras.layers.Lambda(lambda x: x[:, start:end, :, :])
-
-def apply_layer_array(inputs, layer_array):
-    workon = layer_array[0](inputs)
-    for layer in layer_array[1:]:
-        workon = layer(workon)
-    return workon
 
 # Seems to have same structure as split-merge. Probably will be refactored
 class SingleProcessor(object):
