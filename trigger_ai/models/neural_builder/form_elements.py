@@ -120,6 +120,11 @@ class MaxPooling2DConstructor(FormNode):
                                          padding=padding)
 
 
+class ActivationConstructor(Activation):
+    def get_data(self):
+        data = super().get_data()
+        return keras.layers.Activation(data)
+
 class FlattenConstructor(LabelNode):
     DISPLAY_NAME = get_locale("app.model_builder.flatten")
 
@@ -141,6 +146,7 @@ class LayerConstructor(AlternatingNode):
     SEL__conv2d = Conv2DConstructor
     SEL__maxpool3d = MaxPooling3DConstructor
     SEL__maxpool2d = MaxPooling2DConstructor
+    SEL__activation = ActivationConstructor
     SEL__expand_dim = ExpandDimsConstructor
     SEL__flatten = FlattenConstructor
 
@@ -158,5 +164,6 @@ class ResidialConstructor(FormNode):
     def get_data(self):
         data = super().get_data()
         return Residual(**data)
+
 
 LayerConstructor.SEL__residual = ResidialConstructor
