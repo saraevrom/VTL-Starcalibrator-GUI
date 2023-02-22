@@ -3,6 +3,7 @@ from common_GUI.tk_forms_assist.factory import create_value_field
 from localization import get_locale
 from tensorflow import keras
 import tensorflow as tf
+from .custom_structures import Residual
 
 
 class Activation(ComboNode):
@@ -143,6 +144,19 @@ class LayerConstructor(AlternatingNode):
     SEL__expand_dim = ExpandDimsConstructor
     SEL__flatten = FlattenConstructor
 
+
+
+
 class LayerSequenceConstructor(ArrayNode):
     DISPLAY_NAME = get_locale("app.model_builder.layers")
     ITEM_TYPE = LayerConstructor
+
+class ResidialConstructor(FormNode):
+    DISPLAY_NAME = get_locale("app.model_builder.residual")
+    FIELD__layer_array = LayerSequenceConstructor
+
+    def get_data(self):
+        data = super().get_data()
+        return Residual(**data)
+
+LayerConstructor.SEL__residual = ResidialConstructor

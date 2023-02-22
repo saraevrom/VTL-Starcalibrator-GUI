@@ -101,6 +101,7 @@
   "app.model_builder.dense.count": "Dense neurons",
   "app.model_builder.conv3d": "Convolution 3D",
   "app.model_builder.conv2d": "Convolution 2D",
+  "app.model_builder.residual": "Residual",
   "app.model_builder.maxpool3d": "Max pooling 3D",
   "app.model_builder.maxpool2d": "Max pooling 2D",
   "app.model_builder.convnd.outputs": "Convolution outputs",
@@ -289,7 +290,7 @@
   "app.settings.field.display_threshold": "Threshold",
   "app.settings.field.filter_window": "MA filter window [frames]",
 
-  "app.title": "VTL observatory data processing",
+  "app.title": "TULOMA-TRACKS",
   "app.menu.file": "File",
   "app.menu.file.open_mat": "Open data file",
   "app.menu.file.load_settings": "Load settings",

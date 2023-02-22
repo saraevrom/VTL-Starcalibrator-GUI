@@ -98,6 +98,7 @@
   "app.model_builder.dense.count": "Количество нейронов",
   "app.model_builder.conv3d": "Свёртка 3D",
   "app.model_builder.conv2d": "Свёртка 2D",
+  "app.model_builder.residual": "Остаточный",
   "app.model_builder.maxpool3d": "Объединение по максимуму 3D",
   "app.model_builder.maxpool2d": "Объединение по максимуму 2D",
   "app.model_builder.convnd.outputs": "Выводы свёртки",

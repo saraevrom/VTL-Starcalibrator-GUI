@@ -1,4 +1,4 @@
-# VTL-Starcalibrator-GUI
+# TULOMA-TRACKS
 Orientation determining software for VTL telescope
 ## Current features
 * Tuning parameters using data from star catalogues.

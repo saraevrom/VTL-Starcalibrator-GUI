@@ -12,3 +12,9 @@ def splat_select(bool_arg, window):
 def plot_offset(axes, xs, ys, offset, label, style):
     axes.plot(xs, ys + offset, style, color="black", label=label)
     axes.fill_between(xs, offset, ys + offset, color="gray")
+
+def apply_layer_array(inputs, layer_array):
+    workon = layer_array[0](inputs)
+    for layer in layer_array[1:]:
+        workon = layer(workon)
+    return workon
