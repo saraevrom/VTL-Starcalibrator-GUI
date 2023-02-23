@@ -95,6 +95,9 @@ class ConfigEntry(object):
     def set_value(self,newval):
         raise NotImplementedError("This method is not implemented")
 
+    def keep_none(self):
+        return True
+
 
 class EntryInvalidException(Exception):
     '''
@@ -148,6 +151,9 @@ class LabelEntry(ConfigEntry):
 
     def get_value(self):
         return None
+
+    def keep_none(self):
+        return False
 
     def get_frame(self):
         return self.frame
@@ -675,7 +681,7 @@ class TkDictForm(tk.Frame):
         res = dict()
         for i in self.tk_form_configuration.keys():
             val = self.fields[i].get_value()
-            if val is not None:
+            if (val is not None) or self.fields[i].keep_none():
                 res[i] = val
         return res
 
