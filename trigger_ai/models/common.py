@@ -1,6 +1,16 @@
 import numpy as np
 import numba as nb
+import tensorflow as tf
 
+def create_lambda(index, *args, **kwrags):
+    if index==0: # bottom left
+        return tf.keras.layers.Lambda(lambda x: x[:, :, :8, :8], *args, **kwrags)
+    elif index==1: # top left
+        return tf.keras.layers.Lambda(lambda x: x[:, :, :8, 8:], *args, **kwrags)
+    elif index==10: # bottom right
+        return tf.keras.layers.Lambda(lambda x: x[:, :, 8:, :8], *args, **kwrags)
+    elif index==11: # top right
+        return tf.keras.layers.Lambda(lambda x: x[:, :, 8:, 8:], *args, **kwrags)
 
 @nb.njit
 def splat_select(bool_arg, window):

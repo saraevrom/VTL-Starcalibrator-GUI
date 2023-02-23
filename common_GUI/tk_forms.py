@@ -394,10 +394,21 @@ class ArrayEntry(ConfigEntry):
             self.move_up(i)
         def down_press():
             self.move_down(i)
+
+        def del_press():
+            self._delete_at(i)
+
+        def ins_press():
+            self._insert_after(i)
+
         field = create_field(name, self.subframe, subconf, self.color_index+1)
         upbtn = tk.Button(field.frame,text="^", command=up_press)
         upbtn.pack(side="right", anchor="ne")
         downbtn = tk.Button(field.frame, text="v", command=down_press)
+        downbtn.pack(side="right", anchor="ne")
+        downbtn = tk.Button(field.frame, text="-", command=del_press)
+        downbtn.pack(side="right", anchor="ne")
+        downbtn = tk.Button(field.frame, text="+v", command=ins_press)
         downbtn.pack(side="right", anchor="ne")
 
         if value_to_set is not None:
@@ -409,6 +420,19 @@ class ArrayEntry(ConfigEntry):
         field_tmp = self.subfields[i1].get_value()
         self.subfields[i1].set_value(self.subfields[i2].get_value())
         self.subfields[i2].set_value(field_tmp)
+
+    def _delete_at(self, index):
+        for i in range(index, len(self.subfields)-1):
+            self.subfields[i].set_value(self.subfields[i+1].get_value())
+        self.delfield()
+
+    def _insert_after(self, index):
+        self.addfield()
+        N = len(self.subfields)
+        defval = self.subfields[N-1].get_value()
+        for i in reversed(range(index+2, N)):
+            self.subfields[i].set_value(self.subfields[i - 1].get_value())
+        self.subfields[index+1].set_value(defval)
 
     def move_up(self, index):
         if index != 0:

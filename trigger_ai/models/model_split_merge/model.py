@@ -1,15 +1,5 @@
 import tensorflow as tf
-from ..common import apply_layer_array
-
-def create_lambda(index, *args, **kwrags):
-    if index==0:
-        return tf.keras.layers.Lambda(lambda x: x[:, :, :8, :8], *args, **kwrags)
-    elif index==1:
-        return tf.keras.layers.Lambda(lambda x: x[:, :, :8, 8:], *args, **kwrags)
-    elif index==10:
-        return tf.keras.layers.Lambda(lambda x: x[:, :, 8:, :8], *args, **kwrags)
-    elif index==11:
-        return tf.keras.layers.Lambda(lambda x: x[:, :, 8:, 8:], *args, **kwrags)
+from ..common import apply_layer_array, create_lambda
 
 
 def cut_interval(start, end):

@@ -3,7 +3,7 @@ from common_GUI.tk_forms_assist.factory import create_value_field
 from localization import get_locale
 from tensorflow import keras
 import tensorflow as tf
-from .custom_structures import Residual
+from .custom_structures import Residual, TrainableScaling
 
 
 class Activation(ComboNode):
@@ -139,6 +139,16 @@ class ExpandDimsConstructor(IntNode):
         val = super().get_data()
         return tf.keras.layers.Lambda(lambda x: tf.expand_dims(x, val))
 
+class ScaleConstructor(FormNode):
+    DISPLAY_NAME = get_locale("app.model_builder.scale")
+
+    FIELD__use_offset = create_value_field(BoolNode, get_locale("app.model_builder.scale.use_offset"), True)
+
+    def get_data(self):
+        data = super().get_data()
+        return TrainableScaling(**data)
+
+
 class LayerConstructor(AlternatingNode):
     DISPLAY_NAME = get_locale("app.model_builder.layer")
     SEL__dense = DenseConstructor
@@ -149,6 +159,7 @@ class LayerConstructor(AlternatingNode):
     SEL__activation = ActivationConstructor
     SEL__expand_dim = ExpandDimsConstructor
     SEL__flatten = FlattenConstructor
+    SEL__scale = ScaleConstructor
 
 
 
@@ -159,7 +170,10 @@ class LayerSequenceConstructor(ArrayNode):
 
 class ResidialConstructor(FormNode):
     DISPLAY_NAME = get_locale("app.model_builder.residual")
-    FIELD__layer_array = LayerSequenceConstructor
+    FIELD__main = create_value_field(LayerSequenceConstructor,
+                                            get_locale("app.model_builder.residual.main"))
+    FIELD__shortcut = create_value_field(LayerSequenceConstructor,
+                                            get_locale("app.model_builder.residual.shortcut"))
 
     def get_data(self):
         data = super().get_data()
