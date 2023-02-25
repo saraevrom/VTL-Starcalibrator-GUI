@@ -60,6 +60,8 @@
   "teacher.form.flash_maxsize": "Максимальная длина вспышки",
   "teacher.form.flash_attempts": "Количество попыток сгенерировать вспышку",
   "teacher.form.seed": "Зерно",
+  "teacher.weight.title": "Выбор веса",
+  "teacher.weight.prompt": "Вес:",
 
 
   "app.preprocess.form.preprocess.title": "Предобработка",

@@ -2,6 +2,7 @@ import tkinter as tk
 
 import numpy as np
 from tkinter import filedialog
+from tkinter.simpledialog import askinteger
 
 from localization import get_locale
 import os.path as ospath
@@ -27,7 +28,9 @@ class FilePool(tk.Frame):
         label.grid(row=0, column=0, sticky="nsew")
         self.src_extension = src_extension
         self.files_listbox = tk.Listbox(self)
+        self.files_listbox.bind("<Button-3>", self.on_rmb)
         self.files_list = []
+        self.file_weights = []
         self.open_files_cache = dict()
         self.data_cache = dict()
         self.files_listbox.grid(row=1, column=0, sticky="nsew")
@@ -47,8 +50,25 @@ class FilePool(tk.Frame):
 
     def on_clear(self):
         self.files_list.clear()
+        self.file_weights.clear()
         self.files_listbox.delete(0, tk.END)
         self.clear_cache()
+
+    def on_rmb(self, event):
+        self.files_listbox.selection_clear(0, tk.END)
+        selected_i = self.files_listbox.nearest(event.y)
+        self.files_listbox.selection_set(selected_i)
+        self.files_listbox.activate(selected_i)
+        new_w = askinteger(get_locale("teacher.weight.title"), get_locale("teacher.weight.prompt"))
+        if new_w is not None:
+            f = self.files_list[selected_i]
+            new_txt = f"{ospath.basename(f)} ({new_w})"
+            self.file_weights[selected_i] = new_w
+            self.set_listbox_entry(selected_i, new_txt)
+
+    def set_listbox_entry(self, i, txt):
+        self.files_listbox.delete(i)
+        self.files_listbox.insert(i, txt)
 
 
     def on_select_sources(self):
@@ -59,8 +79,10 @@ class FilePool(tk.Frame):
         if filenames:
             self.on_clear()
             for f in filenames:
-                self.files_listbox.insert(tk.END, ospath.basename(f))
                 self.files_list.append(f)
+                self.file_weights.append(1)
+                self.files_listbox.insert(tk.END, f"{ospath.basename(f)} (1)")
+            self.file_weights = np.array(self.file_weights)
 
 
     def get_cached_fileaccess(self, filename):
@@ -71,13 +93,17 @@ class FilePool(tk.Frame):
             self.open_files_cache[filename] = obj
             return obj
 
+    def get_random_filename(self, rng: np.random.Generator):
+        p = self.file_weights/np.sum(self.file_weights)
+        return rng.choice(self.files_list, p=p)
+
     def pull_random_file(self, rng):
-        filename = rng.choice(self.files_list)
+        filename = self.get_random_filename(rng)
         obj = self.get_cached_fileaccess(filename)
         return obj
 
     def pull_fields_from_random_file(self, fields, rng):
-        filename = rng.choice(self.files_list)
+        filename = self.get_random_filename(rng)
         if self.fast_cache:
             result = []
             obj = None

@@ -62,6 +62,9 @@
   "teacher.advform.multiplier": "Multiplier",
   "teacher.advform.offset": "Fluctuations",
   "teacher.advform.parameters": "Parameters",
+  "teacher.weight.title": "Weight selection",
+  "teacher.weight.prompt": "Weight:",
+
 
 
 
