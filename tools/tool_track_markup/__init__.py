@@ -353,8 +353,14 @@ class TrackMarkup(ToolBase):
 
         self.show_next_event()
         self.update_answer_panel()
+
         if self.form_data["auto_cont"]:
-            self.after(1000, self.on_auto)
+            self.after(1000, self.on_auto_cont)
+
+    def on_auto_cont(self):
+        self.sync_form()
+        if self.form_data["auto_cont"]:
+            self.on_auto()
 
     def on_poll(self, result):
         self.sync_form()
@@ -452,7 +458,7 @@ class TrackMarkup(ToolBase):
         if filename:
             self.tf_model = ModelWrapper.load_model(filename)
             self.tf_filter = self.tf_model.get_filter()
-            self.tf_filter_info.set("ANN "+repr(self.tf_filter))
+            self.tf_filter_info.set("ANN "+self.tf_filter.get_representation())
 
     def on_review_trackless_select(self, evt):
         return self.on_review_select_universal(evt, True)
@@ -480,6 +486,13 @@ class TrackMarkup(ToolBase):
         self.params_form_parser.parse_formdata(raw_form_data)
         self.form_data = self.params_form_parser.get_data()
 
+    def get_filter_for_nn(self):
+        if self.form_data["override_ann_filter"] or not self.tf_model:
+            return self.form_data["preprocessing"]
+
+    def get_broken(self):
+        return np.logical_not(self.plotter.alive_pixels_matrix)
+
     def apply_filter(self, signal, use_nn=False):
         self.sync_form()
         if self.form_data["override_ann_filter"] or not use_nn or not self.tf_model:
@@ -489,7 +502,7 @@ class TrackMarkup(ToolBase):
             preprocessor = self.tf_filter
 
         broken = np.logical_not(self.plotter.alive_pixels_matrix)
-        plot_data = preprocessor.preprocess(signal, broken=broken)
+        plot_data = preprocessor.preprocess(signal, broken)
         return plot_data
 
     def popup_draw_all(self):

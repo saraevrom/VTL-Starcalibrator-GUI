@@ -23,10 +23,8 @@ class SplitMergeModel(ModelWrapper):
         else:
             return np.array([1., 0.])
 
-    def trigger(self, x, threshold):
-        x_data = sliding_window_view(x, 128, axis=0)
-        x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
-        y_data = self.model.predict(x_data)
+    def trigger(self, x, threshold, broken, ts_filter=None):
+        y_data = self._predict_raw(x, broken, ts_filter)
         y_data = y_data[:, 1]
         booled =  y_data > threshold
 
@@ -34,10 +32,9 @@ class SplitMergeModel(ModelWrapper):
         booled_full = splat_select(booled, 128)
         return booled_full
 
-    def plot_over_data(self, x, start, end, axes):
-        x_data = sliding_window_view(x, 128, axis=0)
-        x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
-        y_data: np.ndarray = self.model.predict(x_data)[:, 1]
+    def plot_over_data(self, x, start, end, axes, broken, ts_filter=None):
+
+        y_data = self._predict_raw(x, broken, ts_filter)[:, 1]
         xs = np.arange(start, end - 127)
         print("PLOT!")
         axes.plot(xs, y_data+20, "-", color="black")

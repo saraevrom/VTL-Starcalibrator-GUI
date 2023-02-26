@@ -327,7 +327,8 @@ class ToolTeacher(ToolBase):
             else:
                 sample_start = self.rng.integers(bg_start, bg_end-frame_size)
             bg = bg_sample[sample_start:sample_start+frame_size]
-            x_data = preprocessor.preprocess(bg, broken=broken)
+            broken = np.array(broken)
+            x_data = preprocessor.preprocess(bg, broken)
             y_params = TargetParameters()
             artificial_interference = conf.intergerence_artificial()
             if artificial_interference or self.interference_pool.files_list:

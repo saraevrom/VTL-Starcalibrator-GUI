@@ -50,7 +50,7 @@ class FilePool(tk.Frame):
 
     def on_clear(self):
         self.files_list.clear()
-        self.file_weights.clear()
+        self.file_weights = []
         self.files_listbox.delete(0, tk.END)
         self.clear_cache()
 

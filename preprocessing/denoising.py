@@ -35,24 +35,28 @@ def sliding_median_pixels(x, win):
     return res
 
 
-def divide_multidim(a,b):
-    #print("Incoming data shape", a.shape)
-    #print("Incoming divider shape", b.shape)
-    if len(a.shape)>1:
-        res = a/b
-        if a.shape != b.shape:
-            res[:,b==0] = 0
-        else:
-            res[b==0] = 0
-        return res
-    elif hasattr(b,"shape") :
-        res = a/b
-        res[b==0] = 0
-        return res
-    elif b==0:
-        return np.zeros(a.shape)
-    else:
-        return a/b
+@nb.njit(nb.float64[:, :, :](nb.float64[:, :, :], nb.float64[:, :]))
+def divide_multidim_3to2(a, b):
+    res = np.zeros(a.shape)
+    for i in range(a.shape[0]):
+        for j in range(a.shape[1]):
+            for k in range(a.shape[2]):
+                if b[j,k] != 0:
+                    res[i, j, k] = a[i, j, k]/b[j, k]
+
+    return res
+
+
+@nb.njit(nb.float64[:, :, :](nb.float64[:, :, :], nb.float64[:, :, :]))
+def divide_multidim_3to3(a, b):
+    res = np.zeros(a.shape)
+    for i in range(a.shape[0]):
+        for j in range(a.shape[1]):
+            for k in range(a.shape[2]):
+                if b[i, j, k] != 0:
+                    res[i, j, k] = a[i, j, k]/b[i, j, k]
+
+    return res
 
 
 @nb.njit(parallel=True)
@@ -90,8 +94,10 @@ def sliding_std_old(data, window_size):
     return res_array[:output_shape[0]-window_size+1]
 
 
+@nb.njit()
 def sliding_robust_dev_centered(data, window_size):
     return sliding_median_pixels(np.abs(data), window_size)
+
 
 @nb.njit()
 def antiflash(data):
@@ -99,6 +105,7 @@ def antiflash(data):
     for i in range(data.shape[0]):
         data1[i] = data[i] - np.median(data[i])
     return data1
+
 
 @nb.njit()
 def antiflash_single(part_data, full_data):
@@ -108,21 +115,35 @@ def antiflash_single(part_data, full_data):
     return data1
 
 
+@nb.njit(nb.float64[:, :](nb.float64[:, :, :]))
+def nb_std0(data):
+    '''
+    apply std along axis 0
+    :param data:
+    :return:
+    '''
+    res = np.zeros(shape=(data.shape[1], data.shape[2]))
+    for i in range(data.shape[1]):
+        for j in range(data.shape[2]):
+            res[i, j] = np.std(data[:, i, j])
+    return res
 
 
+@nb.njit()
 def reduce_noise(data,sliding_win):
     if sliding_win>=data.shape[0]:
-        std = np.std(data,axis=0)
-        return divide_multidim(data, std)
+        std = nb_std0(data)
+        return divide_multidim_3to2(data, std)
     else:
         std = sliding_std(data, sliding_win)
-        ret_data = divide_multidim(data, std)
+        ret_data = divide_multidim_3to3(data, std)
         return ret_data
 
 
+@nb.njit()
 def reduce_noise_robust(data, sliding_win):
     std = sliding_robust_dev_centered(data, sliding_win)*(np.pi/2)**0.5
-    ret_data = divide_multidim(data, std)
+    ret_data = divide_multidim_3to3(data, std)
     return ret_data
 
 

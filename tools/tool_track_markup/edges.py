@@ -125,19 +125,23 @@ class EdgeProcessor(object):
 
     def get_prob(self, data_source, ax):
         event_start, event_end = data_source.current_event
-        x_data_true = data_source.file["data0"][event_start:event_end]
-        x_data = data_source.apply_filter(x_data_true, True)
+        x_data_true = np.array(data_source.file["data0"][event_start:event_end])
+        filt = data_source.get_filter_for_nn()
+        broken = data_source.get_broken()
+        #x_data = data_source.apply_filter(x_data_true, True)
         # x_data = sliding_window_view(x_data, 128, axis=0)
         # x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
         # y_data: np.ndarray = data_source.tf_model.predict(x_data)[:, 1]
         # xs = np.arange(event_start, event_end-127)
-        data_source.tf_model.plot_over_data(x_data,event_start, event_end, ax)
+        data_source.tf_model.plot_over_data(x_data_true,event_start, event_end, ax, ts_filter=filt, broken=broken)
 
     def apply(self, data_source):
         event_start, event_end = data_source.current_event
-        x_data_true = data_source.file["data0"][event_start:event_end]
-        x_data = data_source.apply_filter(x_data_true, True)
-        booled_full = data_source.tf_model.trigger(x_data, self.threshold)
+        x_data_true = np.array(data_source.file["data0"][event_start:event_end])
+        filt = data_source.get_filter_for_nn()
+        broken = data_source.get_broken()
+        #x_data = data_source.apply_filter(x_data_true, True)
+        booled_full = data_source.tf_model.trigger(x_data_true, self.threshold, ts_filter=filt, broken=broken)
         # x_data = sliding_window_view(x_data, 128, axis=0)
         # x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
         # y_data: np.ndarray = data_source.tf_model.predict(x_data)[:, 1]

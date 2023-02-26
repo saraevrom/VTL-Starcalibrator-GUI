@@ -2,6 +2,7 @@
 Model shared for every pmt
 '''
 import numpy as np
+from numpy.distutils.system_info import x11_info
 from numpy.lib.stride_tricks import sliding_window_view
 from ..model_wrapper import ModelWrapper
 import numba as nb
@@ -29,10 +30,8 @@ class NoSplitModel(ModelWrapper):
             ydata[3] = 1.0
         return ydata
 
-    def trigger(self, x, threshold):
-        x_data = sliding_window_view(x, 128, axis=0)
-        x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
-        y_data = self.model.predict(x_data)
+    def trigger(self, x, threshold, broken, ts_filter=None):
+        y_data = self._predict_raw(x, broken, ts_filter)
         y_data = 1 - np.prod(1 - y_data, axis=1)
         booled = y_data > threshold
 
@@ -40,10 +39,9 @@ class NoSplitModel(ModelWrapper):
         booled_full = splat_select(booled, 128)
         return booled_full
 
-    def plot_over_data(self, x, start, end, axes):
-        x_data = sliding_window_view(x, 128, axis=0)
-        x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
-        y_data: np.ndarray = self.model.predict(x_data)
+    def plot_over_data(self, x, start, end, axes, broken, ts_filter=None):
+
+        y_data = self._predict_raw(x, broken, ts_filter)
         xs = np.arange(start, end - 127)
         print("PLOT!")
         plot_offset(axes, xs, y_data[:, 0], 20, "bottom left", "-")

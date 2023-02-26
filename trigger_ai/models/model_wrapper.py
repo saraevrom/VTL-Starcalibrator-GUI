@@ -4,6 +4,7 @@ from tensorflow import keras
 import tensorflow as tf
 import json
 from preprocessing.forms import DataPreProcessorField
+from numpy.lib.stride_tricks import sliding_window_view
 
 CUSTOM_FIELD = "CUSTOM_MODEL_WRAPPER"
 FILTER_FIELD = "CUSTOM_PREFERRED_FILTER"
@@ -79,10 +80,10 @@ class ModelWrapper(object):
     def create_dataset_ydata_for_item(self, y_data_parameters: TargetParameters):
         raise NotImplementedError()
 
-    def trigger(self, x, threshold):
+    def trigger(self, x, threshold, broken, ts_filter=None):
         raise NotImplementedError()
 
-    def plot_over_data(self, x, start, end, axes):
+    def plot_over_data(self, x, start, end, axes, broken, ts_filter=None):
         raise NotImplementedError()
 
     def get_y_spec(self):
@@ -90,3 +91,14 @@ class ModelWrapper(object):
 
     def get_y_signature(self, n):
         raise NotImplementedError()
+
+    def _predict_raw(self, x, broken, ts_filter=None):
+        if ts_filter is None:
+            ts_filter = self.get_filter()
+        #x_data = sliding_window_view(x, 128, axis=0)
+        #x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
+        x_data = ts_filter.stabilized_sliding(x, broken, 128)
+        #x_data = np.array([ts_filter.preprocess(np.array(item), broken) for item in x_data])
+
+        y_data = self.model.predict(x_data)
+        return y_data
