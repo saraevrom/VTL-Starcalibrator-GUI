@@ -6,7 +6,7 @@ from numpy.lib.stride_tricks import sliding_window_view
 from ..model_wrapper import ModelWrapper
 import numba as nb
 
-from common_GUI.tk_forms_assist import FormNode
+from common_GUI.tk_forms_assist import FormNode, BoolNode
 from common_GUI.tk_forms_assist.factory import create_value_field
 from ..neural_builder.form_elements import LayerSequenceConstructor
 from localization import get_locale
@@ -69,11 +69,16 @@ class SplitedForm(FormNode):
     DEFAULT_VALUE = DEFAULT_CONF
     DISPLAY_NAME = "Splited"
     FIELD__independent = IndependentGetter
+    FIELD__share = create_value_field(BoolNode, get_locale("models.splitmerge.independent_share"), False)
 
     def get_data(self):
         data = super().get_data()
+        if data["share"]:
+            dat = data["independent"][0]
+            data["independent"] = dat, dat, dat, dat
+
         inputs = tf.keras.Input(shape=(128, 16, 16))
-        processor = SingleProcessor(**data)
+        processor = SingleProcessor(data["independent"])
         output = processor.apply(inputs)
         model = tf.keras.Model(inputs, output)
         return SplitedModel(model)

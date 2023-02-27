@@ -123,6 +123,7 @@
 
   "models.splitmerge.independent": "Независимое",
   "models.splitmerge.common": "Общее",
+  "models.splitmerge.independent_share": "Общие слои для независимых частей",
 
   "datasetgen.form.separator.display": "Отображение",
   "datasetgen.form.cutoff_start": "Пропуск кадров в начале",
