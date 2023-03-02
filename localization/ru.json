@@ -120,10 +120,18 @@
   "app.model_builder.padding": "Заполнение",
   "app.model_builder.flatten": "Выравнивание",
   "app.model_builder.expand": "Расширение измерений",
+  "app.model_builder.split": "Разделение ФЭУ",
+  "app.model_builder.split_share": "Общие слои для независимых частей",
 
   "models.splitmerge.independent": "Независимое",
   "models.splitmerge.common": "Общее",
   "models.splitmerge.independent_share": "Общие слои для независимых частей",
+
+
+  "models.universal.layers": "Слои",
+  "models.universal.output_type": "Тип выхода",
+  "models.universal.shape_warning.title": "Предупреждение о размерности",
+  "models.universal.shape_warning.content": "Выходная размерность сети - {output}. Однако требуется {request}. Будет добавлен дополнительный слой",
 
   "datasetgen.form.separator.display": "Отображение",
   "datasetgen.form.cutoff_start": "Пропуск кадров в начале",

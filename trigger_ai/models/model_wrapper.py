@@ -8,6 +8,7 @@ from numpy.lib.stride_tricks import sliding_window_view
 
 CUSTOM_FIELD = "CUSTOM_MODEL_WRAPPER"
 FILTER_FIELD = "CUSTOM_PREFERRED_FILTER"
+ATTRS_FIELD = "MOD_ATTRS"
 
 class TargetParameters(object):
     def __init__(self):
@@ -41,9 +42,10 @@ class ModelWrapper(object):
     SUBCLASSES = None
     MODEL_FORM = None  # Set it to class correspondong to form creation
 
-    def __init__(self, model: keras.Model, preferred_filter_data=None):
+    def __init__(self, model: keras.Model, preferred_filter_data=None, additional_params=None):
         self.model = model
         self.preferred_filter_data = preferred_filter_data
+        self.additional_params = additional_params
 
     def set_preferred_filter_data(self, data):
         self.preferred_filter_data = data
@@ -57,6 +59,8 @@ class ModelWrapper(object):
         self.model.save(file_path)
         with h5py.File(file_path, "a") as fp:
             fp.attrs[CUSTOM_FIELD] = type(self).__name__.encode("utf-8")
+            if self.additional_params is not None:
+                fp.attrs[ATTRS_FIELD] = json.dumps(self.additional_params)
             if attach_filter is not None:
                 fp.attrs[FILTER_FIELD] = json.dumps(attach_filter).encode("utf-8")
             elif self.preferred_filter_data is not None:
@@ -73,9 +77,13 @@ class ModelWrapper(object):
             filter_data = None
             if FILTER_FIELD in fp.attrs.keys():
                 filter_data = json.loads(fp.attrs[FILTER_FIELD])
+            if ATTRS_FIELD in fp.attrs.keys():
+                add_data = json.loads(fp.attrs[ATTRS_FIELD])
+            else:
+                add_data = None
 
         model = keras.models.load_model(file_path)
-        return instance_class(model, filter_data)
+        return instance_class(model, filter_data, add_data)
 
     def create_dataset_ydata_for_item(self, y_data_parameters: TargetParameters):
         raise NotImplementedError()

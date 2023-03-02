@@ -124,10 +124,18 @@
   "app.model_builder.padding": "Padding",
   "app.model_builder.flatten": "Flatten",
   "app.model_builder.expand": "Expand dim",
+  "app.model_builder.split": "PMT Split",
+  "app.model_builder.split_share": "Share configuration",
 
   "models.splitmerge.independent": "Independent",
   "models.splitmerge.independent_share": "Share configuration",
   "models.splitmerge.common": "Common",
+
+  "models.universal.layers": "Layers",
+  "models.universal.output_type": "Output type",
+  "models.universal.shape_warning.title": "Shape warning",
+  "models.universal.shape_warning.content": "Output shape is {output}. While selected mode requests {request}. Additional layer will be created.",
+
 
   "app.model.form.set_to_default": "Set to default",
 

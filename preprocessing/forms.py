@@ -12,6 +12,19 @@ def create_int_option(default_value):
 
         return IntOptionWrapped
 
+
+def data_changed(new_dict, reference_dict):
+    for i in ["ma_win", "mstd_win", "use_antiflash", "use_robust", "independent_pmt"]:
+        if new_dict[i] != reference_dict[i]:
+            return True
+    return False
+
+
+def correct_data(new_dict):
+    for i in ["ma_win", "mstd_win"]:
+        if new_dict[i] is None:
+            new_dict[i] = 0
+
 class DataThreeStagesFilter(FormNode):
     USE_SCROLLVIEW = False
     DISPLAY_NAME = get_locale("app.preprocess.form.preprocess.tsf.title")
@@ -22,9 +35,20 @@ class DataThreeStagesFilter(FormNode):
     FIELD__independent_pmt = create_value_field(BoolNode,
                                                 get_locale("app.preprocess.form.preprocess.independent_pmt"), False)
 
+    def __init__(self):
+        super().__init__()
+        self.cached_filter = None
+        self.cached_settings = None
+
     def get_data(self):
         raw_data = super().get_data()
-        return DataThreeStagePreProcessor(**raw_data)
+        correct_data(raw_data)
+        if (self.cached_filter is None) or data_changed(raw_data, self.cached_settings):
+            print("FILTER:", raw_data)
+
+            self.cached_filter = DataThreeStagePreProcessor(**raw_data)
+            self.cached_settings = raw_data
+        return self.cached_filter
 
 
 # class DataMedianNormForm(FormNode):

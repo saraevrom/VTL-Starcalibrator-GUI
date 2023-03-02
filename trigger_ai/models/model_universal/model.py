@@ -1,0 +1,99 @@
+from ..common import apply_layer_array
+import tensorflow as tf
+from ..model_wrapper import ModelWrapper
+import numpy as np
+from ..common import splat_select, plot_offset
+
+OUT_SINGLE_SIGMA, OUT_SOFT, OUT_SPLIT = OUTPUT_TYPES = ["single_sigma", "binary_softmax", "splitted_sigma"]
+S_SINGLE_SIGMA, S_SOFT, S_SPLIT = OUTPUT_SHAPES = [(1,), (2,), (4,)]
+
+def create_tf_model(callable_array):
+    inputs = tf.keras.Input(shape=(128, 16, 16))
+    outputs = apply_layer_array(inputs, callable_array)
+    return tf.keras.Model(inputs, outputs)
+
+class UniversalModel(ModelWrapper):
+
+    def get_mode(self):
+        return self.additional_params["mode"]
+    def create_dataset_ydata_for_item(self, y_data_parameters):
+        mode = self.get_mode()
+        if mode == OUT_SPLIT:
+            ydata = np.array([0., 0., 0., 0.])
+            if y_data_parameters.pmt_bottom_left:
+                ydata[0] = 1.0
+            if y_data_parameters.pmt_bottom_right:
+                ydata[1] = 1.0
+            if y_data_parameters.pmt_top_left:
+                ydata[2] = 1.0
+            if y_data_parameters.pmt_top_right:
+                ydata[3] = 1.0
+            return ydata
+        elif mode == OUT_SOFT:
+            if y_data_parameters.has_track():
+                return np.array([0., 1.])
+            else:
+                return np.array([1., 0.])
+        elif mode == OUT_SINGLE_SIGMA:
+            if y_data_parameters.has_track():
+                return np.array([1.])
+            else:
+                return np.array([0.])
+        else:
+            raise RuntimeError("Unknown mode")
+
+    def trigger(self, x, threshold, broken, ts_filter=None):
+        mode = self.get_mode()
+        y_data = self._predict_raw(x, broken, ts_filter)
+        if mode == OUT_SPLIT:
+            #y_data = 1 - np.prod(1 - y_data, axis=1)
+            y_data = np.max(y_data, axis=1)
+        elif mode == OUT_SOFT:
+            y_data = y_data[:, 1]
+        elif mode == OUT_SINGLE_SIGMA:
+            y_data = y_data[:, 0]
+        else:
+            raise RuntimeError("Unknown mode")
+
+        booled = y_data > threshold
+
+        print("R0", booled)
+        booled_full = splat_select(booled, 128)
+        return booled_full
+
+    def plot_over_data(self, x, start, end, axes, broken, ts_filter=None):
+        mode = self.get_mode()
+        y_data = self._predict_raw(x, broken, ts_filter)
+        xs = np.arange(start, end - 127)
+        if mode == OUT_SPLIT:
+            print("PLOT!")
+            plot_offset(axes, xs, y_data[:, 0], 20, "bottom left", "-")
+            plot_offset(axes, xs, y_data[:, 1], 22, "bottom right", "--")
+            plot_offset(axes, xs, y_data[:, 2], 24, "top left", "-.")
+            plot_offset(axes, xs, y_data[:, 3], 26, "top right", ":")
+        else:
+            if mode == OUT_SOFT:
+                y_data = y_data[:, 1]
+            elif mode == OUT_SINGLE_SIGMA:
+                y_data = y_data[:, 0]
+            else:
+                raise RuntimeError("Unknown mode")
+            axes.plot(xs, y_data + 20, "-", color="black")
+
+    def get_y_spec(self):
+        mode = self.get_mode()
+        if mode == OUT_SPLIT:
+            return tf.TensorSpec(shape=(None, 4), dtype=tf.double)
+        elif mode == OUT_SOFT:
+            return tf.TensorSpec(shape=(None, 2), dtype=tf.double)
+        elif mode == OUT_SINGLE_SIGMA:
+            return tf.TensorSpec(shape=(None, 1), dtype=tf.double)
+
+    def get_y_signature(self, n):
+        mode = self.get_mode()
+        if mode == OUT_SPLIT:
+            return n, 4
+        elif mode == OUT_SOFT:
+            return n, 2
+        elif mode == OUT_SINGLE_SIGMA:
+            return n, 1

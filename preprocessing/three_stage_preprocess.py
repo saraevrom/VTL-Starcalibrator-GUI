@@ -1,7 +1,7 @@
 import numpy as np
 from .base import Preprocessor
-from .denoising import reduce_noise, antiflash, moving_average_subtract
-from .denoising import  moving_median_subtract, reduce_noise_robust
+from .denoising import reduce_noise, antiflash, moving_average_subtract, divide_multidim_3to2
+from .denoising import  moving_median_subtract, reduce_noise_robust, window_limiting
 from numba.experimental import jitclass
 import numba as nb
 from numba.core.types.containers import UniTuple
@@ -62,10 +62,10 @@ class DataThreeStagePreProcessor(object):
     def get_representation(self):
         res = "Filter:\n"
         off = True
-        if self.ma_win is not None:
+        if self.ma_win != 0:
             res += f"\tMA={self.ma_win}\n"
             off = False
-        if self.mstd_win is not None:
+        if self.mstd_win != 0:
             res += f"\tMSTD={self.mstd_win}\n"
             off = False
         if self.use_antiflash:
@@ -88,22 +88,22 @@ class DataThreeStagePreProcessor(object):
         ma_win = self.ma_win
         mstd_win = self.mstd_win
         use_antiflash = self.use_antiflash
-        if ma_win is not None:
+        if ma_win != 0:
             stage1 = moving_median_subtract(src, ma_win)
         else:
-            stage1 = src
+            stage1 = src[:]
 
-        if mstd_win is not None:
+        if mstd_win != 0:
             stage2 = reduce_noise_robust(stage1, mstd_win)
         else:
-            stage2 = stage1
+            stage2 = stage1[:]
 
         if use_antiflash:
             stage3 = antiflash(stage2)
         else:
-            stage3 = stage2
+            stage3 = stage2[:]
 
-        return stage3
+        return stage3[:]
 
     def preprocess_bulk_norobust(self, src):
 
@@ -113,25 +113,25 @@ class DataThreeStagePreProcessor(object):
 
         use_antiflash = self.use_antiflash
 
-        if ma_win is not None:
+        if ma_win != 0:
             stage1 = moving_average_subtract(src, ma_win)
         else:
-            stage1 = src
+            stage1 = src[:]
 
-        if mstd_win is not None:
+        if mstd_win != 0:
             stage2 = reduce_noise(stage1, mstd_win)
         else:
-            stage2 = stage1
+            stage2 = stage1[:]
 
         if use_antiflash:
             stage3 = antiflash(stage2)
         else:
-            stage3 = stage2
+            stage3 = stage2[:]
 
         return stage3
 
 
-    def preprocess_bulk(self, src):
+    def _preprocess_bulk(self, src):
         if self.use_robust:
             return self.preprocess_bulk_robust(src)
         else:
@@ -140,12 +140,12 @@ class DataThreeStagePreProcessor(object):
     def preprocess(self, src: np.ndarray, broken: np.ndarray):
         if self.independent_pmt:
             signal = np.zeros(src.shape)
-            signal[:, :8, :8] = self.preprocess_bulk(src[:, :8, :8])
-            signal[:, 8:, :8] = self.preprocess_bulk(src[:, 8:, :8])
-            signal[:, :8, 8:] = self.preprocess_bulk(src[:, :8, 8:])
-            signal[:, 8:, 8:] = self.preprocess_bulk(src[:, 8:, 8:])
+            signal[:, :8, :8] = self._preprocess_bulk(src[:, :8, :8])
+            signal[:, 8:, :8] = self._preprocess_bulk(src[:, 8:, :8])
+            signal[:, :8, 8:] = self._preprocess_bulk(src[:, :8, 8:])
+            signal[:, 8:, 8:] = self._preprocess_bulk(src[:, 8:, 8:])
         else:
-            signal = self.preprocess_bulk(src)
+            signal = self._preprocess_bulk(src)
 
         if broken is not None:
             # noise = np.std(signal[:, np.logical_not(broken)])
@@ -168,4 +168,41 @@ class DataThreeStagePreProcessor(object):
                 res[i] = self.preprocess(sub_src, broken)
             return res
 
+    def get_affected_range(self):
+        if self.ma_win>self.mstd_win:
+            return self.ma_win
+        else:
+            return self.mstd_win
 
+    def preprocess_single(self, src: np.ndarray, broken: np.ndarray,index: int):
+        return self.preprocess(src, broken)[index] # let it be automatically remove dead code
+
+    def is_sliding(self):
+        return self.ma_win != 0 or self.mstd_win != 0
+
+    def is_working(self):
+        return self.is_sliding() or self.use_antiflash
+
+def get_window_data(signal_source, index, filter_obj:DataThreeStagePreProcessor):
+    affect_window = filter_obj.get_affected_range()
+    start, end = window_limiting(index, affect_window, signal_source.shape[0])
+    new_index = index-start
+    return signal_source[start:end], new_index
+
+def absmed(x, *args, **kwargs):
+    return np.median(np.abs(x), *args, **kwargs)
+
+def preprocess_single(self:DataThreeStagePreProcessor, ffmodel, src, index, broken):
+    '''
+    Since DataThreeStagePreProcessor has some limitation use this function instead for reading the h5py data
+    :return:
+    '''
+    if self.is_sliding():
+        subsrc, new_index = get_window_data(src, index, self)
+    else:
+        subsrc = src[index:index+1]
+        new_index = 0
+
+    if ffmodel is not None:
+        subsrc = ffmodel.apply(subsrc)
+    return self.preprocess_single(subsrc, broken, new_index)

@@ -98,6 +98,9 @@ class GridPlotter(Plotter):
                             arrowprops=dict(arrowstyle="->"))
         self.annotation.set_visible(False)
 
+    def get_broken(self):
+        return np.logical_not(self.alive_pixels_matrix)
+
     def update_norm(self, low_fallback=None, high_fallback=None):
         if low_fallback is None:
             if self.norm is None:

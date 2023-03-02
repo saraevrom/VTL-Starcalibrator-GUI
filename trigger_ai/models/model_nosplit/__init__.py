@@ -32,7 +32,8 @@ class NoSplitModel(ModelWrapper):
 
     def trigger(self, x, threshold, broken, ts_filter=None):
         y_data = self._predict_raw(x, broken, ts_filter)
-        y_data = 1 - np.prod(1 - y_data, axis=1)
+        y_data = np.max(y_data, axis=1)
+        #y_data = 1 - np.prod(1 - y_data, axis=1)
         booled = y_data > threshold
 
         print("R0", booled)

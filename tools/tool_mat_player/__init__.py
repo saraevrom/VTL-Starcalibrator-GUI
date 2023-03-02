@@ -18,6 +18,7 @@ import matplotlib.dates as md
 from datetime import datetime
 import json, h5py
 
+from preprocessing.three_stage_preprocess import preprocess_single
 
 WORKSPACE_ANIMATIONS = Workspace("animations")
 
@@ -99,20 +100,28 @@ class MatPlayer(ToolBase):
         if self.file:
             #frame_start = time.time()
             #print("Frame START")
-            frame = self.frames[frame_num]
+            frame = self.file["data0"][frame_num]
             #frame = self.file["data0"][frame_num]
             ut0 = self.ut0_s[frame_num]
             #ut0 = self.file["UT0"][frame_num]
             time_str = datetime.utcfromtimestamp(ut0).strftime(DATETIME_FORMAT)
             ffmodel = self.get_ff_model()
-            if self.form_data["use_filter"]:
-                window = self.form_data["filter_window"]
-                #print("PING!", window)
-                slide_bg = np.median(self.file["data0"][frame_num:frame_num+window],axis=0)
-                if (ffmodel is not None) and self.form_data["use_flatfielding"]:
-                    frame = ffmodel.apply(self.file["data0"][frame_num]) - ffmodel.apply(slide_bg)
+            filter_obj = self.form_data["filter"]
+            if filter_obj.is_working():
+                if self.form_data["use_flatfielding"]:
+                    frame = preprocess_single(filter_obj, ffmodel, self.file["data0"], frame_num, self.plotter.get_broken())
                 else:
-                    frame = self.file["data0"][frame_num] - slide_bg
+                    frame = preprocess_single(filter_obj, None, self.file["data0"], frame_num,
+                                              self.plotter.get_broken())
+                # window = self.form_data["filter_window"]
+                # #print("PING!", window)
+                # slide_bg = np.median(self.file["data0"][frame_num:frame_num+window],axis=0)
+                # if (ffmodel is not None) and self.form_data["use_flatfielding"]:
+                #     frame = ffmodel.apply(self.file["data0"][frame_num]) - ffmodel.apply(slide_bg)
+                # else:
+                #     frame = self.file["data0"][frame_num] - slide_bg
+
+
             elif (ffmodel is not None) and self.form_data["use_flatfielding"]:
                 frame = ffmodel.apply(frame)
             self.plotter.buffer_matrix = frame
@@ -128,7 +137,7 @@ class MatPlayer(ToolBase):
          self.form_data = self.form_parser.get_data()
 
     def on_loaded_file_success(self):
-        self.frames = np.array(self.file["data0"])
+        #self.frames = np.array(self.file["data0"])
         self.ut0_s = np.array(self.file["UT0"])
         self.player_controls.link_time(self.ut0_s)
         self.player_controls.set_limit(len(self.file["UT0"]) - 1)
@@ -166,14 +175,15 @@ class MatPlayer(ToolBase):
             start, end = self.player_controls.get_selected_range()
             print("FROM", start, "TO", end)
             xs = self.__get_plot_x(start,end)
-            ys = self.frames[start: end+1]
+            ys = self.file["data0"][start: end+1]
             if self.form_data["use_flatfielding"]:
                 ffmodel = self.get_ff_model()
                 if ffmodel:
                     ys = ffmodel.apply_nobreak(ys)
+            filter_obj = self.form_data["filter"]
+            if filter_obj.is_working():
+                ys = filter_obj.preprocess(ys, self.plotter.get_broken())
             ys = ys[:, i, j]
-            if self.form_data["use_filter"]:
-                ys = moving_average_subtract(ys, self.form_data["filter_window"])
             if self.fig is None:
                 self.fig, self.ax = plt.subplots()
                 self.fig.canvas.mpl_connect('close_event', self.handle_mpl_close)
@@ -188,13 +198,14 @@ class MatPlayer(ToolBase):
             print("DRAW ALL")
             start, end = self.player_controls.get_selected_range()
             xs = self.__get_plot_x(start,end)
-            ys = self.frames[start: end + 1]
+            ys = self.file["data0"][start: end + 1]
             if self.form_data["use_flatfielding"]:
                 ffmodel = self.get_ff_model()
                 if ffmodel:
                     ys = ffmodel.apply_nobreak(ys)
-            if self.form_data["use_filter"]:
-                ys = moving_average_subtract(ys, self.form_data["filter_window"])
+            filter_obj = self.form_data["filter"]
+            if filter_obj.is_working():
+                ys = filter_obj.preprocess(ys, self.plotter.get_broken())
             fig, ax = plt.subplots()
             for i in range(16):
                 for j in range(16):

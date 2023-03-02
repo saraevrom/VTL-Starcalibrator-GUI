@@ -3,7 +3,7 @@ from common_GUI.tk_forms_assist.factory import create_value_field
 from localization import get_locale
 from tensorflow import keras
 import tensorflow as tf
-from .custom_structures import Residual, TrainableScaling
+from .custom_structures import Residual, TrainableScaling, PMTSplit
 
 
 class Activation(ComboNode):
@@ -149,6 +149,7 @@ class ScaleConstructor(FormNode):
         return TrainableScaling(**data)
 
 
+
 class LayerConstructor(AlternatingNode):
     DISPLAY_NAME = get_locale("app.model_builder.layer")
     SEL__dense = DenseConstructor
@@ -160,9 +161,6 @@ class LayerConstructor(AlternatingNode):
     SEL__expand_dim = ExpandDimsConstructor
     SEL__flatten = FlattenConstructor
     SEL__scale = ScaleConstructor
-
-
-
 
 class LayerSequenceConstructor(ArrayNode):
     DISPLAY_NAME = get_locale("app.model_builder.layers")
@@ -181,3 +179,23 @@ class ResidialConstructor(FormNode):
 
 
 LayerConstructor.SEL__residual = ResidialConstructor
+
+
+class SequenceMultiplied(LayerSequenceConstructor):
+    def get_data(self):
+        return super().get_data(), super().get_data(), super().get_data(), super().get_data()
+
+
+class SplitConstructor(FormNode):
+    FIELD__share = create_value_field(BoolNode, get_locale("app.model_builder.split_share"), False)
+    FIELD__sequence = SequenceMultiplied
+    
+    def get_data(self):
+        data = super().get_data()
+        if data["share"]:
+            dat = data["sequence"][0]
+            return PMTSplit(pmt_tuple=(dat, dat, dat, dat))
+        else:
+            return PMTSplit(pmt_tuple=data["sequence"])
+
+LayerConstructor.SEL__splitmerge = SplitConstructor
