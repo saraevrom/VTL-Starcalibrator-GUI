@@ -22,6 +22,8 @@ else:
     ModelWrapper = None
 
 from .edges import edged_intervals
+from localized_GUI.signal_plotter import PopupPlotable
+
 
 OFF = get_locale("app.state_off")
 ON = get_locale("app.state_on")
@@ -51,9 +53,9 @@ def stitch_events(events):
             deflation_i += 1
     return sorted_events
 
-class TrackMarkup(ToolBase):
+class TrackMarkup(ToolBase, PopupPlotable):
     def __init__(self, master):
-        super(TrackMarkup, self).__init__(master)
+        ToolBase.__init__(self,master)
         self.form_data = None
         self.title(get_locale("track_markup.title"))
         self.plotter = GridPlotter(self)
@@ -125,8 +127,9 @@ class TrackMarkup(ToolBase):
         self.start_btn.pack(expand=True, fill="both")
 
         self.just_started =  True
-        self.plotter.on_right_click_callback = self.popup_draw_signal
-        self.plotter.on_right_click_callback_outofbounds = self.popup_draw_all
+        #self.plotter.on_right_click_callback = self.popup_draw_signal
+        #self.plotter.on_right_click_callback_outofbounds = self.popup_draw_all
+        PopupPlotable.__init__(self, self.plotter)
         # self.reset_events()
         self.retractable_event = False
         self.event_in_queue = True, None
@@ -173,7 +176,7 @@ class TrackMarkup(ToolBase):
         self.clear_events()
 
     def on_spawn_figure_press(self):
-        self.ensure_figure(True)
+        self.create_plotter()
 
     def ensure_figure(self, spawnnew):
         if self.last_single_plot_data is None or spawnnew:
@@ -521,6 +524,26 @@ class TrackMarkup(ToolBase):
                 for j in range(16):
                     ax.plot(xs, plot_data[:,i,j])
             fig.show()
+
+    def get_plot_data(self):
+        if self.file and self.current_event:
+            t1, t2 = self.current_event
+            signal = self.file["data0"][t1:t2]
+            model = self.get_ff_model()
+            if model:
+                signal = model.apply(signal)
+                signal[:, np.logical_not(self.plotter.alive_pixels_matrix)] = 0
+
+            plot_data = self.apply_filter(signal)
+            xs = np.linspace(t1, t2, len(plot_data))
+            return xs, plot_data
+
+    def postprocess_plot(self, axes):
+        if self.tf_model and self.current_event:
+            e_start, e_end = self.current_event
+            if abs(e_end - e_start) >= 128:
+                self.sync_form()
+                self.form_data["trigger"].get_prob(self, axes)
 
     def handle_mpl_close(self, mpl_event):
         if self.last_single_plot_data is None:

@@ -117,6 +117,8 @@ class ParallelWorker(Process):
                         utc_time.resize(dset_length, axis=0)
                         if rcut == 0:
                             rcut = None   # We are not interested in cutting everything
+                        else:
+                            rcut = -rcut
                         data0[write_pos:] = signals[lcut:rcut]
                         utc_time[write_pos:] = times[lcut:rcut, 0]   # Matlab gives some shape magic  :D
                     else:

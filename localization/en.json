@@ -385,6 +385,11 @@
   "app.state_off": "OFF",
   "app.state_on": "ON",
 
+  "app.popup_plot.lightcurve": "Light curve",
+  "app.popup_plot.lightcurve_mean": "Light curve using mean instead of sum",
+  "app.popup_plot.threshold": "Active pixels threshold",
+  "app.popup_plot.detect_active": "Select active pixels",
+
   "app.load_file_with_ff.title": "Loading data file",
   "app.load_file_with_ff.message": "This file contains own flat fielding parameters. They will be loaded automatically."
 }

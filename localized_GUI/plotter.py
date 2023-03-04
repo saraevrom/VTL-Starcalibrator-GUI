@@ -32,6 +32,10 @@ class Plotter(ttk.Frame):
         self.toolbar = NavigationToolbar2Tk(self.mpl_canvas, self)
         self.toolbar.update()
 
+
+    def allow_callbacks(self):
+        return not self.figure.canvas.toolbar.mode
+
     def draw(self):
         #self.figure.canvas.draw()
         #self.figure.canvas.flush_events()
@@ -46,6 +50,7 @@ class GridPlotter(Plotter):
         self.min_norm_entry = tk.StringVar(self)
         self.max_norm_entry = tk.StringVar(self)
         self.enable_scale_configuration = enable_scale_configuration
+        self.on_left_click_callback = None
         self.on_right_click_callback = None
         self.on_right_click_callback_outofbounds = None
 
@@ -148,8 +153,12 @@ class GridPlotter(Plotter):
         # print("Draw START")
         if update_norm or (self.norm is None):
             alive_data = self.buffer_matrix[self.alive_pixels_matrix]
-            low_auto = np.min(alive_data)
-            high_auto = np.max(alive_data)
+            if len(alive_data)>0:
+                low_auto = np.min(alive_data)
+                high_auto = np.max(alive_data)
+            else:
+                low_auto = -1
+                high_auto = 0
             self.update_norm(low_auto, high_auto)
 
             if self.colorbar is None:
@@ -182,8 +191,10 @@ class GridPlotter(Plotter):
     def highlighted_pixels_query(self):
         return np.array(np.where(self.highlight_pixels_matrix)).T
 
+
+
     def on_plot_click(self, event):
-        if (event.xdata is not None) and (event.ydata is not None):
+        if (event.xdata is not None) and (event.ydata is not None) and self.allow_callbacks():
             i = find_index(event.xdata)
             j = find_index(event.ydata)
             if i >= 0 and j >= 0:
@@ -191,6 +202,8 @@ class GridPlotter(Plotter):
                     self.toggle_broken(i, j)
                     self.update_matrix_plot(True)
                     self.draw()
+                    if self.on_left_click_callback:
+                        self.on_left_click_callback(i, j)
                 elif event.button == 3:  #RMB
                     if self.on_right_click_callback:
                         self.on_right_click_callback(i, j)

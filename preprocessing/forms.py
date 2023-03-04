@@ -24,6 +24,8 @@ def correct_data(new_dict):
     for i in ["ma_win", "mstd_win"]:
         if new_dict[i] is None:
             new_dict[i] = 0
+    if new_dict["independent_pmt"] is None:
+        new_dict["independent_pmt"] = False
 
 class DataThreeStagesFilter(FormNode):
     USE_SCROLLVIEW = False

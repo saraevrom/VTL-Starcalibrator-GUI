@@ -17,15 +17,16 @@ import imageio as iio
 import matplotlib.dates as md
 from datetime import datetime
 import json, h5py
+from localized_GUI.signal_plotter import PopupPlotable
 
 from preprocessing.three_stage_preprocess import preprocess_single
 
 WORKSPACE_ANIMATIONS = Workspace("animations")
 
 
-class MatPlayer(ToolBase):
+class MatPlayer(ToolBase, PopupPlotable):
     def __init__(self, master):
-        super(MatPlayer, self).__init__(master)
+        ToolBase.__init__(self,master)
         self.title(get_locale("matplayer.title"))
         self.file = None
         self.form_parser = ViewerForm()
@@ -43,13 +44,14 @@ class MatPlayer(ToolBase):
         rframe.pack(side=tk.RIGHT, fill=tk.Y)
         self.plotter = GridPlotter(self)
         self.plotter.pack(side=tk.TOP, expand=True, fill=tk.BOTH)
-        self.plotter.on_right_click_callback = self.on_pixel_rmb
-        self.plotter.on_right_click_callback_outofbounds = self.on_common_rmb
+        #self.plotter.on_right_click_callback = self.on_pixel_rmb
+        #self.plotter.on_right_click_callback_outofbounds = self.on_common_rmb
         self.player_controls = PlayerControls(self, self.on_frame_draw, self.click_callback)
         self.player_controls.pack(side=tk.BOTTOM, fill=tk.X)
         self.get_mat_file()
         self.form_data = None
         self.fig, self.ax = None, None
+        PopupPlotable.__init__(self, self.plotter)
         self.click_callback()
 
 
@@ -191,6 +193,22 @@ class MatPlayer(ToolBase):
             self.ax.plot(xs, ys, label=f"[{i+1},{j+1}]")
             self.ax.legend()
             self.fig.show()
+
+    def get_plot_data(self):
+        if self.file:
+            start, end = self.player_controls.get_selected_range()
+            xs = self.__get_plot_x(start, end)
+            ys = self.file["data0"][start: end + 1]
+            if self.form_data["use_flatfielding"]:
+                ffmodel = self.get_ff_model()
+                if ffmodel:
+                    ys = ffmodel.apply_nobreak(ys)
+            filter_obj = self.form_data["filter"]
+            if filter_obj.is_working():
+                ys = filter_obj.preprocess(ys, self.plotter.get_broken())
+            return xs, ys
+        else:
+            return None
 
     def on_common_rmb(self):
         if self.file:

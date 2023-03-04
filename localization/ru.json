@@ -382,6 +382,12 @@
   "app.state_off": "ВЫКЛ",
   "app.state_on": "ВКЛ",
 
+
+  "app.popup_plot.lightcurve": "Кривая свечения",
+  "app.popup_plot.lightcurve_mean": "Кривая свечения использует среднее вместо суммы",
+  "app.popup_plot.threshold": "Порог для активных пикселей",
+  "app.popup_plot.detect_active": "Выбрать активные пиксели",
+
   "app.load_file_with_ff.title": "Загрузка файла",
   "app.load_file_with_ff.message": "В этом файле есть коэффициенты для выравнивания пикселей. Они будут загруженны автоматически."
 }
