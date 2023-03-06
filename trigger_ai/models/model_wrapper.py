@@ -46,6 +46,7 @@ class ModelWrapper(object):
         self.model = model
         self.preferred_filter_data = preferred_filter_data
         self.additional_params = additional_params
+        self.stabilize_slide = True
 
     def set_preferred_filter_data(self, data):
         self.preferred_filter_data = data
@@ -105,7 +106,11 @@ class ModelWrapper(object):
             ts_filter = self.get_filter()
         #x_data = sliding_window_view(x, 128, axis=0)
         #x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
-        x_data = ts_filter.stabilized_sliding(x, broken, 128)
+        if self.stabilize_slide:
+            x_data = ts_filter.stabilized_sliding(x, broken, 128)
+        else:
+            x_data = sliding_window_view(x, 128, axis=0)
+            x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
         #x_data = np.array([ts_filter.preprocess(np.array(item), broken) for item in x_data])
 
         y_data = self.model.predict(x_data)

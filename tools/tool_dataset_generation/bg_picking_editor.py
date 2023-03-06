@@ -4,6 +4,7 @@ import numpy as np
 from matplotlib.patches import Rectangle
 
 
+from utilities import set_vlines_position
 
 
 class BgPickingEditor(Plotter):
@@ -82,23 +83,11 @@ class BgPickingEditor(Plotter):
 
 
     def set_pointer(self, new_x):
-        seg_old = self.pointer.get_segments()
-        ymin = seg_old[0][0, 1]
-        ymax = seg_old[0][1, 1]
-
-        seg_new = [np.array([[new_x, ymin],
-                             [new_x, ymax]])]
-        self.pointer.set_segments(seg_new)
+        set_vlines_position(self.pointer, new_x)
         self.pointer_location = new_x
 
     def set_frame_pointer(self, new_x):
-        seg_old = self.frame_pointer.get_segments()
-        ymin = seg_old[0][0, 1]
-        ymax = seg_old[0][1, 1]
-
-        seg_new = [np.array([[new_x, ymin],
-                             [new_x, ymax]])]
-        self.frame_pointer.set_segments(seg_new)
+        set_vlines_position(self.frame_pointer, new_x)
         self.frame_pointer_location = new_x
 
     def clear(self):

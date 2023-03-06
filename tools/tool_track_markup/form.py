@@ -16,6 +16,7 @@ class TriggerParameters(FormNode):
     DISPLAY_NAME = get_locale("track_markup.form.trigger")
     FIELD__threshold = create_value_field(FloatNode, get_locale("track_markup.form.trigger.threshold"), 0.5)
     #FIELD__edge_shift = create_value_field(IntNode, get_locale("track_markup.form.trigger.edge_shift"), 64)
+    FIELD__stabilize_slide = create_value_field(BoolNode, get_locale("track_markup.form.trigger.stabilize"), True)
     USE_SCROLLVIEW = False
     
     def get_data(self):

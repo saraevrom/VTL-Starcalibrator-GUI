@@ -7,6 +7,7 @@ from datetime import datetime
 from tkinter.simpledialog import askstring
 import numpy as np
 from matplotlib.patches import Rectangle
+from utilities import set_vlines_position
 
 MARK_LOW = 0
 MARK_HIGH = 1
@@ -111,14 +112,7 @@ class ValueWrapper(tk.Frame):
         self.set_value(v_ref)
 
 
-def set_vlines_position(lines, position):
-    seg_old = lines.get_segments()
-    ymin = seg_old[0][0, 1]
-    ymax = seg_old[0][1, 1]
 
-    seg_new = [np.array([[position, ymin],
-                         [position, ymax]])]
-    lines.set_segments(seg_new)
 
 class PlayingPosition(Plotter):
     def __init__(self, master):

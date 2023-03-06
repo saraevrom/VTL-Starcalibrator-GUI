@@ -1,8 +1,8 @@
-from ..common import apply_layer_array
+from ..common import apply_layer_array, deconvolve_windows
 import tensorflow as tf
 from ..model_wrapper import ModelWrapper
 import numpy as np
-from ..common import splat_select, plot_offset
+from ..common import splat_select, plot_offset, expand_window
 
 OUT_SINGLE_SIGMA, OUT_SOFT, OUT_SPLIT = OUTPUT_TYPES = ["single_sigma", "binary_softmax", "splitted_sigma"]
 S_SINGLE_SIGMA, S_SOFT, S_SPLIT = OUTPUT_SHAPES = [(1,), (2,), (4,)]
@@ -47,24 +47,30 @@ class UniversalModel(ModelWrapper):
         y_data = self._predict_raw(x, broken, ts_filter)
         if mode == OUT_SPLIT:
             #y_data = 1 - np.prod(1 - y_data, axis=1)
-            y_data = np.max(y_data, axis=1)
+            deconvolved = []
+            for i in range(4):
+                deconvolved.append(deconvolve_windows(y_data[:, i], 128))
+            y_data = np.max(np.vstack(deconvolved), axis=0)
         elif mode == OUT_SOFT:
             y_data = y_data[:, 1]
+            y_data = deconvolve_windows(y_data, 128)
         elif mode == OUT_SINGLE_SIGMA:
             y_data = y_data[:, 0]
+            y_data = deconvolve_windows(y_data, 128)
         else:
             raise RuntimeError("Unknown mode")
 
-        booled = y_data > threshold
+        # booled = y_data > threshold
+        booled_full = y_data > threshold
 
-        print("R0", booled)
-        booled_full = splat_select(booled, 128)
-        return booled_full
+        #print("R0", booled)
+        #booled_full = splat_select(booled, 128)
+        return expand_window(booled_full,128)
 
     def plot_over_data(self, x, start, end, axes, broken, ts_filter=None):
         mode = self.get_mode()
         y_data = self._predict_raw(x, broken, ts_filter)
-        xs = np.arange(start, end - 127)
+        xs = np.arange(start, end)
         if mode == OUT_SPLIT:
             print("PLOT!")
             plot_offset(axes, xs, y_data[:, 0], 20, "bottom left", "-")
@@ -78,7 +84,8 @@ class UniversalModel(ModelWrapper):
                 y_data = y_data[:, 0]
             else:
                 raise RuntimeError("Unknown mode")
-            axes.plot(xs, y_data + 20, "-", color="black")
+            plot_offset(axes, xs, y_data, 20, "ANN output", "-")
+            #axes.plot(xs, y_data + 20, "-", color="black")
 
     def get_y_spec(self):
         mode = self.get_mode()

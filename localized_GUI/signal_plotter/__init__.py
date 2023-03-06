@@ -1,98 +1,11 @@
 import tkinter as tk
-from ..plotter import Plotter, GridPlotter
-import numpy.random as rng
+from ..plotter import GridPlotter
 import numpy as np
 from common_GUI.settings_frame import SettingMenu
 from .build_settings import build_menu
 from localization import get_locale
 
-
-def generate_color_part(generator):
-    return (generator.random()+0.1)/1.15
-
-def generate_color(generator):
-    r = generate_color_part(generator)
-    g = generate_color_part(generator)
-    b = generate_color_part(generator)
-    #roundval = generator.random()*2*np.pi
-    # r = (np.cos(roundval)+1)/2
-    # g = (np.cos(roundval+2*np.pi/3)+1)/2
-    # b = (np.cos(roundval+4*np.pi/3)+1)/2
-    return r,g,b
-
-LEGEND_PARAMS = dict(loc='upper left', bbox_to_anchor=(1.05, 1),
-              ncol=2, borderaxespad=0)
-
-class MainPlotter(Plotter):
-    def __init__(self, master, x_plot, display_data):
-        super().__init__(master)
-        gen = rng.default_rng(42)
-        self.lines = []
-        for i in range(16):
-            line_row = []
-            for j in range(16):
-                line, = self.axes.plot(x_plot, display_data[:,i,j], c=generate_color(gen), label="_hidden")
-                line.set_visible(False)
-                line_row.append(line)
-            self.lines.append(line_row)
-        self.display_data = display_data
-        self.use_mean = False
-        self.accumulated, = self.axes.plot(x_plot, np.zeros(shape=display_data.shape[0]), "--",
-                                           color="#BBBBBB", label="_hidden")
-        self.accumulated.set_visible(False)
-        box = self.axes.get_position()
-        self.axes.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-        self.axes.legend(loc='upper left', bbox_to_anchor=(1.05, 1),
-              ncol=2, borderaxespad=0)
-        self.draw()
-        self._accumulation_mode = "Off"
-        self.display_matrix = np.full(fill_value=False, shape=(16,16))
-
-    def set_visibility(self, matrix):
-        for i in range(16):
-            for j in range(16):
-                self.lines[i][j].set_visible(matrix[i,j])
-                if matrix[i,j]:
-                    self.lines[i][j].set_label(f"[{i + 1}, {j + 1}]")
-                else:
-                    self.lines[i][j].set_label("_hidden")
-        self.axes.legend(**LEGEND_PARAMS)
-        self.display_matrix = matrix
-        self.draw()
-
-    def set_accumulation_visibility(self, visible):
-        self.accumulated.set_visible(visible)
-        if visible:
-            self.accumulated.set_label("Σ")
-        else:
-            self.accumulated.set_label("_hidden")
-        self.draw()
-
-
-    def update_accumulation_selected(self, checkmode=None):
-        if checkmode is None:
-            checkmode = self._accumulation_mode
-        if checkmode =="Selected":
-            srcdata = self.display_data[:, self.display_matrix]
-            func = self.get_lightcurve_func()
-            self.accumulated.set_ydata(func(srcdata, axis=1))
-        self.draw()
-
-    def get_lightcurve_func(self):
-        if self.use_mean:
-            return np.mean
-        else:
-            return np.sum
-
-    def switch_accumulation_mode(self, new_mode):
-        if self._accumulation_mode != new_mode:
-            self.set_accumulation_visibility(new_mode != "Off")
-            if new_mode == "All":
-                func = self.get_lightcurve_func()
-                full_sum = func(self.display_data, axis=(1, 2))
-                self.accumulated.set_ydata(full_sum)
-            self.update_accumulation_selected(new_mode)
-        self._accumulation_mode = new_mode
+from .time_plotter import MainPlotter
 
 
 class ChoosablePlotter(tk.Toplevel):
@@ -124,6 +37,7 @@ class ChoosablePlotter(tk.Toplevel):
         quickactive_btn = tk.Button(auxpanel, text=get_locale("app.popup_plot.detect_active"),
                                     command=self.on_active_select)
         quickactive_btn.pack(side="bottom", fill="x")
+        self.settings_menu.push_settings_dict(self.settings_dict)
 
     def get_axes(self):
         return self.plotter.axes
@@ -132,6 +46,7 @@ class ChoosablePlotter(tk.Toplevel):
         self.settings_menu.push_settings_dict(self.settings_dict)
         self.plotter.switch_accumulation_mode(self.settings_dict["lightcurve"])
         self.plotter.use_mean = self.settings_dict["lightcurve_mean"]
+        self.on_lmb(-1,-1)
         self.plotter.draw()
 
     def on_active_select(self):
@@ -145,7 +60,12 @@ class ChoosablePlotter(tk.Toplevel):
         self.on_lmb(-1, -1)
 
     def on_lmb(self,i,j):
-        self.plotter.set_visibility(self.selector.alive_pixels_matrix)
+        if self.settings_dict["show_pixels"]:
+            self.plotter.set_visibility(self.selector.alive_pixels_matrix)
+        else:
+            self.plotter.set_visibility(np.full(fill_value=False, shape=(16, 16)))
+            self.plotter.display_matrix = self.selector.alive_pixels_matrix # To accumulate data
+            self.plotter.draw()
         self.plotter.update_accumulation_selected()
 
     def on_right_click_callback(self,i,j):

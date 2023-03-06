@@ -13,7 +13,7 @@ from localization import get_locale
 import tensorflow as tf
 from .model import SingleProcessor
 from .default_configuration import DEFAULT_CONF
-from ..common import splat_select, plot_offset
+from ..common import splat_select, plot_offset, expand_window, deconvolve_windows
 
 
 
@@ -35,18 +35,25 @@ class SplitedModel(ModelWrapper):
     def trigger(self, x, threshold, broken, ts_filter=None):
 
         y_data = self._predict_raw(x, broken, ts_filter)
-        y_data = np.max(y_data, axis=1)
-        #y_data = 1 - np.prod(1 - y_data, axis=1)
-        booled = y_data > threshold
+        deconvolved = []
+        for i in range(4):
+            deconvolved.append(deconvolve_windows(y_data[:, i], 128))
+        y_data = np.max(np.vstack(deconvolved), axis=0)
 
-        print("R0", booled)
-        booled_full = splat_select(booled, 128)
-        return booled_full
+        booled_full = y_data > threshold
+
+        # y_data = np.max(y_data, axis=1)
+        # #y_data = 1 - np.prod(1 - y_data, axis=1)
+        # booled = y_data > threshold
+        #
+        # print("R0", booled)
+        # booled_full = splat_select(booled, 128)
+        return expand_window(booled_full,128)
 
     def plot_over_data(self, x, start, end, axes, broken, ts_filter=None):
 
         y_data = self._predict_raw(x, broken, ts_filter)
-        xs = np.arange(start, end - 127)
+        xs = np.arange(start, end)
         print("PLOT!")
         plot_offset(axes, xs, y_data[:, 0], 20, "bottom left", "-")
         plot_offset(axes, xs, y_data[:, 1], 22, "bottom right", "--")

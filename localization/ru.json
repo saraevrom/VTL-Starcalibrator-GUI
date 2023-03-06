@@ -233,6 +233,7 @@
   "track_markup.form.trigger.edge_shift": "Сдвиг краёв диапазона",
   "track_markup.form.auto_continue": "Продолжить автоматическую разметку",
   "track_markup.form.override_ann": "Не использовать собственный фильтр нейросети",
+  "track_markup.form.trigger.stabilize": "Стабилиировать окно фильтра",
   "track_markup.label.accepted": "Интервалы без треков",
   "track_markup.label.rejected": "Интервалы с треками",
   "track_markup.form.noise_suppress_use": "Использовать подавление шума",
@@ -387,6 +388,7 @@
   "app.popup_plot.lightcurve_mean": "Кривая свечения использует среднее вместо суммы",
   "app.popup_plot.threshold": "Порог для активных пикселей",
   "app.popup_plot.detect_active": "Выбрать активные пиксели",
+  "app.popup_plot.show_pixels": "Показать пиксели",
 
   "app.load_file_with_ff.title": "Загрузка файла",
   "app.load_file_with_ff.message": "В этом файле есть коэффициенты для выравнивания пикселей. Они будут загруженны автоматически."
