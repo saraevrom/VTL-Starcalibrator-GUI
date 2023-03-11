@@ -21,9 +21,9 @@ def deconvolve_windows(convolved, window):
     for i in range(convolved.shape[0]):
         result_arr[i: i + window] = result_arr[i: i + window] + convolved[i]
         norm_arr[i: i + window] = norm_arr[i: i + window] + 1.0
-    print("SRC:", convolved)
-    print("RES:",result_arr)
-    print("NORM:", norm_arr)
+    #print("SRC:", convolved)
+    #print("RES:",result_arr)
+    #print("NORM:", norm_arr)
     return result_arr/norm_arr
 
 @nb.njit
