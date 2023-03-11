@@ -202,7 +202,9 @@
   "matplayer.form.gif_renderer.frame_skip": "Frame skip",
   "matplayer.form.gif_renderer.fps": "FPS",
   "matplayer.button.render_gif": "Render GIF",
+  "matplayer.button.export": "Export data",
   "matplayer.dialog.gif_target": "Choose file name for animation",
+  "matplayer.dialog.h5_target": "Choose file name for data",
 
   "matplayer.button.datetime_entry": "Enter date/time",
   "matplayer.dialog.datetime_prompt": "Enter target date and time",

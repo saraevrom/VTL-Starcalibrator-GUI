@@ -22,6 +22,7 @@ from localized_GUI.signal_plotter import PopupPlotable
 from preprocessing.three_stage_preprocess import preprocess_single
 
 WORKSPACE_ANIMATIONS = Workspace("animations")
+WORKSPACE_EXPORT = Workspace("export")
 
 
 class MatPlayer(ToolBase, PopupPlotable):
@@ -41,6 +42,9 @@ class MatPlayer(ToolBase, PopupPlotable):
         attach_btn = tk.Button(rframe, text=get_locale("matplayer.button.attach_ff"), command=self.on_attach_ff)
         attach_btn.pack(side=tk.TOP, fill=tk.X)
 
+        export_btn = tk.Button(rframe, text=get_locale("matplayer.button.export"), command=self.on_export)
+        export_btn.pack(side=tk.TOP, fill=tk.X)
+
         rframe.pack(side=tk.RIGHT, fill=tk.Y)
         self.plotter = GridPlotter(self)
         self.plotter.pack(side=tk.TOP, expand=True, fill=tk.BOTH)
@@ -54,7 +58,35 @@ class MatPlayer(ToolBase, PopupPlotable):
         PopupPlotable.__init__(self, self.plotter)
         self.click_callback()
 
+    def on_export(self):
+        filename = WORKSPACE_EXPORT.asksaveasfilename(title=get_locale("matplayer.dialog.gif_target"),
+                                                          filetypes=[
+                                                              (get_locale("app.filedialog_formats.h5"), "*.h5")],
+                                                          parent=self)
+        if filename and self.file:
+            self.click_callback()
+            low, high = self.player_controls.get_selected_range()
+            filter_obj = self.form_data["filter"]
+            affect = filter_obj.get_affected_range()
+            a_low = low - affect
+            if a_low<0:
+                a_low = 0
+            a_high = high+1+affect
+            if a_high>self.file["data0"].shape[0]:
+                a_high = self.file["data0"].shape[0]
 
+            ffmodel = self.get_ff_model()
+
+            data = self.file["data0"][a_low:a_high]
+
+            if (ffmodel is not None) and self.form_data["use_flatfielding"]:
+                data = ffmodel.apply(data)
+
+            if filter_obj.is_working():
+                data = filter_obj.preprocess(data, self.plotter.get_broken())
+
+            with h5py.File(filename, "w") as fp:
+                fp.create_dataset("data0", data=data)
 
     def on_attach_ff(self):
         if self.file:
@@ -122,7 +154,6 @@ class MatPlayer(ToolBase, PopupPlotable):
                 #     frame = ffmodel.apply(self.file["data0"][frame_num]) - ffmodel.apply(slide_bg)
                 # else:
                 #     frame = self.file["data0"][frame_num] - slide_bg
-
 
             elif (ffmodel is not None) and self.form_data["use_flatfielding"]:
                 frame = ffmodel.apply(frame)

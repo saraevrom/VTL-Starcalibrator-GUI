@@ -204,8 +204,10 @@
   "matplayer.button.set_start": "Уст. начало",
   "matplayer.button.set_end": "Уст. конец",
   "matplayer.button.render_gif": "Создать анимацию GIF",
+  "matplayer.button.export": "Экспорт данных",
   "matplayer.button.attach_ff": "Привязать параметры для выравнивания пикселей",
   "matplayer.dialog.gif_target": "Выберите имя файла для анимации",
+  "matplayer.dialog.h5_target": "Выберите имя файла для данных",
 
   "track_markup.title": "Выделение фона",
   "track_markup.btn.remove_selected": "Удалить выбранный элемент",

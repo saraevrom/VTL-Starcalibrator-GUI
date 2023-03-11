@@ -350,7 +350,7 @@ class ToolTeacher(ToolBase):
                 if artificial_interference and self.rng.random() < conf.flash_probability:
                     interf = interf + self.generate_artificial_flash(conf)
                 x_data = x_data + interf
-            if self.rng.random() < conf.track_probability:
+            if self.rng.random() >= conf.track_probability:
                 pass
             else:
                 fg = np.zeros(bg.shape)
