@@ -16,6 +16,7 @@ from workspace_manager import Workspace
 from tensorflow import keras
 from localized_GUI import SaveableTkDictForm
 from .advanced_form import SettingForm
+from .plotting import plot_roc
 from multiprocessing import Process, Pipe
 from tensorflow.data import Dataset
 from tensorflow.keras.utils import plot_model
@@ -23,6 +24,8 @@ import tensorflow as tf
 from trigger_ai.models.model_wrapper import ModelWrapper, TargetParameters
 from extension.optional_pydot import PYDOT_INSTALLED
 import numba as nb
+from common_GUI.button_panel import ButtonPanel
+from tkinter.simpledialog import askinteger
 
 
 TENSORFLOW_MODELS_WORKSPACE = Workspace("ann_models")
@@ -48,6 +51,13 @@ def find_first_true(arr):
         if arr[i]:
             return i
     return -1
+
+
+def ask_test():
+    return askinteger(title=get_locale("teacher.dialog.test.title"),
+                      prompt=get_locale("teacher.dialog.test.prompt"))
+
+
 
 
 class ToolTeacher(ToolBase):
@@ -80,34 +90,24 @@ class ToolTeacher(ToolBase):
 
         self.settings_menu = SaveableTkDictForm(control_frame, form_conf, True, file_asker=EVENTS_PRESET_WORKSPACE)
         self.settings_menu.commit_action = self.on_teach
-        self.settings_menu.grid(row=0, column=0, columnspan=2, sticky="nsew")
+        self.settings_menu.grid(row=0, column=0, sticky="nsew")
 
-        probe_btn1 = tk.Button(control_frame, text=get_locale("teacher.button.probe_track"),
-                               command=lambda: self.on_probe(True))
-        probe_btn1.grid(row=1, column=0, sticky="ew")
+        button_panel = ButtonPanel(control_frame)
+        button_panel.grid(row=1, column=0, sticky="nsew")
+        button_panel.add_button(text=get_locale("teacher.button.probe_track"),
+                                command=lambda: self.on_probe(True), row=0)
+        button_panel.add_button(text=get_locale("teacher.button.probe_trackless"),
+                                command=lambda: self.on_probe(False), row=0)
+        button_panel.add_button(text=get_locale("teacher.button.probe_test"), command=self.on_test, row=0)
+        button_panel.add_button(text=get_locale("teacher.button.probe_roc"), command=self.on_plot_roc, row=0)
 
-        probe_btn2 = tk.Button(control_frame, text=get_locale("teacher.button.probe_trackless"),
-                               command=lambda: self.on_probe(False))
-        probe_btn2.grid(row=1, column=1, sticky="ew")
+        button_panel.add_button(text=get_locale("teacher.button.reset"), command=self.on_reset_model, row=1)
+        button_panel.add_button(text=get_locale("teacher.button.recompile"), command=self.on_recompile_model, row=1)
+        button_panel.add_button(text=get_locale("teacher.button.save"), command=self.on_save_model, row=2)
+        button_panel.add_button(text=get_locale("teacher.button.load"), command=self.on_load_model, row=2)
+        button_panel.add_button(text=get_locale("teacher.button.reset_seed"), command=self.reset_generator, row=3)
+        button_panel.add_button(text=get_locale("teacher.button.start"), command=self.on_teach, row=3)
 
-        resetbtn = tk.Button(control_frame, text=get_locale("teacher.button.reset"), command=self.on_reset_model)
-        resetbtn.grid(row=2, column=0, columnspan=2, sticky="ew")
-
-        recompbtn = tk.Button(control_frame, text=get_locale("teacher.button.recompile"), command=self.on_recompile_model)
-        recompbtn.grid(row=3, column=0, columnspan=2, sticky="ew")
-
-        savebtn = tk.Button(control_frame, text=get_locale("teacher.button.save"), command=self.on_save_model)
-        savebtn.grid(row=4, column=0, columnspan=2, sticky="ew")
-
-        loadbtn = tk.Button(control_frame, text=get_locale("teacher.button.load"), command=self.on_load_model)
-        loadbtn.grid(row=5, column=0, columnspan=2, sticky="ew")
-
-
-        teachbtn = tk.Button(control_frame, text=get_locale("teacher.button.start"), command=self.on_teach)
-        teachbtn.grid(row=6, column=0, columnspan=2, sticky="ew")
-
-        seedreset = tk.Button(control_frame, text=get_locale("teacher.button.reset_seed"), command=self.reset_generator)
-        seedreset.grid(row=7, column=0, columnspan=2, sticky="ew")
 
         self.reset_generator()
 
@@ -222,9 +222,44 @@ class ToolTeacher(ToolBase):
         self.interference_pool.clear_cache()
 
 
+    def generate_test(self):
+        self.clear_status()
+        self.check_files()
+        if self.check_passed and self.ensure_model():
+            self.close_mat_file()
+            conf = self.settings_menu.get_values()
+            self.fg_pool.fast_cache = conf["fastcache"]
+            self.bg_pool.fast_cache = conf["fastcache"]
+            self.settings_form.parse_formdata(conf)
+            conf = self.settings_form.get_data()
+            generator = self.data_generator(conf)
+            batch_size = ask_test()
+            return self.generate_batch(generator, batch_size)
+
+    def on_test(self):
+        testd = self.generate_test()
+        if testd is not None:
+            x_test, y_test = testd
+            self.workon_model.model.evaluate(x_test, y_test)
+
+            self.fg_pool.clear_cache()
+            self.bg_pool.clear_cache()
+            self.interference_pool.clear_cache()
+
+
+    def on_plot_roc(self):
+        testd = self.generate_test()
+        if testd is not None:
+            x_test, y_test = testd
+            y_pred = self.workon_model.model.predict(x_test)
+            plot_roc(y_pred, y_test, 100)
+
+            self.fg_pool.clear_cache()
+            self.bg_pool.clear_cache()
+            self.interference_pool.clear_cache()
+
     def on_probe(self, needstrack):
         self.clear_status()
-        self.println_status(get_locale("teacher.status.msg_model_ok"))
         self.check_files()
         if self.check_passed:
             self.close_mat_file()
@@ -377,18 +412,30 @@ class ToolTeacher(ToolBase):
 
     def batch_generator(self, conf, frame_size=128):
         generator = self.data_generator(conf, frame_size)
-        batchX = []
-        batchY = []
+        # batchX = []
+        # batchY = []
         gen_params = conf.generator_params()
         batch_size = gen_params["batch_size"]
+
         while True:
-            batchX.clear()
-            batchY.clear()
-            for _ in range(batch_size):
-                X, Y_par = next(generator)
-                batchX.append(X)
-                batchY.append(self.workon_model.create_dataset_ydata_for_item(Y_par))
-            yield np.array(batchX), np.array(batchY)
+            yield self.generate_batch(generator,batch_size)
+            # batchX.clear()
+            # batchY.clear()
+            # for _ in range(batch_size):
+            #     X, Y_par = next(generator)
+            #     batchX.append(X)
+            #     batchY.append(self.workon_model.create_dataset_ydata_for_item(Y_par))
+            # yield np.array(batchX), np.array(batchY)
+
+
+    def generate_batch(self, generator, size):
+        x_data = []
+        y_data = []
+        for _ in range(size):
+            X, Y_par = next(generator)
+            x_data.append(X)
+            y_data.append(self.workon_model.create_dataset_ydata_for_item(Y_par))
+        return np.array(x_data), np.array(y_data)
 
 
     def check_files(self):

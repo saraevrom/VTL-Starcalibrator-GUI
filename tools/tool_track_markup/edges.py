@@ -120,14 +120,18 @@ def fix_ranges(ranges):
 
 
 class EdgeProcessor(object):
-    def __init__(self,threshold, edge_shift=None, stabilize_slide=True):
+    def __init__(self,threshold, edge_shift=None, stabilize_slide=True, max_plot=5000):
         self.threshold = threshold
         self.edge_shift = edge_shift
         self.stabilize_slide=stabilize_slide
+        self.max_plot = max_plot
 
 
     def get_prob(self, data_source, ax):
         event_start, event_end = data_source.current_event
+        length = event_end-event_start
+        if length > self.max_plot:
+            return
         x_data_true = np.array(data_source.file["data0"][event_start:event_end])
         filt = data_source.get_filter_for_nn()
         broken = data_source.get_broken()

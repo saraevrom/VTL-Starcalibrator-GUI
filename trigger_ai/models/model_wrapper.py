@@ -40,7 +40,7 @@ class TargetParameters(object):
 
 class ModelWrapper(object):
     SUBCLASSES = None
-    MODEL_FORM = None  # Set it to class correspondong to form creation
+    MODEL_FORM = None  # Set it to class corresponding to form creation
 
     def __init__(self, model: keras.Model, preferred_filter_data=None, additional_params=None):
         self.model = model
