@@ -1,6 +1,6 @@
-from common_GUI.tk_forms_assist import *
-from common_GUI.tk_forms_assist.factory import create_value_field
-from localization import get_locale
+from vtl_common.common_GUI.tk_forms_assist import *
+from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field
+from vtl_common.localization import get_locale
 import inspect
 from .model import create_trigger_model
 

@@ -1,5 +1,5 @@
-from common_GUI.settings_frame import SettingMenu, RangeIntValue, CheckboxValue, ComboboxValue
-from localization import get_locale
+from vtl_common.common_GUI.settings_frame import SettingMenu, RangeIntValue, CheckboxValue, ComboboxValue
+from vtl_common.localization import get_locale
 from .flat_fielding_methods import ALGO_MAP
 
 def build_settings(menu:SettingMenu):

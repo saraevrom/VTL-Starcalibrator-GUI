@@ -1,4 +1,4 @@
-from localized_GUI.plotter import GridPlotter
+from vtl_common.localized_GUI.plotter import GridPlotter
 import numpy as np
 import colorsys
 

@@ -1,6 +1,6 @@
 
 from tkinter.messagebox import askokcancel, showinfo, showerror
-from localization import get_locale, format_locale
+from vtl_common.localization import get_locale, format_locale
 import subprocess
 import sys
 

@@ -1,6 +1,6 @@
-from common_GUI.tk_forms_assist import FormNode, FloatNode, AlternatingNode
-from localization import get_locale
-from common_GUI.tk_forms_assist.factory import create_value_field
+from vtl_common.common_GUI.tk_forms_assist import FormNode, FloatNode, AlternatingNode
+from vtl_common.localization import get_locale
+from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field
 from .noising import FloatDistributedAlter
 from .parameters_processing import Appliance
 

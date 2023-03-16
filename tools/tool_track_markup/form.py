@@ -1,7 +1,7 @@
-from common_GUI import TkDictForm
-from common_GUI.tk_forms_assist import FormNode, IntNode, ComboNode, BoolNode, FloatNode
-from common_GUI.tk_forms_assist.factory import create_value_field
-from localization import get_locale
+from vtl_common.common_GUI import TkDictForm
+from vtl_common.common_GUI.tk_forms_assist import FormNode, IntNode, ComboNode, BoolNode, FloatNode
+from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field
+from vtl_common.localization import get_locale
 from preprocessing.forms import DataPreProcessorField
 from .edges import EdgeProcessor
 

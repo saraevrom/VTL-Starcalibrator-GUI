@@ -8,8 +8,8 @@ from parameters import NPROC
 from .models import Linear, NonlinearSaturation, NonlinearPileup
 from scipy.optimize import minimize, Bounds, LinearConstraint
 import numpy.random as rng
-from localization import get_locale
-from workspace_manager import Workspace
+from vtl_common.localization import get_locale
+from vtl_common.workspace_manager import Workspace
 
 CALIBRATION_WORKSPACE = Workspace("calibration")
 

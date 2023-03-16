@@ -3,8 +3,8 @@
 # from tools.tool_track_markup.form import TrackMarkupForm
 # from trigger_ai.neural_builder.form_elements import LayerSequenceConstructor
 import tkinter as tk
-from common_GUI import TkDictForm
-# from common_GUI.tk_forms_assist import FormNode
+from vtl_common.common_GUI import TkDictForm
+# from vtl_common.common_GUI.tk_forms_assist import FormNode
 
 
 

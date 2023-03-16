@@ -1,23 +1,23 @@
 import tkinter as tk
-from localized_GUI.plotter import GridPlotter
+from vtl_common.localized_GUI.plotter import GridPlotter
 from .player_controls import PlayerControls
 import numpy as np
 from datetime import datetime
 from ..tool_base import ToolBase
-from localization import get_locale
-from common_GUI import TkDictForm
+from vtl_common.localization import get_locale
+from vtl_common.common_GUI import TkDictForm
 from parameters import DATETIME_FORMAT
 from preprocessing.denoising import moving_average_subtract
 import matplotlib.pyplot as plt
 from .form import ViewerForm
-from workspace_manager import Workspace
+from vtl_common.workspace_manager import Workspace
 import tqdm
 import io
 import imageio as iio
 import matplotlib.dates as md
 from datetime import datetime
 import json, h5py
-from localized_GUI.signal_plotter import PopupPlotable
+from vtl_common.localized_GUI.signal_plotter import PopupPlotable
 
 from preprocessing.three_stage_preprocess import preprocess_single
 

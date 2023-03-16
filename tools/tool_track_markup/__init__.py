@@ -1,15 +1,15 @@
 import tkinter as tk
 
-from common_GUI import TkDictForm
-from localized_GUI import GridPlotter
+from vtl_common.common_GUI import TkDictForm
+from vtl_common.localized_GUI import GridPlotter
 from ..tool_base import ToolBase
 from .sorted_queue import SortedQueue
 import numpy as np
 import tkinter.messagebox
 #import tkinter.filedialog
-from workspace_manager import Workspace
+from vtl_common.workspace_manager import Workspace
 import json
-from localization import get_locale
+from vtl_common.localization import get_locale
 import matplotlib.pyplot as plt
 from .reset import ResetAsker
 from .form import TrackMarkupForm
@@ -22,7 +22,7 @@ else:
     ModelWrapper = None
 
 from .edges import edged_intervals
-from localized_GUI.signal_plotter import PopupPlotable
+from vtl_common.localized_GUI.signal_plotter import PopupPlotable
 
 
 OFF = get_locale("app.state_off")

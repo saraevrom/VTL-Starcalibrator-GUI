@@ -1,16 +1,16 @@
 from tkinter import ttk
 import tkinter as tk
 from .dual_highlighting_plotter import DualHighlightingplotter
-from common_GUI import SettingMenu
+from vtl_common.common_GUI import SettingMenu
 from .settings_build import build_settings
 from .signal_plotter import SignalPlotter
 import numpy as np
 from robustats import weighted_median
 from .flat_fielding_methods import ALGO_MAP
 import matplotlib.pyplot as plt
-from localization import get_locale
+from vtl_common.localization import get_locale
 # import tkinter.filedialog as filedialog
-from workspace_manager import Workspace
+from vtl_common.workspace_manager import Workspace
 
 from ..tool_base import ToolBase
 from .models import FlatFieldingModel, Chain

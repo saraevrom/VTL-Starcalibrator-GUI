@@ -1,8 +1,8 @@
 
-from common_GUI.tk_forms_assist import FormNode, ComboNode
-from common_GUI.tk_forms_assist.factory import create_value_field
+from vtl_common.common_GUI.tk_forms_assist import FormNode, ComboNode
+from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field
 from ..neural_builder.form_elements import LayerSequenceConstructor
-from localization import get_locale, format_locale
+from vtl_common.localization import get_locale, format_locale
 from .model import OUTPUT_TYPES, OUT_SPLIT, OUT_SOFT, OUT_SINGLE_SIGMA, UniversalModel, create_tf_model, OUTPUT_SHAPES
 from tkinter import messagebox
 import tensorflow as tf

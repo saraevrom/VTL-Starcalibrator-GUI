@@ -1,6 +1,6 @@
-from common_GUI.tk_forms_assist import FormNode, IntNode
-from common_GUI.tk_forms_assist.factory import create_value_field
-from localization import get_locale
+from vtl_common.common_GUI.tk_forms_assist import FormNode, IntNode
+from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field
+from vtl_common.localization import get_locale
 
 
 class ConverterForm(FormNode):

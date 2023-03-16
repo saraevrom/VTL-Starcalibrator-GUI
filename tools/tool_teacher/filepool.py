@@ -4,7 +4,7 @@ import numpy as np
 from tkinter import filedialog
 from tkinter.simpledialog import askinteger
 
-from localization import get_locale
+from vtl_common.localization import get_locale
 import os.path as ospath
 import h5py
 

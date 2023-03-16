@@ -1,13 +1,13 @@
-from localized_GUI import SaveableTkDictForm
+from vtl_common.localized_GUI import SaveableTkDictForm
 import tkinter as tk
 import tkinter.simpledialog as simpledialog
-from localization import get_locale
+from vtl_common.localization import get_locale
 from .compiler_form import CompileForm
 import json
 
 from trigger_ai.models import ModelBuilder
 from tkinter import filedialog
-from workspace_manager import Workspace
+from vtl_common.workspace_manager import Workspace
 
 TENSORFLOW_MODEL_TEMPLATES_WORKSPACE = Workspace("ann_templates")
 TENSORFLOW_TRAINERS_TEMPLATES = Workspace("ann_trainer_presets")

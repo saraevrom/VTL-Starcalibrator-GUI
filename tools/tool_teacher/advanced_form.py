@@ -1,7 +1,7 @@
-from common_GUI.tk_forms_assist import FormNode, FloatNode, AlternatingNode, IntNode
-from common_GUI.tk_forms_assist import BoolNode, OptionNode
-from common_GUI.tk_forms_assist.factory import create_value_field, create_label
-from localization import get_locale
+from vtl_common.common_GUI.tk_forms_assist import FormNode, FloatNode, AlternatingNode, IntNode
+from vtl_common.common_GUI.tk_forms_assist import BoolNode, OptionNode
+from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field, create_label
+from vtl_common.localization import get_locale
 from .parameters_processing import Augmenter, DualProcessing, LearnParameters
 from preprocessing import DataPreProcessorField
 from .signal_modulator import ProcessingSubform, PostprocessingSubform

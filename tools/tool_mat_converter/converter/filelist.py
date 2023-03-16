@@ -1,5 +1,5 @@
 import tkinter as tk
-from localization import get_locale, format_locale
+from vtl_common.localization import get_locale, format_locale
 from tkinter import messagebox
 import os.path as ospath
 

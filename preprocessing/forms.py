@@ -1,6 +1,6 @@
-from common_GUI.tk_forms_assist import FormNode, BoolNode, OptionNode, IntNode, AlternatingNode
-from common_GUI.tk_forms_assist.factory import create_label, create_value_field
-from localization import get_locale
+from vtl_common.common_GUI.tk_forms_assist import FormNode, BoolNode, OptionNode, IntNode, AlternatingNode
+from vtl_common.common_GUI.tk_forms_assist.factory import create_label, create_value_field
+from vtl_common.localization import get_locale
 from .three_stage_preprocess import DataThreeStagePreProcessor
 from .sliding_median_normalizer import SlidingMedianNormalizer
 

@@ -7,7 +7,7 @@ from .forms import MainParametersForm
 from .forms import localize_fields as localize_parameters_fields
 import tkinter as tk
 from tkinter.simpledialog import Dialog
-from common_GUI import TkDictForm
+from vtl_common.common_GUI import TkDictForm
 from numba import set_num_threads
 
 cwd = ospath.abspath(__file__)
@@ -58,8 +58,8 @@ class SettingsDialog(Dialog):
 
 
 def add_parameters_menu(app_menu: tk.Menu):
-    from workspace_manager import Workspace
-    from localization import get_locale
+    from vtl_common.workspace_manager import Workspace
+    from vtl_common.localization import get_locale
     menu = tk.Menu(app_menu, tearoff=0)
 
     def settings_wrapper():

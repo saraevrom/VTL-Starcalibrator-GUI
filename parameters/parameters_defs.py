@@ -1,4 +1,4 @@
-from common_GUI.tk_forms_assist import IntNode, FloatNode, StringNode, BoolNode
+from vtl_common.common_GUI.tk_forms_assist import IntNode, FloatNode, StringNode, BoolNode
 from multiprocessing import cpu_count
 from .form_parts import LocaleSelection, ColormapSetting
 

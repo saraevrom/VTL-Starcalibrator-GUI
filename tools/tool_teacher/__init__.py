@@ -6,15 +6,15 @@ from .filepool import RandomIntervalAccess, RandomFileAccess, FilePool
 import h5py
 import tkinter as tk
 from tkinter.scrolledtext import ScrolledText
-from localization import get_locale, format_locale
+from vtl_common.localization import get_locale, format_locale
 from trigger_ai import compile_model, create_model
 import gc
 import numpy.random as numpy_rng
 import numpy as np
-from common_GUI import SettingMenu
-from workspace_manager import Workspace
+from vtl_common.common_GUI import SettingMenu
+from vtl_common.workspace_manager import Workspace
 from tensorflow import keras
-from localized_GUI import SaveableTkDictForm
+from vtl_common.localized_GUI import SaveableTkDictForm
 from .advanced_form import SettingForm
 from .plotting import plot_roc
 from multiprocessing import Process, Pipe
@@ -24,7 +24,7 @@ import tensorflow as tf
 from trigger_ai.models.model_wrapper import ModelWrapper, TargetParameters
 from extension.optional_pydot import PYDOT_INSTALLED
 import numba as nb
-from common_GUI.button_panel import ButtonPanel
+from vtl_common.common_GUI.button_panel import ButtonPanel
 from tkinter.simpledialog import askinteger
 
 

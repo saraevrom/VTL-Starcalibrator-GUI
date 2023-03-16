@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
-from common_GUI.modified_base import EntryWithEnterKey
-from localization import get_locale, format_locale
+from vtl_common.common_GUI.modified_base import EntryWithEnterKey
+from vtl_common.localization import get_locale, format_locale
 from ftplib import FTP, error_perm
 import tkinter.messagebox as messagebox
 import tkinter.simpledialog as simpledialog
@@ -11,7 +11,7 @@ from multiprocessing import Process, Pipe
 import h5py
 import time
 import gc
-from workspace_manager import Workspace
+from vtl_common.workspace_manager import Workspace
 
 UNPROCESSED_DATA_WORKSPACE = Workspace("unprocessed_data")
 

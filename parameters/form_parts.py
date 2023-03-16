@@ -1,4 +1,4 @@
-from common_GUI.tk_forms_assist import StringNode, ComboNode
+from vtl_common.common_GUI.tk_forms_assist import StringNode, ComboNode
 import matplotlib.pyplot as plt
 
 def valid_cmap(x:str):

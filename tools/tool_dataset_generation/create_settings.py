@@ -1,6 +1,6 @@
-from common_GUI import SettingMenu
-from common_GUI.settings_frame import RangeIntValue, CheckboxValue, ComboboxValue, RangeDoubleValue
-from localization import get_locale
+from vtl_common.common_GUI import SettingMenu
+from vtl_common.common_GUI.settings_frame import RangeIntValue, CheckboxValue, ComboboxValue, RangeDoubleValue
+from vtl_common.localization import get_locale
 
 def build_menu(menu: SettingMenu):
     menu.add_separator(get_locale("datasetgen.form.separator.display"))

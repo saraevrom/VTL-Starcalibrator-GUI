@@ -1,11 +1,11 @@
 import os
 import tkinter as tk
-from common_GUI import SettingMenu
+from vtl_common.common_GUI import SettingMenu
 from .vtl_settings_build import build_menu
 from .starlist import Starlist
 from .starplotter import StarGridPlotter
 # import tkinter.filedialog as filedialog
-from workspace_manager import Workspace
+from vtl_common.workspace_manager import Workspace
 import numpy as np
 import pandas as pd
 from numpy.lib.stride_tricks import sliding_window_view
@@ -18,7 +18,7 @@ from tools.tool_mat_converter import MatConverter
 
 import matplotlib.pyplot as plt
 from parameters import MAIN_LATITUDE, MAIN_LONGITUDE
-from localization import get_locale
+from vtl_common.localization import get_locale
 from ..tool_base import ToolBase
 
 ORIENTATION_WORKSPACE = Workspace("orientation")

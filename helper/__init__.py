@@ -1,4 +1,4 @@
-from localization import get_help, get_locale
+from vtl_common.localization import get_help, get_locale
 import tkinter as tk
 
 ARTICLES = ["datetime_hint"]

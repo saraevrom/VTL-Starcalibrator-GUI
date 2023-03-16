@@ -7,7 +7,7 @@ import time
 
 import h5py
 
-from localization import get_locale
+from vtl_common.localization import get_locale
 
 
 def where_is_index(lengths, index):

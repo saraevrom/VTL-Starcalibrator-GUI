@@ -1,7 +1,7 @@
 from .optional_tensorflow import OptionalTfModifier
 from .optional_pydot import OptionalPydotModifier
 import tkinter as tk
-from localization import get_locale
+from vtl_common.localization import get_locale
 
 MODS = [OptionalTfModifier, OptionalPydotModifier]
 

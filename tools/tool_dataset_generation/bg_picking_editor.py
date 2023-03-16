@@ -1,4 +1,4 @@
-from localized_GUI import Plotter
+from vtl_common.localized_GUI import Plotter
 from preprocessing.denoising import moving_average_subtract
 import numpy as np
 from matplotlib.patches import Rectangle

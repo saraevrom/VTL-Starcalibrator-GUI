@@ -6,10 +6,10 @@ from numpy.lib.stride_tricks import sliding_window_view
 from ..model_wrapper import ModelWrapper
 import numba as nb
 
-from common_GUI.tk_forms_assist import FormNode, BoolNode
-from common_GUI.tk_forms_assist.factory import create_value_field
+from vtl_common.common_GUI.tk_forms_assist import FormNode, BoolNode
+from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field
 from ..neural_builder.form_elements import LayerSequenceConstructor
-from localization import get_locale
+from vtl_common.localization import get_locale
 import tensorflow as tf
 from .model import SingleProcessor
 from .default_configuration import DEFAULT_CONF

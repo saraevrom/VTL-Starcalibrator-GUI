@@ -1,7 +1,7 @@
-from common_GUI.tk_forms_assist import FormNode, FloatNode, AlternatingNode
-from localization import get_locale
+from vtl_common.common_GUI.tk_forms_assist import FormNode, FloatNode, AlternatingNode
+from vtl_common.localization import get_locale
 from .sampling import SamplerConstant, SamplerUniform, SamplerGauss, SamplerLaplace
-from common_GUI.tk_forms_assist.factory import create_value_field
+from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field
 
 class Constant(FloatNode):
     DISPLAY_NAME = get_locale("teacher.advform.constant")

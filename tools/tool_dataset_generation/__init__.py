@@ -4,16 +4,16 @@ from .create_settings import build_menu
 import gc
 import numpy as np
 import numba as nb
-from common_GUI import SettingMenu
-from localized_GUI import GridPlotter
-from localization import get_locale, format_locale
+from vtl_common.common_GUI import SettingMenu
+from vtl_common.localized_GUI import GridPlotter
+from vtl_common.localization import get_locale, format_locale
 import json
 import tkinter.messagebox as messagebox
 import h5py
 from .hdf5_utils import overwrite_with_numpy
 from datetime import datetime
 from parameters import DATETIME_FORMAT
-from workspace_manager import Workspace
+from vtl_common.workspace_manager import Workspace
 import tkinter as tk
 
 MARKUP_WORKSPACE = Workspace("marked_up_tracks")

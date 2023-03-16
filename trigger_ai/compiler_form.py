@@ -1,6 +1,6 @@
 
-from common_GUI.tk_forms_assist import *
-from localization import get_locale
+from vtl_common.common_GUI.tk_forms_assist import *
+from vtl_common.localization import get_locale
 import inspect
 import tensorflow.keras.optimizers as optimizers
 import tensorflow.keras.optimizers.experimental as optimizers_exp

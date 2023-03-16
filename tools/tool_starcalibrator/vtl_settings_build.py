@@ -1,6 +1,6 @@
-from common_GUI.settings_frame import SettingMenu, RangeDoubleValue, RangeIntValue, CheckboxValue
-from common_GUI.settings_frame import ComboboxValue
-from localization import get_locale
+from vtl_common.common_GUI.settings_frame import SettingMenu, RangeDoubleValue, RangeIntValue, CheckboxValue
+from vtl_common.common_GUI.settings_frame import ComboboxValue
+from vtl_common.localization import get_locale
 
 def build_menu(menu: SettingMenu):
     menu.add_separator(get_locale("app.settings.separator.stars_selection"))

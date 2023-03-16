@@ -1,11 +1,11 @@
 import tkinter as tk
 import tkinter.messagebox as messagebox
 import h5py
-from workspace_manager import Workspace
-from localization import get_locale
+from vtl_common.workspace_manager import Workspace
+from vtl_common.localization import get_locale
 from .filelist import Filelist
 from .form import ConverterForm
-from common_GUI.tk_forms import TkDictForm
+from vtl_common.common_GUI.tk_forms import TkDictForm
 from .converter_parallel import ConverterParallel
 
 MDATA_WORKSPACE = Workspace("merged_data")

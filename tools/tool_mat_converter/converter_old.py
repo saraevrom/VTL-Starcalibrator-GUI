@@ -4,11 +4,11 @@ import h5py
 import numpy as np
 import tqdm
 import scipy.io as scipio
-from localization import get_locale, format_locale
+from vtl_common.localization import get_locale, format_locale
 from tools.tool_base import ToolBase
 import os.path as ospath
 from .single_copy import average_single_file
-from workspace_manager import Workspace
+from vtl_common.workspace_manager import Workspace
 
 MDATA_WORKSPACE = Workspace("merged_data")
 UNPROCESSED_DATA_WORKSPACE = Workspace("unprocessed_data")
