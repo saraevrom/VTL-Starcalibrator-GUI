@@ -156,7 +156,7 @@
   "datasetgen.button.cut_left": "Обрезать слева",
   "datasetgen.button.cut_right": "Обрезать справа",
 
-  "datasetgen.button.view_reset": "Reset view",
+  "datasetgen.button.view_reset": "Сбросить вид",
   "datasetgen.messagebox.reset.title": "Сброс данных",
   "datasetgen.messagebox.reset.content": "Вы точно хотите стереть пустые интервалы и начать заново?",
   "datasetgen.messagebox.save.title": "Сохранение данных для обучения",
@@ -348,27 +348,13 @@
   "app.parameters.USE_TRAINER": "Включить инструмент обучения нейросети",
   "app.parameters": "Параметры",
 
-  "app.filedialog.save_settings.title": "Сохранение настроек",
-  "app.filedialog.load_settings.title": "Загрузка настроек",
   "app.filedialog.save_model.title": "Сохранение модели",
   "app.filedialog.load_model.title": "Загрузка модели",
 
   "app.filedialog.load_ff_settings.title": "Открыть параметры для выравнивания пикселей",
   "app.filedialog.load_mat.title": "Открыть mat файл",
 
-  "app.filedialog_formats.settings_json": "JSON файл с настройками",
-  "app.filedialog_formats.ff_json": "JSON с параметрами",
-  "app.filedialog_formats.processed_mat": "Обработанные mat файлы",
-  "app.filedialog_formats.raw_mat": "Файл с сырыми данными",
-  "app.filedialog_formats.model": "Модель",
-  "app.filedialog_formats.png": "Изображение PNG",
-  "app.filedialog_formats.txt": "Текстовый документ",
-  "app.filedialog_formats.csv": "Значения, разделённые запятыми",
-  "app.filedialog_formats.gif": "GIF анимация",
-  "app.filedialog_formats.h5": "Данные в HDF5",
 
-  "app.widgets.gridplotter.use_autoscale": "Автоматическая нормировка",
-  "app.widgets.gridplotter.scale": "Нормировка",
   "app.ff_warning": "ПИКСЕЛИ НЕ ВЫРАВНИВАЮТСЯ",
   "app.loaded_file": "Загружен файл {}",
 
@@ -379,23 +365,12 @@
   "app.extension.action_install_pkg_info_ok": "Пакет {} установлен. Перезапустите приложение для применения изменений.",
   "app.extension.action_install_pkg_info_err": "Ошибка установки {}. Подробности в консоли.",
 
-  "app.workspace_manager.greeter.title": "Рабочее пространство",
-  "app.workspace_manager.greeter.message": "Сейчас будет предложен выбор папки для работы с данными. Если вы хотите работать с файлами как раньше, просто отмените действие.",
-  "app.workspace_manager.askdir": "Выберите папку рабочего пространства",
-  "app.workspace_manager.setup": "Настроить рабочее пространство",
 
   "app.menu.help": "Помощь",
   "app.help.datetime_hint": "Ввод даты/времени",
 
   "app.state_off": "ВЫКЛ",
   "app.state_on": "ВКЛ",
-
-
-  "app.popup_plot.lightcurve": "Кривая свечения",
-  "app.popup_plot.lightcurve_mean": "Кривая свечения использует среднее вместо суммы",
-  "app.popup_plot.threshold": "Порог для активных пикселей",
-  "app.popup_plot.detect_active": "Выбрать активные пиксели",
-  "app.popup_plot.show_pixels": "Показать пиксели",
 
   "app.load_file_with_ff.title": "Загрузка файла",
   "app.load_file_with_ff.message": "В этом файле есть коэффициенты для выравнивания пикселей. Они будут загруженны автоматически."

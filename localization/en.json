@@ -351,27 +351,14 @@
   "app.parameters": "Parameters",
 
 
-  "app.filedialog.save_settings.title": "Save settings",
-  "app.filedialog.load_settings.title": "Load settings",
   "app.filedialog.save_model.title": "Save model",
   "app.filedialog.load_model.title": "Load model",
   "app.filedialog.load_ff_settings.title": "Open flat fielding parameters",
   "app.filedialog.load_mat.title": "Open data file",
 
-  "app.filedialog_formats.settings_json": "JSON with settings",
-  "app.filedialog_formats.ff_json": "JSON with FF parameters",
-  "app.filedialog_formats.form_json": "JSON with form data",
-  "app.filedialog_formats.processed_mat": "Converted data files",
-  "app.filedialog_formats.raw_mat": "Raw data",
-  "app.filedialog_formats.model": "Model",
-  "app.filedialog_formats.png": "PNG image",
-  "app.filedialog_formats.txt": "Text file",
-  "app.filedialog_formats.csv": "Comma separated values",
-  "app.filedialog_formats.gif": "GIF animation",
-  "app.filedialog_formats.h5": "HDF5 data",
 
-  "app.widgets.gridplotter.use_autoscale": "Autoscale",
-  "app.widgets.gridplotter.scale": "Scale",
+
+
   "app.ff_warning": "NO FLAT FIELDING USED",
   "app.loaded_file": "Loaded File {}",
 
@@ -382,10 +369,6 @@
   "app.extension.action_install_pkg_info_ok": "Package {} installed. Restart app to take effect.",
   "app.extension.action_install_pkg_info_err": "Package {} installation error. Check console for details",
 
-  "app.workspace_manager.greeter.title": "Workspace manager",
-  "app.workspace_manager.greeter.message": "You will be asked to choose workspace directory. Do not select any directory if you want to work with files in conventional way.",
-  "app.workspace_manager.askdir": "Choose directory of workspace",
-  "app.workspace_manager.setup": "Set up workspace",
 
   "app.menu.help": "Help",
   "app.help.datetime_hint": "Datetime entry",
@@ -393,11 +376,6 @@
   "app.state_off": "OFF",
   "app.state_on": "ON",
 
-  "app.popup_plot.lightcurve": "Light curve",
-  "app.popup_plot.lightcurve_mean": "Light curve using mean instead of sum",
-  "app.popup_plot.threshold": "Active pixels threshold",
-  "app.popup_plot.detect_active": "Select active pixels",
-  "app.popup_plot.show_pixels": "Show pixels",
 
   "app.load_file_with_ff.title": "Loading data file",
   "app.load_file_with_ff.message": "This file contains own flat fielding parameters. They will be loaded automatically."
