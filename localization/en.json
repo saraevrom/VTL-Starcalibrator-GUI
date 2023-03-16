@@ -324,7 +324,7 @@
   "app.menu.tools.flatfielder": "Flat fielding",
   "app.menu.tools.mat_player": "Data viewer",
   "app.menu.tools.track_markup": "Mark-up",
-  "app.menu.tools.starcalibrator": "Orientation",
+  "app.menu.tools.starcalibrator": "Orientation (legacy)",
   "app.menu.tools.dataset_generator": "Dataset generator",
   "app.menu.tools.teacher": "ANN model",
   "app.menu.settings": "Settings",

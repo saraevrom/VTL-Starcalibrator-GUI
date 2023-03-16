@@ -252,7 +252,7 @@ class ToolTeacher(ToolBase):
         if testd is not None:
             x_test, y_test = testd
             y_pred = self.workon_model.model.predict(x_test)
-            plot_roc(y_pred, y_test, 100)
+            plot_roc(y_pred, y_test, 101)
 
             self.fg_pool.clear_cache()
             self.bg_pool.clear_cache()

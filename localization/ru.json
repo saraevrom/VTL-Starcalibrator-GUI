@@ -322,7 +322,7 @@
   "app.menu.tools.flatfielder": "Выравнивание пикселей",
   "app.menu.tools.mat_player": "Просмотр данных",
   "app.menu.tools.track_markup": "Фон",
-  "app.menu.tools.starcalibrator": "Ориентация",
+  "app.menu.tools.starcalibrator": "Ориентация (старая)",
   "app.menu.tools.dataset_generator": "Генерация данных обучения",
   "app.menu.tools.teacher": "Обучение модели",
   "app.menu.settings": "Настройки",

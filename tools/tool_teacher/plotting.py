@@ -20,5 +20,9 @@ def plot_roc(y_pred, y_true, npoints):
         tprs.append(tp/positives)
 
     fig, ax = plt.subplots()
-    ax.plot(fprs, tprs)
+    ax.set_xlabel("FPR")
+    ax.set_ylabel("TPR")
+    ax.plot(fprs, tprs, color="black")
+    ax.plot([0,1], [0,1], "--", color="gray")
+
     fig.show()
