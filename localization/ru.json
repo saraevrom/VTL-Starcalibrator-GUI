@@ -325,7 +325,6 @@
   "app.menu.tools.starcalibrator": "Ориентация (старая)",
   "app.menu.tools.dataset_generator": "Генерация данных обучения",
   "app.menu.tools.teacher": "Обучение модели",
-  "app.menu.settings": "Настройки",
 
 
   "app.parameters.USE_VIEWER": "Включить инструмент просмотра",
@@ -335,7 +334,6 @@
   "app.parameters.USE_BACKGROUND_EXTRACTOR": "Включить инструмент разметки фона",
   "app.parameters.USE_DATASET_CREATOR": "Включить инструмент создания обучающих выборок",
   "app.parameters.USE_TRAINER": "Включить инструмент обучения нейросети",
-  "app.parameters": "Параметры",
 
   "app.filedialog.save_model.title": "Сохранение модели",
   "app.filedialog.load_model.title": "Загрузка модели",

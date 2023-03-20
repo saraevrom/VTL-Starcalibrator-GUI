@@ -327,7 +327,6 @@
   "app.menu.tools.starcalibrator": "Orientation (legacy)",
   "app.menu.tools.dataset_generator": "Dataset generator",
   "app.menu.tools.teacher": "ANN model",
-  "app.menu.settings": "Settings",
 
 
   "app.parameters.USE_VIEWER": "Enable viewer tool",
@@ -337,7 +336,6 @@
   "app.parameters.USE_BACKGROUND_EXTRACTOR": "Enable background markup tool",
   "app.parameters.USE_DATASET_CREATOR": "Enable dataset creation tool",
   "app.parameters.USE_TRAINER": "Enable trainer tool",
-  "app.parameters": "Parameters",
 
 
   "app.filedialog.save_model.title": "Save model",
