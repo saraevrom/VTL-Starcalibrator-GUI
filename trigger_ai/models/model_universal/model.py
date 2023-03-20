@@ -66,6 +66,21 @@ class UniversalModel(ModelWrapper):
         #print("R0", booled)
         #booled_full = splat_select(booled, 128)
         return expand_window(booled_full,128)
+    
+    def trigger_split(self, x, threshold, broken, ts_filter=None):
+        mode = self.get_mode()
+        y_data = self._predict_raw(x, broken, ts_filter)
+        if mode == OUT_SPLIT:
+            # y_data = 1 - np.prod(1 - y_data, axis=1)
+            signals = []
+            for i in range(4):
+                deconv = deconvolve_windows(y_data[:, i], 128)
+                booled_full = deconv > threshold
+                signal = expand_window(booled_full,128)
+                signals.append(signal)
+            return signals
+        else:
+            return super().trigger_split(x, threshold, broken, ts_filter)
 
     def plot_over_data(self, x, start, end, axes, broken, ts_filter=None):
         mode = self.get_mode()

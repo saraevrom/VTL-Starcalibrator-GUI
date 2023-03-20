@@ -226,6 +226,7 @@
   "track_markup.btn.track_yes": "Track visible",
   "track_markup.btn.track_no": "Track not visible",
   "track_markup.btn.im_too_lazy": "Auto",
+  "track_markup.btn.export": "Export tracks",
   "track_markup.messagebox.reset.title": "Data reset",
   "track_markup.messagebox.reset.content": "Are you sure you want to erase empty intervals and start all over?",
   "track_markup.messagebox.markup_done.title": "Data markup",

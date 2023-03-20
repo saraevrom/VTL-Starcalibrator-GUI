@@ -92,6 +92,10 @@ class ModelWrapper(object):
     def trigger(self, x, threshold, broken, ts_filter=None):
         raise NotImplementedError()
 
+    def trigger_split(self, x, threshold, broken, ts_filter=None):
+        arr = self.trigger(x, threshold, broken, ts_filter)
+        return arr, arr, arr, arr
+
     def plot_over_data(self, x, start, end, axes, broken, ts_filter=None):
         raise NotImplementedError()
 

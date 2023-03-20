@@ -14,6 +14,10 @@ import matplotlib.pyplot as plt
 from .reset import ResetAsker
 from .form import TrackMarkupForm
 from extension.optional_tensorflow import TENSORFLOW_INSTALLED
+import zipfile, h5py, io
+import os.path as ospath
+
+
 if TENSORFLOW_INSTALLED:
     from tensorflow import keras
     from trigger_ai.models.model_wrapper import ModelWrapper
@@ -30,6 +34,7 @@ ON = get_locale("app.state_on")
 
 MARKUP_WORKSPACE = Workspace("marked_up_tracks")
 TENSORFLOW_MODELS_WORKSPACE = Workspace("ann_models")
+TRACKS_WORKSPACE = Workspace("tracks")
 
 def try_append_event(target_list,start,end):
     ok = True
@@ -52,6 +57,22 @@ def stitch_events(events):
         else:
             deflation_i += 1
     return sorted_events
+
+
+def track_sym(a):
+    if a:
+        return "#"
+    else:
+        return "."
+
+def print_track(bl,br,tl,tr):
+    r = ""
+    r += track_sym(tl)
+    r += track_sym(tr)
+    r += "\n"
+    r += track_sym(bl)
+    r += track_sym(br)
+    print(r)
 
 class TrackMarkup(ToolBase, PopupPlotable):
     def __init__(self, master):
@@ -84,6 +105,8 @@ class TrackMarkup(ToolBase, PopupPlotable):
                   command=self.on_reset).grid(row=0, column=0, sticky="ew")
         tk.Button(right_panel, text=get_locale("track_markup.btn.save"),
                   command=self.on_save_data).grid(row=1, column=0, sticky="ew")
+        tk.Button(right_panel, text=get_locale("track_markup.btn.export"),
+                  command=self.on_export_data).grid(row=2, column=0, sticky="ew")
         tk.Button(right_panel, text=get_locale("track_markup.btn.load"),
                   command=self.on_load_data).grid(row=3, column=0, sticky="ew")
         if TENSORFLOW_INSTALLED:
@@ -137,6 +160,49 @@ class TrackMarkup(ToolBase, PopupPlotable):
         self.rejected_data.bind('<<ListboxSelect>>', self.on_review_tracked_select)
         self.update_highlight_button()
         self.update_answer_panel()
+
+
+    def on_export_data(self):
+        if self.tracked_events and self.file and self.tf_model:
+            fbase = self.get_loaded_filename()
+            fbase = ospath.splitext(fbase)[0]
+            filename = TRACKS_WORKSPACE.asksaveasfilename(auto_formats=["zip"], initialfile=f"tracks-{fbase}.zip")
+            if filename:
+                with zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                    index = 1
+                    for track_start, track_end in self.tracked_events:
+                        buffer = io.BytesIO(b"")
+                        h5_file = h5py.File(buffer, "w")
+
+                        plot_data = self.file["data0"][track_start:track_end]
+                        ut0 = self.file["UT0"][track_start:track_end]
+
+                        model = self.get_ff_model()
+                        if model:
+                            plot_data = model.apply(plot_data)
+
+                        plot_data = self.apply_filter(plot_data, True)
+                        self.sync_form()
+                        bl, br, tl, tr = self.form_data["trigger"].get_triggering(self, plot_data)
+                        print(f"TRACK {index}:")
+                        print_track(bl, br, tl, tr)
+
+                        #self.tf_model.trigger_split(plot_data, threshold, broken, ts_filter)
+
+
+                        h5_file.create_dataset("data0", data=plot_data)
+                        h5_file.create_dataset("UT0", data=ut0)
+                        h5_file.attrs["bottom_left"] = bl
+                        h5_file.attrs["bottom_right"] = br
+                        h5_file.attrs["top_left"] = tl
+                        h5_file.attrs["top_right"] = tr
+
+                        h5_file.close()
+                        zipf.writestr(f"f{index}_track_{track_start}_{track_end}.h5", buffer.getvalue())
+                        index += 1
+                        # tgtfile = zipf.open(f"track_{track_start}_{track_end}", "w")
+                        #tgtfile.close()
+
 
 
     def update_answer_panel(self):

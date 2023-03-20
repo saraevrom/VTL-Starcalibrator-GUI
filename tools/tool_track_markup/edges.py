@@ -143,6 +143,14 @@ class EdgeProcessor(object):
         data_source.tf_model.stabilize_slide = self.stabilize_slide
         data_source.tf_model.plot_over_data(x_data_true,event_start, event_end, ax, ts_filter=filt, broken=broken)
 
+    def get_triggering(self, data_source, plot_data):
+        filt = data_source.get_filter_for_nn()
+        broken = data_source.get_broken()
+        data_source.tf_model.stabilize_slide = self.stabilize_slide
+        res = data_source.tf_model.trigger_split(plot_data, self.threshold, ts_filter=filt, broken=broken)
+        # print("RES",res)
+        return [item.any() for item in res]
+
     def apply(self, data_source):
         gc.collect()
         event_start, event_end = data_source.current_event
