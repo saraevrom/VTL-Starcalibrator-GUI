@@ -7,7 +7,7 @@ from datetime import datetime
 from tkinter.simpledialog import askstring
 import numpy as np
 from matplotlib.patches import Rectangle
-from utilities import set_vlines_position
+from vtl_common.utilities import set_vlines_position
 
 MARK_LOW = 0
 MARK_HIGH = 1

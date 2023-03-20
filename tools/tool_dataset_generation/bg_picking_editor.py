@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib.patches import Rectangle
 
 
-from utilities import set_vlines_position
+from vtl_common.utilities import set_vlines_position
 
 
 class BgPickingEditor(Plotter):
