@@ -11,7 +11,7 @@ import pandas as pd
 from numpy.lib.stride_tricks import sliding_window_view
 
 from astropy.time import Time
-from astronomy import range_calculate, to_altaz
+from vtl_common.astronomy import range_calculate, to_altaz
 import json
 from .random_roaming import RandomRoaming, maximize
 from tools.tool_mat_converter import MatConverter

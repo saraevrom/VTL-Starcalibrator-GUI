@@ -3,7 +3,7 @@ import tkinter
 from vtl_common.common_GUI.settings_frame import ScrollableFrame
 import pandas as pd
 import numpy as np
-from astronomy import Star, name_a_star
+from vtl_common.astronomy import Star, name_a_star
 
 
 class Starlist(ScrollableFrame):
