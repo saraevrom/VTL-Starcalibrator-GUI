@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+
+from additional_parameters import ADD_PARAMS
+
+import vtl_common.parameters as parameters
+
+parameters.add_parameters(*ADD_PARAMS)
+parameters.load_settings()
+
 import json
 import os
 import tkinter as tk
@@ -14,10 +22,11 @@ import warnings
 import os.path as ospath
 from extension import expand_app
 from helper import add_help_menu
-import parameters
 from vtl_common.workspace_manager import Workspace
 
 from vtl_common import localization
+
+
 localization.set_locale(parameters.LOCALE)
 localization.SEARCH_DIRS.append(ospath.join(ospath.dirname(ospath.abspath(__file__)),"localization"))
 parameters.localize_parameters_fields()

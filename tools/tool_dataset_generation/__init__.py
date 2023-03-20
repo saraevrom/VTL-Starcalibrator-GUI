@@ -12,7 +12,7 @@ import tkinter.messagebox as messagebox
 import h5py
 from .hdf5_utils import overwrite_with_numpy
 from datetime import datetime
-from parameters import DATETIME_FORMAT
+from vtl_common.parameters import DATETIME_FORMAT
 from vtl_common.workspace_manager import Workspace
 import tkinter as tk
 

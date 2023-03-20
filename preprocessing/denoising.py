@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
-from parameters import NPROC
+from vtl_common.parameters import NPROC
 from multiprocessing import Pool
 import numba as nb
 from numba import prange

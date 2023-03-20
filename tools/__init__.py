@@ -1,6 +1,8 @@
 from extension.optional_tensorflow import TENSORFLOW_INSTALLED
-from parameters import USE_VIEWER, USE_CONVERTER, USE_FLATFIELDER, USE_STARCALIBRATOR, USE_BACKGROUND_EXTRACTOR
-from parameters import USE_DATASET_CREATOR, USE_TRAINER
+import vtl_common.parameters
+print(dir(vtl_common.parameters))
+from vtl_common.parameters import USE_VIEWER, USE_CONVERTER, USE_FLATFIELDER, USE_STARCALIBRATOR, USE_BACKGROUND_EXTRACTOR
+from vtl_common.parameters import USE_DATASET_CREATOR, USE_TRAINER
 
 def add_tools(adder):
         if USE_VIEWER:

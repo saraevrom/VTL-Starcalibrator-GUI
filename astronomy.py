@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from astropy.time import Time
 from astropy.coordinates import EarthLocation
-from parameters import *
+from vtl_common.parameters import *
 
 def name_a_star(row):
     data = []

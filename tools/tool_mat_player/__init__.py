@@ -6,7 +6,7 @@ from datetime import datetime
 from ..tool_base import ToolBase
 from vtl_common.localization import get_locale
 from vtl_common.common_GUI import TkDictForm
-from parameters import DATETIME_FORMAT
+from vtl_common.parameters import DATETIME_FORMAT
 from preprocessing.denoising import moving_average_subtract
 import matplotlib.pyplot as plt
 from .form import ViewerForm

@@ -4,7 +4,7 @@ from robustats import weighted_median
 from .isotropic_lsq import isotropic_lad_line, phir0_to_kb, phir0_to_kb_inv, isotropic_lad_multidim
 from .isotropic_lsq import isotropic_lad_multidim_no_bg, multidim_sphere
 from multiprocessing import Pool
-from parameters import NPROC
+from vtl_common.parameters import NPROC
 from .models import Linear, NonlinearSaturation, NonlinearPileup
 from scipy.optimize import minimize, Bounds, LinearConstraint
 import numpy.random as rng

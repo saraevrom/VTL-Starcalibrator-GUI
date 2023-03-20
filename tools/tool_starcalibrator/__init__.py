@@ -17,7 +17,7 @@ from .random_roaming import RandomRoaming, maximize
 from tools.tool_mat_converter import MatConverter
 
 import matplotlib.pyplot as plt
-from parameters import MAIN_LATITUDE, MAIN_LONGITUDE
+from vtl_common.parameters import MAIN_LATITUDE, MAIN_LONGITUDE
 from vtl_common.localization import get_locale
 from ..tool_base import ToolBase
 
