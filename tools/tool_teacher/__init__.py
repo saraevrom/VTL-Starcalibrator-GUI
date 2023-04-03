@@ -32,6 +32,7 @@ TENSORFLOW_MODELS_WORKSPACE = Workspace("ann_models")
 MDATA_WORKSPACE = Workspace("merged_data")
 MODELED_TRACK_WORKSPACE = Workspace("modelled_tracks")
 EVENTS_PRESET_WORKSPACE = Workspace("ann_event_presets")
+EXPORT_WORKSPACE = Workspace("export")
 
 @nb.njit(nb.float64[:, :, :](nb.float64[:], nb.float64[:, :]))
 def signal_multiply(profile, mask):
@@ -58,6 +59,20 @@ def ask_test():
                       prompt=get_locale("teacher.dialog.test.prompt"))
 
 
+def plot_event(x_gen, y_par, block=False):
+    fig, ax = plt.subplots()
+    # display_data = np.max(x_gen, axis=0)
+    # ax.matshow(display_data.T)
+    plot_xs = np.arange(x_gen.shape[0])
+    for i in range(16):
+        for j in range(16):
+            ax.plot(plot_xs, x_gen[:, i, j])
+    if y_par.has_track():
+        ax.set_title(get_locale("teacher.sampleplot.title_true"))
+    else:
+        ax.set_title(get_locale("teacher.sampleplot.title_false"))
+    plt.figure(fig.number)
+    plt.show(block=block)
 
 
 class ToolTeacher(ToolBase):
@@ -98,15 +113,19 @@ class ToolTeacher(ToolBase):
                                 command=lambda: self.on_probe(True), row=0)
         button_panel.add_button(text=get_locale("teacher.button.probe_trackless"),
                                 command=lambda: self.on_probe(False), row=0)
+        button_panel.add_button(text=get_locale("teacher.button.probe_track_save"),
+                                command=lambda: self.on_probe_save(True), row=1)
+        button_panel.add_button(text=get_locale("teacher.button.probe_trackless_save"),
+                                command=lambda: self.on_probe_save(False), row=1)
         button_panel.add_button(text=get_locale("teacher.button.probe_test"), command=self.on_test, row=0)
         button_panel.add_button(text=get_locale("teacher.button.probe_roc"), command=self.on_plot_roc, row=0)
 
-        button_panel.add_button(text=get_locale("teacher.button.reset"), command=self.on_reset_model, row=1)
-        button_panel.add_button(text=get_locale("teacher.button.recompile"), command=self.on_recompile_model, row=1)
-        button_panel.add_button(text=get_locale("teacher.button.save"), command=self.on_save_model, row=2)
-        button_panel.add_button(text=get_locale("teacher.button.load"), command=self.on_load_model, row=2)
-        button_panel.add_button(text=get_locale("teacher.button.reset_seed"), command=self.reset_generator, row=3)
-        button_panel.add_button(text=get_locale("teacher.button.start"), command=self.on_teach, row=3)
+        button_panel.add_button(text=get_locale("teacher.button.reset"), command=self.on_reset_model, row=2)
+        button_panel.add_button(text=get_locale("teacher.button.recompile"), command=self.on_recompile_model, row=2)
+        button_panel.add_button(text=get_locale("teacher.button.save"), command=self.on_save_model, row=3)
+        button_panel.add_button(text=get_locale("teacher.button.load"), command=self.on_load_model, row=3)
+        button_panel.add_button(text=get_locale("teacher.button.reset_seed"), command=self.reset_generator, row=4)
+        button_panel.add_button(text=get_locale("teacher.button.start"), command=self.on_teach, row=4)
 
 
         self.reset_generator()
@@ -182,20 +201,12 @@ class ToolTeacher(ToolBase):
         self.try_recompile_model()
 
     def on_teach(self):
-        self.fg_pool.clear_cache()
-        self.bg_pool.clear_cache()
-        self.interference_pool.clear_cache()
-        self.clear_status()
+        self.clear_caches()
         if self.ensure_model():
-            self.check_files()
-            if self.check_passed:
-                self.close_mat_file()
-                conf = self.settings_menu.get_values()
-                self.fg_pool.fast_cache = conf["fastcache"]
-                self.bg_pool.fast_cache = conf["fastcache"]
-                self.interference_pool.fast_cache = conf["fastcache"]
-                self.settings_form.parse_formdata(conf)
-                preferred_filter = conf["preprocessing"]
+            pre_conf = self._prepare_files()
+            if pre_conf is not None:
+                self.interference_pool.fast_cache = pre_conf["fastcache"]
+                preferred_filter = pre_conf["preprocessing"]
                 self.workon_model.set_preferred_filter_data(preferred_filter)
                 conf = self.settings_form.get_data()
                 gc.collect()
@@ -217,9 +228,7 @@ class ToolTeacher(ToolBase):
                                           self.workon_model.get_y_spec())
                     )
                     self.workon_model.model.fit(dataset, **conf.get_fit_parameters())
-        self.fg_pool.clear_cache()
-        self.bg_pool.clear_cache()
-        self.interference_pool.clear_cache()
+        self.clear_caches()
 
 
     def generate_test(self):
@@ -242,9 +251,7 @@ class ToolTeacher(ToolBase):
             x_test, y_test = testd
             self.workon_model.model.evaluate(x_test, y_test)
 
-            self.fg_pool.clear_cache()
-            self.bg_pool.clear_cache()
-            self.interference_pool.clear_cache()
+            self.clear_caches()
 
 
     def on_plot_roc(self):
@@ -254,11 +261,10 @@ class ToolTeacher(ToolBase):
             y_pred = self.workon_model.model.predict(x_test)
             plot_roc(y_pred, y_test, 101)
 
-            self.fg_pool.clear_cache()
-            self.bg_pool.clear_cache()
-            self.interference_pool.clear_cache()
+            self.clear_caches()
 
-    def on_probe(self, needstrack):
+
+    def _prepare_files(self):
         self.clear_status()
         self.check_files()
         if self.check_passed:
@@ -268,25 +274,47 @@ class ToolTeacher(ToolBase):
             self.bg_pool.fast_cache = conf["fastcache"]
             self.interference_pool.fast_cache = conf["fastcache"]
             self.settings_form.parse_formdata(conf)
-            conf = self.settings_form.get_data()
             gc.collect()
-            gen = self.data_generator(conf)
+            return conf
+        return None
+
+    def clear_caches(self):
+        self.fg_pool.clear_cache()
+        self.bg_pool.clear_cache()
+        self.interference_pool.clear_cache()
+
+
+    def on_probe_save(self, needstrack):
+        if self._prepare_files() is not None:
+            conf = self.settings_form.get_data()
+            probe_params = conf.probe_params
+            gen = self.data_generator(conf, **probe_params)
             x_gen, y_par = next(gen)
             while y_par.has_track() != needstrack:
                 x_gen, y_par = next(gen)
             print("GENERATE_SUCCESS:", (x_gen!=0).any())
-            fig, ax = plt.subplots()
-            # display_data = np.max(x_gen, axis=0)
-            # ax.matshow(display_data.T)
-            plot_xs = np.arange(x_gen.shape[0])
-            for i in range(16):
-                for j in range(16):
-                    ax.plot(plot_xs, x_gen[:, i, j])
-            if y_par.has_track():
-                ax.set_title(get_locale("teacher.sampleplot.title_true"))
-            else:
-                ax.set_title(get_locale("teacher.sampleplot.title_false"))
-            fig.show()
+            plot_event(x_gen, y_par, True)
+            ut0 = np.arange(x_gen.shape[0])
+            filename = EXPORT_WORKSPACE.asksaveasfilename(auto_formats=["h5"])
+            if filename:
+                with h5py.File(filename,"w") as fp:
+                    fp.create_dataset("data0", data=x_gen)
+                    fp.create_dataset("UT0", data=ut0)
+                    fp.attrs["has_track"] = y_par.has_track()
+
+
+    def on_probe(self, needstrack):
+
+        if self._prepare_files() is not None:
+            conf = self.settings_form.get_data()
+            probe_params = conf.probe_params
+            gc.collect()
+            gen = self.data_generator(conf, **probe_params)
+            x_gen, y_par = next(gen)
+            while y_par.has_track() != needstrack:
+                x_gen, y_par = next(gen)
+            print("GENERATE_SUCCESS:", (x_gen!=0).any())
+            plot_event(x_gen,y_par)
 
 
     def println_status(self, message, tabs=0):
@@ -338,9 +366,9 @@ class ToolTeacher(ToolBase):
         flash_interference = signal_multiply(lightcurve, flash_mask)
         return conf.process_it(flash_interference, rng=self.rng)
 
-    def get_interference(self, conf, use_artificial):
+    def get_interference(self, conf, use_artificial, frame_size):
         if use_artificial:
-            source_foreground, e_length = self.fg_pool.random_access(self.rng)
+            source_foreground, e_length = self.fg_pool.random_access(self.rng, frame_size)
             # We can create artificial "meteor" interference signal from foreground signal
             flattened = np.sum(source_foreground, axis=0)
             interference = np.zeros(source_foreground.shape)
@@ -354,14 +382,18 @@ class ToolTeacher(ToolBase):
         cycle_forever = amount is None
         preprocessor = conf.get_preprocessor()
         while cycle_forever or i < amount:
-            bg_sample, (bg_start, bg_end), broken = self.bg_pool.random_access(self.rng)
-            if np.abs(bg_end-bg_start) < frame_size:
+            # bg_sample, (bg_start, bg_end), broken = self.bg_pool.random_access(self.rng, frame_size)
+            # if np.abs(bg_end-bg_start) < frame_size:
+            #     continue
+            # if bg_start==bg_end-frame_size:
+            #     sample_start = bg_start
+            # else:
+            #     sample_start = self.rng.integers(bg_start, bg_end-frame_size)
+            # bg = bg_sample[sample_start:sample_start+frame_size]
+            accessed_data = self.bg_pool.random_access(self.rng, frame_size)
+            if accessed_data is None:
                 continue
-            if bg_start==bg_end-frame_size:
-                sample_start = bg_start
-            else:
-                sample_start = self.rng.integers(bg_start, bg_end-frame_size)
-            bg = bg_sample[sample_start:sample_start+frame_size]
+            bg, broken = accessed_data
             broken = np.array(broken)
             x_data = preprocessor.preprocess(bg, broken)
             y_params = TargetParameters()
@@ -371,16 +403,20 @@ class ToolTeacher(ToolBase):
                 for _ in range(conf.quick_track_attempts):
                     if self.rng.random() < conf.quick_track_probability:
                         y_params.interference_bottom_left = True
-                        interf[:, :8, :8] = interf[:, :8, :8] + self.get_interference(conf, artificial_interference)
+                        interf[:, :8, :8] = interf[:, :8, :8] + \
+                                            self.get_interference(conf, artificial_interference, frame_size)
                     if self.rng.random() < conf.quick_track_probability:
                         y_params.interference_bottom_right = True
-                        interf[:, 8:, :8] = interf[:, 8:, :8] + self.get_interference(conf, artificial_interference)
+                        interf[:, 8:, :8] = interf[:, 8:, :8] + \
+                                            self.get_interference(conf, artificial_interference, frame_size)
                     if self.rng.random() < conf.quick_track_probability:
                         y_params.interference_top_left = True
-                        interf[:, :8, 8:] = interf[:, :8, 8:] + self.get_interference(conf, artificial_interference)
+                        interf[:, :8, 8:] = interf[:, :8, 8:] + \
+                                            self.get_interference(conf, artificial_interference, frame_size)
                     if self.rng.random() < conf.quick_track_probability:
                         y_params.interference_top_right = True
-                        interf[:, 8:, 8:] = interf[:, 8:, 8:] + self.get_interference(conf, artificial_interference)
+                        interf[:, 8:, 8:] = interf[:, 8:, 8:] + \
+                                            self.get_interference(conf, artificial_interference, frame_size)
 
                 if artificial_interference and self.rng.random() < conf.flash_probability:
                     interf = interf + self.generate_artificial_flash(conf)
@@ -389,19 +425,20 @@ class ToolTeacher(ToolBase):
                 pass
             else:
                 fg = np.zeros(bg.shape)
+                self.fg_pool.set_shift_threshold(conf.shift_threshold)
                 rng_append = self.rng.integers(1, 16)
                 if rng_append % 2 == 1:
                     y_params.pmt_bottom_left = True
-                    fg[:, :8, :8] = conf.process_fg(self.fg_pool.random_access(self.rng)[0], rng=self.rng)
+                    fg[:, :8, :8] = conf.process_fg(self.fg_pool.random_access(self.rng, frame_size)[0], rng=self.rng)
                 if rng_append // 2 % 2 == 1:
                     y_params.pmt_bottom_right = True
-                    fg[:, 8:, :8] = conf.process_fg(self.fg_pool.random_access(self.rng)[0], rng=self.rng)
+                    fg[:, 8:, :8] = conf.process_fg(self.fg_pool.random_access(self.rng, frame_size)[0], rng=self.rng)
                 if rng_append // 4 % 2 == 1:
                     y_params.pmt_top_left = True
-                    fg[:, :8, 8:] = conf.process_fg(self.fg_pool.random_access(self.rng)[0], rng=self.rng)
+                    fg[:, :8, 8:] = conf.process_fg(self.fg_pool.random_access(self.rng, frame_size)[0], rng=self.rng)
                 if rng_append // 8 % 2 == 1:
                     y_params.pmt_top_right = True
-                    fg[:, 8:, 8:] = conf.process_fg(self.fg_pool.random_access(self.rng)[0], rng=self.rng)
+                    fg[:, 8:, 8:] = conf.process_fg(self.fg_pool.random_access(self.rng, frame_size)[0], rng=self.rng)
                 fg[:, broken] = 0
                 x_data = x_data + fg
             i += 1
@@ -419,13 +456,6 @@ class ToolTeacher(ToolBase):
 
         while True:
             yield self.generate_batch(generator,batch_size)
-            # batchX.clear()
-            # batchY.clear()
-            # for _ in range(batch_size):
-            #     X, Y_par = next(generator)
-            #     batchX.append(X)
-            #     batchY.append(self.workon_model.create_dataset_ydata_for_item(Y_par))
-            # yield np.array(batchX), np.array(batchY)
 
 
     def generate_batch(self, generator, size):

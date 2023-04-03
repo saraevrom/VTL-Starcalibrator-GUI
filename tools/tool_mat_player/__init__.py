@@ -78,6 +78,7 @@ class MatPlayer(ToolBase, PopupPlotable):
             ffmodel = self.get_ff_model()
 
             data = self.file["data0"][a_low:a_high]
+            ut0 = self.file["UT0"][a_low:a_high]
 
             if (ffmodel is not None) and self.form_data["use_flatfielding"]:
                 data = ffmodel.apply(data)
@@ -87,6 +88,7 @@ class MatPlayer(ToolBase, PopupPlotable):
 
             with h5py.File(filename, "w") as fp:
                 fp.create_dataset("data0", data=data)
+                fp.create_dataset("UT0", data=ut0)
 
     def on_attach_ff(self):
         if self.file:

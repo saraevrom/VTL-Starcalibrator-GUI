@@ -146,27 +146,36 @@ class FilePool(tk.Frame):
                         })
         return failed
 
-    def random_access(self, rng):
+    def random_access(self, rng, target_length):
         raise NotImplementedError("Random access is not implemented")
 
 class RandomFileAccess(FilePool):
     def __init__(self, master, title_key, reading_field="EventsIJ", workspace=None, allow_clear=False):
         super().__init__(master, title_key, "*.mat *.hdf *.h5", workspace=workspace, allow_clear=allow_clear)
         self.reading_field = reading_field
+        self.shift_threshold = 32
 
-    def random_access(self, rng):
+    def set_shift_threshold(self,tgt):
+        self.shift_threshold = tgt
+
+    def random_access(self, rng, target_length):
+        shift_threshold = self.shift_threshold
         dataset, = self.pull_fields_from_random_file([self.reading_field], rng)
         length = dataset.shape[0]
         if length > 0:
             i = rng.integers(0, length)
             sample = dataset[i]
+            needed_zeros = target_length - sample.shape[0]
+            if needed_zeros > 0:
+                add_shape = list(sample.shape)
+                add_shape[0] = needed_zeros
+                sample = np.concatenate([sample, np.zeros(shape=add_shape, dtype=float)])
             signal_present = np.logical_or.reduce(sample,axis=(1,2))
             length = np.count_nonzero(signal_present)
-            if length < 128:
-                first = find_first_true(signal_present)
-                assert first >= 0
+            first = find_first_true(signal_present)
+            if length > shift_threshold or first>5:
                 lc_cut = sample[first:first + length]
-                new_start = rng.integers(0, 128 - length)
+                new_start = rng.integers(0, target_length - length)
                 new_sample = np.zeros(shape=sample.shape)
                 new_sample[new_start:new_start + length] = lc_cut
                 return new_sample, length
@@ -179,7 +188,7 @@ class RandomIntervalAccess(FilePool):
     def __init__(self, master, title_key, workspace=None, allow_clear=False):
         super().__init__(master, title_key, "*.mat *.hdf *.h5", workspace=workspace, allow_clear=allow_clear)
 
-    def random_access(self, rng):
+    def random_access(self, rng, target_length, **kwargs):
         intervals, data0, broken = self.pull_fields_from_random_file(["marked_intervals", "data0", "broken"], rng)
         weights = intervals[:, 2]
         p = weights/np.sum(weights)
@@ -190,4 +199,17 @@ class RandomIntervalAccess(FilePool):
         end = sample_interval[1]
         #print(start, end)
         #sample = data0[int(start):int(end)]
-        return data0, (int(start), int(end)), broken
+        #return  data0,     (int(start), int(end)), broken
+        #getting bg_sample, (bg_start, bg_end), broken
+        bg_start = int(start)
+        bg_end = int(end)
+
+        if np.abs(bg_end - bg_start) < target_length:
+            return None
+        if bg_start == bg_end - target_length:
+            sample_start = bg_start
+        else:
+            sample_start = rng.integers(bg_start, bg_end - target_length)
+        bg = data0[sample_start:sample_start + target_length]
+
+        return bg, broken

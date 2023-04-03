@@ -51,6 +51,12 @@ class PregenerateDataset(OptionNode):
     ITEM_TYPE = create_value_field(IntNode, get_locale("teacher.advform.amount"), 1000)
     DEFAULT_VALUE = None
 
+
+class ProbeParameters(FormNode):
+    DISPLAY_NAME = get_locale("teacher.form.probing")
+    FIELD__frame_size = create_value_field(IntNode, get_locale("teacher.form.probing.size"), 128)
+
+
 class SettingForm(FormNode):
     FIELD__label_dataset_parameters = create_label(get_locale("teacher.form.separator.dataset_parameters"), True)
     FIELD__preprocessing = DataPreProcessorField
@@ -62,6 +68,7 @@ class SettingForm(FormNode):
                                                      get_locale("teacher.form.quick_track_attempts"), 5)
     FIELD__flash_probability = create_value_field(FloatNode,
                                                   get_locale("teacher.form.flash_probability"), 0.0)
+    FIELD__shift_threshold = create_value_field(IntNode, get_locale("teacher.form.shift_allow_threshold"), 64)
     FIELD__flash_maxsize = create_value_field(IntNode, get_locale("teacher.form.flash_maxsize"), 10)
     FIELD__flash_attempts = create_value_field(IntNode, get_locale("teacher.form.flash_attempts"), 0)
     FIELD__modification = create_dual(ProcessingSubform,
@@ -85,6 +92,7 @@ class SettingForm(FormNode):
     FIELD__workers = create_value_field(IntNode, get_locale("teacher.form.workers"), 1)
     FIELD__fastcache = create_value_field(BoolNode, get_locale("teacher.form.fastcache"), False)
     FIELD__pregenerate = PregenerateDataset
+    FIELD__probe_params = ProbeParameters
 
     def get_data(self):
         data = super().get_data()

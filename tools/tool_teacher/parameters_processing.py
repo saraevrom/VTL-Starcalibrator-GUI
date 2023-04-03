@@ -25,6 +25,7 @@ class Augmenter(Appliance):
             if rng.random() < 0.5:
                 data1 = np.flip(data1, axis=2)
         return data1
+
 class DualProcessing(object):
     def __init__(self, primary, secondary):
         self.primary = primary
@@ -42,6 +43,10 @@ class DualProcessing(object):
     def apply_secondary(self, data, rng):
         return self.get_secondary().apply(data, rng)
 
+
+class ProbeParameters(object):
+    def __init__(self, conf):
+        self.conf = conf
 
 
 class LearnParameters(object):
