@@ -173,7 +173,7 @@ class RandomFileAccess(FilePool):
             signal_present = np.logical_or.reduce(sample,axis=(1,2))
             length = np.count_nonzero(signal_present)
             first = find_first_true(signal_present)
-            if length > shift_threshold or first>5:
+            if target_length > length > shift_threshold or first>5:
                 lc_cut = sample[first:first + length]
                 new_start = rng.integers(0, target_length - length)
                 new_sample = np.zeros(shape=sample.shape)
