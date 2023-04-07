@@ -106,15 +106,12 @@ class ModelWrapper(object):
         raise NotImplementedError()
 
     def _predict_raw(self, x, broken, ts_filter=None):
-        if ts_filter is None:
-            ts_filter = self.get_filter()
+        # if ts_filter is None:
+        #     ts_filter = self.get_filter()
         #x_data = sliding_window_view(x, 128, axis=0)
         #x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
-        if self.stabilize_slide:
-            x_data = ts_filter.stabilized_sliding(x, broken, 128)
-        else:
-            x_data = sliding_window_view(x, 128, axis=0)
-            x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
+        x_data = sliding_window_view(x, 128, axis=0)
+        x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
         #x_data = np.array([ts_filter.preprocess(np.array(item), broken) for item in x_data])
 
         y_data = self.model.predict(x_data)

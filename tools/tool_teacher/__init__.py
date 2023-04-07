@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import tqdm
 
+import preprocessing
 from ..tool_base import ToolBase
 from .filepool import RandomIntervalAccess, RandomFileAccess, FilePool
 import h5py
@@ -380,7 +381,7 @@ class ToolTeacher(ToolBase):
     def data_generator(self, conf, frame_size=128, amount=None):
         i = 0
         cycle_forever = amount is None
-        preprocessor = conf.get_preprocessor()
+        preprocessor : preprocessing.DataThreeStagePreProcessor = conf.get_preprocessor()
         while cycle_forever or i < amount:
             # bg_sample, (bg_start, bg_end), broken = self.bg_pool.random_access(self.rng, frame_size)
             # if np.abs(bg_end-bg_start) < frame_size:
@@ -390,16 +391,22 @@ class ToolTeacher(ToolBase):
             # else:
             #     sample_start = self.rng.integers(bg_start, bg_end-frame_size)
             # bg = bg_sample[sample_start:sample_start+frame_size]
-            accessed_data = self.bg_pool.random_access(self.rng, frame_size)
+            if preprocessor.is_working():
+                margin = preprocessor.get_affected_range()
+            else:
+                margin = 0
+            accessed_data = self.bg_pool.random_access(self.rng, frame_size+margin)
             if accessed_data is None:
                 continue
             bg, broken = accessed_data
             broken = np.array(broken)
-            x_data = preprocessor.preprocess(bg, broken)
+            x_data = preprocessor.preprocess_whole(bg, broken)
+            margin_offset = margin//2
+            x_data = x_data[margin_offset: margin_offset + frame_size]
             y_params = TargetParameters()
             artificial_interference = conf.intergerence_artificial()
             if artificial_interference or self.interference_pool.files_list:
-                interf = np.zeros(bg.shape)
+                interf = np.zeros(x_data.shape)
                 for _ in range(conf.quick_track_attempts):
                     if self.rng.random() < conf.quick_track_probability:
                         y_params.interference_bottom_left = True
@@ -424,7 +431,7 @@ class ToolTeacher(ToolBase):
             if self.rng.random() >= conf.track_probability:
                 pass
             else:
-                fg = np.zeros(bg.shape)
+                fg = np.zeros(x_data.shape)
                 self.fg_pool.set_shift_threshold(conf.shift_threshold)
                 rng_append = self.rng.integers(1, 16)
                 if rng_append % 2 == 1:

@@ -7,7 +7,6 @@ from ..tool_base import ToolBase
 from vtl_common.localization import get_locale
 from vtl_common.common_GUI import TkDictForm
 from vtl_common.parameters import DATETIME_FORMAT
-from preprocessing.denoising import moving_average_subtract
 import matplotlib.pyplot as plt
 from .form import ViewerForm
 from vtl_common.workspace_manager import Workspace
@@ -18,8 +17,8 @@ import matplotlib.dates as md
 from datetime import datetime
 import json, h5py
 from vtl_common.localized_GUI.signal_plotter import PopupPlotable
+from preprocessing.denoising import slice_for_preprocess
 
-from preprocessing.three_stage_preprocess import preprocess_single
 
 WORKSPACE_ANIMATIONS = Workspace("animations")
 WORKSPACE_EXPORT = Workspace("export")
@@ -48,8 +47,6 @@ class MatPlayer(ToolBase, PopupPlotable):
         rframe.pack(side=tk.RIGHT, fill=tk.Y)
         self.plotter = GridPlotter(self)
         self.plotter.pack(side=tk.TOP, expand=True, fill=tk.BOTH)
-        #self.plotter.on_right_click_callback = self.on_pixel_rmb
-        #self.plotter.on_right_click_callback_outofbounds = self.on_common_rmb
         self.player_controls = PlayerControls(self, self.on_frame_draw, self.click_callback)
         self.player_controls.pack(side=tk.BOTTOM, fill=tk.X)
         self.get_mat_file()
@@ -84,7 +81,7 @@ class MatPlayer(ToolBase, PopupPlotable):
                 data = ffmodel.apply(data)
 
             if filter_obj.is_working():
-                data = filter_obj.preprocess(data, self.plotter.get_broken())
+                data = filter_obj.preprocess_whole(data, self.plotter.get_broken())
 
             with h5py.File(filename, "w") as fp:
                 fp.create_dataset("data0", data=data)
@@ -145,10 +142,11 @@ class MatPlayer(ToolBase, PopupPlotable):
             filter_obj = self.form_data["filter"]
             if filter_obj.is_working():
                 if self.form_data["use_flatfielding"]:
-                    frame = preprocess_single(filter_obj, ffmodel, self.file["data0"], frame_num, self.plotter.get_broken())
+                    frame = filter_obj.preprocess_single(ffmodel, self.file["data0"], frame_num,
+                                                         self.plotter.get_broken())
                 else:
-                    frame = preprocess_single(filter_obj, None, self.file["data0"], frame_num,
-                                              self.plotter.get_broken())
+                    frame = filter_obj.preprocess_single(None, self.file["data0"], frame_num,
+                                                         self.plotter.get_broken())
                 # window = self.form_data["filter_window"]
                 # #print("PING!", window)
                 # slide_bg = np.median(self.file["data0"][frame_num:frame_num+window],axis=0)
@@ -203,63 +201,22 @@ class MatPlayer(ToolBase, PopupPlotable):
         else:
             return np.arange(start, end+1)
 
-    def on_pixel_rmb(self, i, j):
-        if self.file:
-            self.click_callback()
-            print("DRAW", i, j)
-            start, end = self.player_controls.get_selected_range()
-            print("FROM", start, "TO", end)
-            xs = self.__get_plot_x(start,end)
-            ys = self.file["data0"][start: end+1]
-            if self.form_data["use_flatfielding"]:
-                ffmodel = self.get_ff_model()
-                if ffmodel:
-                    ys = ffmodel.apply_nobreak(ys)
-            filter_obj = self.form_data["filter"]
-            if filter_obj.is_working():
-                ys = filter_obj.preprocess(ys, self.plotter.get_broken())
-            ys = ys[:, i, j]
-            if self.fig is None:
-                self.fig, self.ax = plt.subplots()
-                self.fig.canvas.mpl_connect('close_event', self.handle_mpl_close)
-
-            self.ax.plot(xs, ys, label=f"[{i+1},{j+1}]")
-            self.ax.legend()
-            self.fig.show()
-
     def get_plot_data(self):
         if self.file:
             start, end = self.player_controls.get_selected_range()
             xs = self.__get_plot_x(start, end)
-            ys = self.file["data0"][start: end + 1]
+            #ys = self.file["data0"][start: end + 1]
+            filter_obj = self.form_data["filter"]
+            ys, ys_slice = filter_obj.prepare_array(self.file["data0"], start, end+1)
             if self.form_data["use_flatfielding"]:
                 ffmodel = self.get_ff_model()
                 if ffmodel:
                     ys = ffmodel.apply_nobreak(ys)
-            filter_obj = self.form_data["filter"]
             if filter_obj.is_working():
-                ys = filter_obj.preprocess(ys, self.plotter.get_broken())
+                ys = filter_obj.preprocess_whole(ys, self.plotter.get_broken())
+
+            ys = ys[ys_slice]
             return xs, ys
         else:
             return None
 
-    def on_common_rmb(self):
-        if self.file:
-            self.click_callback()
-            print("DRAW ALL")
-            start, end = self.player_controls.get_selected_range()
-            xs = self.__get_plot_x(start,end)
-            ys = self.file["data0"][start: end + 1]
-            if self.form_data["use_flatfielding"]:
-                ffmodel = self.get_ff_model()
-                if ffmodel:
-                    ys = ffmodel.apply_nobreak(ys)
-            filter_obj = self.form_data["filter"]
-            if filter_obj.is_working():
-                ys = filter_obj.preprocess(ys, self.plotter.get_broken())
-            fig, ax = plt.subplots()
-            for i in range(16):
-                for j in range(16):
-                    ax.plot(xs, ys[:, i, j], label=f"[{i+1},{j+1}]")
-            ax.legend()
-            fig.show()

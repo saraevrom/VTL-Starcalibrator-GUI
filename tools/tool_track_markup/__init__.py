@@ -16,6 +16,7 @@ from .form import TrackMarkupForm
 from extension.optional_tensorflow import TENSORFLOW_INSTALLED
 import zipfile, h5py, io
 import os.path as ospath
+from preprocessing.three_stage_preprocess import DataThreeStagePreProcessor
 
 
 if TENSORFLOW_INSTALLED:
@@ -174,7 +175,9 @@ class TrackMarkup(ToolBase, PopupPlotable):
                         buffer = io.BytesIO(b"")
                         h5_file = h5py.File(buffer, "w")
 
-                        plot_data = self.file["data0"][track_start:track_end]
+                        #plot_data = self.file["data0"][track_start:track_end]
+                        plot_data, pdata_cutter = self.get_filter().prepare_array(self.file["data0"],
+                                                                                  track_start, track_end)
                         ut0 = self.file["UT0"][track_start:track_end]
 
                         model = self.get_ff_model()
@@ -182,6 +185,7 @@ class TrackMarkup(ToolBase, PopupPlotable):
                             plot_data = model.apply(plot_data)
 
                         plot_data = self.apply_filter(plot_data, True)
+                        plot_data = plot_data[pdata_cutter]
                         self.sync_form()
                         bl, br, tl, tr = self.form_data["trigger"].get_triggering(self, plot_data)
                         print(f"TRACK {index}:")
@@ -243,22 +247,6 @@ class TrackMarkup(ToolBase, PopupPlotable):
 
     def on_spawn_figure_press(self):
         self.create_plotter()
-
-    def ensure_figure(self, spawnnew):
-        if self.last_single_plot_data is None or spawnnew:
-            fig, ax = plt.subplots()
-            fig.show()
-            fig.canvas.mpl_connect('close_event', self.handle_mpl_close)
-            self.last_single_plot_data = fig, ax
-            ax.set_title("Pixels")
-            if self.current_event and self.tf_model:
-                e_start, e_end = self.current_event
-                if abs(e_end-e_start) >= 128:
-                    self.sync_form()
-                    self.form_data["trigger"].get_prob(self, ax)
-
-        return self.last_single_plot_data
-
 
     def on_reset(self):
         if tkinter.messagebox.askokcancel(
@@ -322,10 +310,12 @@ class TrackMarkup(ToolBase, PopupPlotable):
 
     def redraw_event(self):
         if self.file and self.current_event:
+            self.sync_form()
             form_data = self.params_form.get_values()
             print(self.queue)
             event_start, event_end = self.current_event
-            plot_data = self.file["data0"][event_start:event_end]
+            #plot_data = self.file["data0"][event_start:event_end]
+            plot_data, pdata_cutter = self.get_filter().prepare_array(self.file["data0"], event_start, event_end)
 
             model = self.get_ff_model()
             if model:
@@ -333,6 +323,7 @@ class TrackMarkup(ToolBase, PopupPlotable):
                 self.plotter.set_broken(model.broken_query())
 
             plot_data = self.apply_filter(plot_data)
+            plot_data = plot_data[pdata_cutter]
             plot_data = np.max(plot_data, axis=0)
             pmt = form_data["pmt_select"]
             real_plot_data = np.zeros(shape=plot_data.shape)
@@ -562,39 +553,25 @@ class TrackMarkup(ToolBase, PopupPlotable):
     def get_broken(self):
         return np.logical_not(self.plotter.alive_pixels_matrix)
 
+
+    def get_filter(self, use_nn=False) -> DataThreeStagePreProcessor:
+        if self.form_data["override_ann_filter"] or not use_nn or not self.tf_model:
+            return self.form_data["preprocessing"]
+        else:
+            return self.tf_filter
+
     def apply_filter(self, signal, use_nn=False):
         self.sync_form()
-        if self.form_data["override_ann_filter"] or not use_nn or not self.tf_model:
-            preprocessor = self.form_data["preprocessing"]
-
-        else:
-            preprocessor = self.tf_filter
-
-        broken = np.logical_not(self.plotter.alive_pixels_matrix)
-        plot_data = preprocessor.preprocess(signal, broken)
+        preprocessor = self.get_filter(use_nn)
+        broken = self.plotter.get_broken()
+        plot_data = preprocessor.preprocess_whole(signal, broken)
         return plot_data
-
-    def popup_draw_all(self):
-        if self.file and self.current_event:
-            t1, t2 = self.current_event
-            signal = self.file["data0"][t1:t2]
-            model = self.get_ff_model()
-            if model:
-                signal = model.apply(signal)
-                signal[:, np.logical_not(self.plotter.alive_pixels_matrix)] = 0
-
-            plot_data = self.apply_filter(signal)
-            fig, ax = plt.subplots()
-            xs = np.linspace(t1, t2, len(plot_data))
-            for i in range(16):
-                for j in range(16):
-                    ax.plot(xs, plot_data[:,i,j])
-            fig.show()
 
     def get_plot_data(self):
         if self.file and self.current_event:
             t1, t2 = self.current_event
-            signal = self.file["data0"][t1:t2]
+            #signal = self.file["data0"][t1:t2]
+            signal, signal_cutter = self.get_filter().prepare_array(self.file["data0"], t1, t2)
             model = self.get_ff_model()
             if model:
                 signal = model.apply(signal)
@@ -611,27 +588,5 @@ class TrackMarkup(ToolBase, PopupPlotable):
                 self.sync_form()
                 self.form_data["trigger"].get_prob(self, axes)
 
-    def handle_mpl_close(self, mpl_event):
-        if self.last_single_plot_data is None:
-            return
-        if mpl_event.canvas.figure == self.last_single_plot_data[0]:
-            print("Closed last figure. Figure resetting.")
-            self.last_single_plot_data = None
 
-    def popup_draw_signal(self, i, j):
-        if self.file and self.current_event:
-            t1, t2 = self.current_event
-            full_data = self.file["data0"][t1:t2]
-            model = self.get_ff_model()
-            if model:
-                full_data = model.apply_nobreak(full_data)
-                full_data[:, np.logical_not(self.plotter.alive_pixels_matrix)] = 0
 
-            plot_data = self.apply_filter(full_data)[:, i, j]
-
-            fig, ax = self.ensure_figure(False)
-            xs = np.linspace(t1, t2, len(plot_data))
-            ax.plot(xs, plot_data, label=f"[{i+1}, {j+1}]")
-            ax.legend()
-            fig.show()
-            self.last_single_plot_data = fig, ax

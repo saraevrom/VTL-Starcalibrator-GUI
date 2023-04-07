@@ -1,10 +1,11 @@
 import numpy as np
 from .base import Preprocessor
 from .denoising import reduce_noise, antiflash, moving_average_subtract, divide_multidim_3to2
-from .denoising import  moving_median_subtract, reduce_noise_robust, window_limiting
+from .denoising import  moving_median_subtract, reduce_noise_robust, window_limiting, slice_for_preprocess
 from numba.experimental import jitclass
 import numba as nb
 from numba.core.types.containers import UniTuple
+import warnings
 
 
 @nb.njit(UniTuple(nb.float64, 2)(nb.float64[:,:,:], nb.boolean[:,:]))
@@ -44,13 +45,13 @@ def noisy(signal, broken):
     return signal
 
 
-@jitclass()
+#@jitclass()
 class DataThreeStagePreProcessor(object):
-    ma_win: nb.int64
-    mstd_win: nb.int64
-    use_antiflash: nb.boolean
-    use_robust: nb.boolean
-    independent_pmt: nb.boolean
+    # ma_win: nb.int64
+    # mstd_win: nb.int64
+    # use_antiflash: nb.boolean
+    # use_robust: nb.boolean
+    # independent_pmt: nb.boolean
 
     def __init__(self, ma_win=10, mstd_win=100, use_antiflash=True, use_robust=False, independent_pmt=False):
         self.ma_win = ma_win
@@ -137,7 +138,7 @@ class DataThreeStagePreProcessor(object):
         else:
             return self.preprocess_bulk_norobust(src)
 
-    def preprocess(self, src: np.ndarray, broken: np.ndarray):
+    def preprocess_whole(self, src: np.ndarray, broken: np.ndarray):
         if self.independent_pmt:
             signal = np.zeros(src.shape)
             signal[:, :8, :8] = self._preprocess_bulk(src[:, :8, :8])
@@ -157,15 +158,22 @@ class DataThreeStagePreProcessor(object):
             #            np.random.normal(mean, noise, signal.shape))
         return signal
 
+    def preprocess_range(self, src: np.ndarray, broken: np.ndarray, slice_start, slice_end):
+        margin = self.get_affected_range()
+        truncated, inner_slice = slice_for_preprocess(src, slice_start, slice_end, margin)
+        preprocessed = self.preprocess_whole(truncated, broken)
+        return preprocessed[inner_slice]
+
     def stabilized_sliding(self, src: np.ndarray, broken: np.ndarray, window: int):
+        warnings.warn("REMOVE IT ASAP. It will take forever. Edge effect suppression is under construction.")
         length = src.shape[0]
         if window >= length:
-            return np.expand_dims(self.preprocess(src, broken), 0)
+            return np.expand_dims(self.preprocess_whole(src, broken), 0)
         else:
             res = np.zeros(shape=(length-window+1, window, src.shape[1], src.shape[2]))
             for i in range(length-window+1):
                 sub_src = src[i:i+window]
-                res[i] = self.preprocess(sub_src, broken)
+                res[i] = self.preprocess_whole(sub_src, broken)
             return res
 
     def get_affected_range(self):
@@ -174,14 +182,35 @@ class DataThreeStagePreProcessor(object):
         else:
             return self.mstd_win
 
-    def preprocess_single(self, src: np.ndarray, broken: np.ndarray,index: int):
-        return self.preprocess(src, broken)[index] # let it be automatically remove dead code
+
+
+    def preprocess_single(self, ffmodel, src, index, broken):
+        '''
+        Since DataThreeStagePreProcessor has some limitation use this function instead for reading the h5py data
+        :return:
+        '''
+        if self.is_sliding():
+            subsrc, new_index = get_window_data(src, index, self)
+        else:
+            subsrc = src[index:index + 1]
+            new_index = 0
+
+        if ffmodel is not None:
+            subsrc = ffmodel.apply(subsrc)
+        #return self.preprocess_single(subsrc, broken, new_index)
+        return self.preprocess_whole(subsrc, broken)[new_index]
 
     def is_sliding(self):
         return self.ma_win != 0 or self.mstd_win != 0
 
     def is_working(self):
         return self.is_sliding() or self.use_antiflash
+
+    def prepare_array(self, src, slice_start, slice_end):
+        if self.is_working():
+            return slice_for_preprocess(src, slice_start, slice_end, self.get_affected_range())
+        else:
+            return src, slice(None,None,None)
 
 def get_window_data(signal_source, index, filter_obj:DataThreeStagePreProcessor):
     affect_window = filter_obj.get_affected_range()
@@ -192,17 +221,4 @@ def get_window_data(signal_source, index, filter_obj:DataThreeStagePreProcessor)
 def absmed(x, *args, **kwargs):
     return np.median(np.abs(x), *args, **kwargs)
 
-def preprocess_single(self:DataThreeStagePreProcessor, ffmodel, src, index, broken):
-    '''
-    Since DataThreeStagePreProcessor has some limitation use this function instead for reading the h5py data
-    :return:
-    '''
-    if self.is_sliding():
-        subsrc, new_index = get_window_data(src, index, self)
-    else:
-        subsrc = src[index:index+1]
-        new_index = 0
 
-    if ffmodel is not None:
-        subsrc = ffmodel.apply(subsrc)
-    return self.preprocess_single(subsrc, broken, new_index)

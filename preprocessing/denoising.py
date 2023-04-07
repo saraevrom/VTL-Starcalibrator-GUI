@@ -1,7 +1,7 @@
 import numpy as np
-from numpy.lib.stride_tricks import sliding_window_view
-from vtl_common.parameters import NPROC
-from multiprocessing import Pool
+#from numpy.lib.stride_tricks import sliding_window_view
+#from vtl_common.parameters import NPROC
+#from multiprocessing import Pool
 import numba as nb
 from numba import prange
 
@@ -195,3 +195,30 @@ def moving_average_subtract(src, win):
 def moving_median_subtract(src, win):
     average = sliding_median_pixels(src, win)
     return src - average
+
+#@nb.njit()
+def slice_for_preprocess(source, slice_min, slice_max, margin):
+    '''
+    Reduce edge effect for preprocessing by taking margin
+    :param source: source array
+    :param slice_min: desired slice start
+    :param slice_max: desired slice end
+    :param margin: affecting range of processing
+    :return: (a,s)  a -- truncated array for processing. s -- slice object to get desired cut
+    '''
+    length = source.shape[0]
+    if slice_max<0:
+        slice_max = length - slice_max
+    lhalf = margin // 2
+    truncate_start = slice_min - lhalf
+    if truncate_start < 0:
+        truncate_start = 0
+    truncate_end = slice_max - lhalf + margin
+    if truncate_end >= length:
+        truncate_end = length
+
+
+    local_start = slice_min - truncate_start
+    local_end = slice_max - truncate_start
+
+    return source[truncate_start:truncate_end], slice(local_start, local_end)
