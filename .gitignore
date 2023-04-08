@@ -3,6 +3,7 @@ venv
 *.json
 !settings-newseason.json
 !localization/*.json
+!friendliness/localization/*.json
 __pycache__/
 *.mat
 *.npy
