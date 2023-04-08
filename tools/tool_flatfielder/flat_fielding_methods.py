@@ -1,6 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from robustats import weighted_median
+try:
+    from robustats import weighted_median
+except ImportError:
+    weighted_median = None
 from .isotropic_lsq import isotropic_lad_line, phir0_to_kb, phir0_to_kb_inv, isotropic_lad_multidim
 from .isotropic_lsq import isotropic_lad_multidim_no_bg, multidim_sphere
 from multiprocessing import Pool
@@ -263,10 +266,12 @@ def pile_up_manual(requested_data0):
 
 
 ALGO_MAP = {
-    "proportional_correlation": (median_corr_flatfield, "PC"),
     "linear_correlation": (isotropic_lsq_corr_flatfield_parallel, "LC"),
     "linear_multidimensional_correlation": (multidim_lad_corr_flatfield, "LMDC"),
     "isotropic_lad_multidim_no_bg": (multidim_lad_corr_flatfield_no_bg, "LMSCNBG"),
     "nonlinear_saturated_respone": (isotropic_lsq_corr_flatfield_nonlinear, "NSR"),
     "pileup_manual": (pile_up_manual, "PUM")
 }
+
+if weighted_median is not None:
+    ALGO_MAP["proportional_correlation"] = (median_corr_flatfield, "PC")

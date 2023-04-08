@@ -5,7 +5,7 @@ h5py
 skyfield
 astropy
 tqdm
-robustats
+#robustats
 scipy
 numexpr
 numba

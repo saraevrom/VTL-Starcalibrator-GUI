@@ -5,7 +5,6 @@ from vtl_common.common_GUI import SettingMenu
 from .settings_build import build_settings
 from .signal_plotter import SignalPlotter
 import numpy as np
-from robustats import weighted_median
 from .flat_fielding_methods import ALGO_MAP
 import matplotlib.pyplot as plt
 from vtl_common.localization import get_locale
@@ -19,21 +18,6 @@ import os.path as ospath
 
 FF_WORKSPACE = Workspace("ff_calibration")
 
-def line_fit_robust(xs, ys):
-    k = np.float(weighted_median(ys/xs, xs))
-    return k
-
-class LineFitter(object):
-    def __init__(self,array):
-        self.array = array
-
-    def __call__(self, ij):
-        i,j = ij
-        i_data = self.array[:, i]
-        j_data = self.array[:, j]
-        if np.median(i_data)==0 or np.median(j_data)==0:
-            return 0
-        return line_fit_robust(i_data, j_data)
 
 REPLACE = 0
 APPEND = 1
