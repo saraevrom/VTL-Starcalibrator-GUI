@@ -29,6 +29,9 @@ from vtl_common import localization
 
 localization.set_locale(parameters.LOCALE)
 localization.SEARCH_DIRS.append(ospath.join(ospath.dirname(ospath.abspath(__file__)),"localization"))
+
+import friendliness
+
 parameters.localize_parameters_fields()
 
 
@@ -96,6 +99,9 @@ class App(tk.Tk):
         print("Loading file:", filename)
         if filename and os.path.isfile(filename):
             new_file = h5py.File(filename, "r")
+            if not friendliness.check_data_file(new_file):
+                self.update_title()
+                return
             if self.file:
                 self.file.close()
             self.filename = filename

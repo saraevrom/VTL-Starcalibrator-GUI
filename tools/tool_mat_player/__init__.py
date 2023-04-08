@@ -34,6 +34,7 @@ class MatPlayer(ToolBase, PopupPlotable):
 
         self.form = TkDictForm(rframe, self.form_parser.get_configuration_root())
         self.form.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        self.form.on_commit = self.poke
 
         gif_btn = tk.Button(rframe, text=get_locale("matplayer.button.render_gif"), command=self.on_render_gif)
         gif_btn.pack(side=tk.TOP, fill=tk.X)
@@ -178,6 +179,7 @@ class MatPlayer(ToolBase, PopupPlotable):
         self.poke()
 
     def poke(self):
+        print("POKED")
         self.player_controls.draw_frame()
 
     def on_ff_reload(self):

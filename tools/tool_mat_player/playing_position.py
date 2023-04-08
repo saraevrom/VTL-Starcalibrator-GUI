@@ -14,7 +14,7 @@ MARK_HIGH = 1
 MARK_PTR = 2
 
 class ValueWrapper(tk.Frame):
-    def __init__(self, master, validator, mark):
+    def __init__(self, master, validator, mark, color=None):
         super().__init__(master)
         self.mark = mark
         self.display_value = tk.StringVar(self)
@@ -28,6 +28,9 @@ class ValueWrapper(tk.Frame):
         self.rowconfigure(0, weight=1)
         btn = tk.Button(self, text=get_locale("matplayer.button.datetime_entry"), command=self.on_datetime_entry)
         btn.grid(row=1, column=0, sticky="nsew")
+        if color is not None:
+            self.entry.configure(fg=color)
+            btn.configure(fg=color)
         self.rowconfigure(1, weight=1)
         self.validator = validator
 
@@ -131,7 +134,7 @@ class PlayingPosition(Plotter):
 
         self.min_cutter = ValueWrapper(subframe, self.validate_intervals, MARK_LOW)
         self.min_cutter.grid(row=0, column=1, sticky="nsew")
-        self.pointer = ValueWrapper(subframe, self.validate_intervals, MARK_PTR)
+        self.pointer = ValueWrapper(subframe, self.validate_intervals, MARK_PTR, color="#CC0000")
         self.pointer.grid(row=0, column=2, sticky="nsew")
         self.max_cutter = ValueWrapper(subframe, self.validate_intervals, MARK_HIGH)
         self.max_cutter.grid(row=0, column=3, sticky="nsew")

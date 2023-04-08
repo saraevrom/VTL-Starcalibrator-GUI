@@ -217,8 +217,8 @@
 
   "matplayer.button.datetime_entry": "Enter date/time",
   "matplayer.dialog.datetime_prompt": "Enter target date and time",
-  "matplayer.button.set_start": "Set start",
-  "matplayer.button.set_end": "Set end",
+  "matplayer.button.set_start": "Set start to current frame",
+  "matplayer.button.set_end": "Set end to current frame",
   "matplayer.button.attach_ff": "Attach flat fielding to file",
 
   "track_markup.title": "Background extractor",

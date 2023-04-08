@@ -30,10 +30,10 @@ def correct_data(new_dict):
 class DataThreeStagesFilter(FormNode):
     USE_SCROLLVIEW = False
     DISPLAY_NAME = get_locale("app.preprocess.form.preprocess.tsf.title")
+    FIELD__use_robust = create_value_field(BoolNode, get_locale("app.preprocess.form.preprocess.robust"), False)
     FIELD__ma_win = create_value_field(create_int_option(10), get_locale("app.preprocess.form.preprocess.stage1"))
     FIELD__mstd_win = create_value_field(create_int_option(100), get_locale("app.preprocess.form.preprocess.stage2"))
     FIELD__use_antiflash = create_value_field(BoolNode, get_locale("app.preprocess.form.preprocess.stage3"), True)
-    FIELD__use_robust = create_value_field(BoolNode, get_locale("app.preprocess.form.preprocess.robust"), False)
     FIELD__independent_pmt = create_value_field(BoolNode,
                                                 get_locale("app.preprocess.form.preprocess.independent_pmt"), False)
 
