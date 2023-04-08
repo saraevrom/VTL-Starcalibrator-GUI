@@ -1,3 +1,4 @@
+import gc
 import tkinter as tk
 
 from vtl_common.common_GUI import TkDictForm
@@ -16,6 +17,7 @@ from .form import TrackMarkupForm
 from extension.optional_tensorflow import TENSORFLOW_INSTALLED
 import zipfile, h5py, io
 import os.path as ospath
+from .edges import EdgeProcessor
 from preprocessing.three_stage_preprocess import DataThreeStagePreProcessor
 
 
@@ -26,7 +28,7 @@ else:
     keras = None
     ModelWrapper = None
 
-from .edges import edged_intervals
+from .edges import edged_intervals, split_intervals
 from vtl_common.localized_GUI.signal_plotter import PopupPlotable
 
 
@@ -108,6 +110,8 @@ class TrackMarkup(ToolBase, PopupPlotable):
                   command=self.on_save_data).grid(row=1, column=0, sticky="ew")
         tk.Button(right_panel, text=get_locale("track_markup.btn.export"),
                   command=self.on_export_data).grid(row=2, column=0, sticky="ew")
+        tk.Button(right_panel, text=get_locale("track_markup.btn.export_bg"),
+                  command=self.on_export_bg).grid(row=2, column=0, sticky="ew")
         tk.Button(right_panel, text=get_locale("track_markup.btn.load"),
                   command=self.on_load_data).grid(row=3, column=0, sticky="ew")
         if TENSORFLOW_INSTALLED:
@@ -163,6 +167,31 @@ class TrackMarkup(ToolBase, PopupPlotable):
         self.update_answer_panel()
 
 
+    def on_export_bg(self):
+        if self.trackless_events and self.file:
+            fbase = self.get_loaded_filename()
+            fbase = ospath.splitext(fbase)[0]
+            filename = TRACKS_WORKSPACE.asksaveasfilename(auto_formats=["zip"], initialfile=f"bg-{fbase}.zip")
+            if filename:
+                with zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                    index = 1
+                    for bg_start, bg_end in self.trackless_events_events:
+                        buffer = io.BytesIO(b"")
+                        h5_file = h5py.File(buffer, "w")
+
+                        # plot_data = self.file["data0"][track_start:track_end]
+                        plot_data = self._get_data_at(bg_start, bg_end, True)
+                        ut0 = self.file["UT0"][bg_start:bg_end]
+
+
+                        assert plot_data.shape[0] == ut0.shape[0]
+                        h5_file.create_dataset("data0", data=plot_data)
+                        h5_file.create_dataset("UT0", data=ut0)
+
+                        h5_file.close()
+                        zipf.writestr(f"f{index}_bg_{bg_start}_{bg_end}.h5", buffer.getvalue())
+                        index += 1
+
     def on_export_data(self):
         if self.tracked_events and self.file and self.tf_model:
             fbase = self.get_loaded_filename()
@@ -176,24 +205,20 @@ class TrackMarkup(ToolBase, PopupPlotable):
                         h5_file = h5py.File(buffer, "w")
 
                         #plot_data = self.file["data0"][track_start:track_end]
-                        plot_data, pdata_cutter = self.get_filter().prepare_array(self.file["data0"],
-                                                                                  track_start, track_end)
+                        plot_data = self._get_data_at(track_start, track_end, True)
                         ut0 = self.file["UT0"][track_start:track_end]
-
-                        model = self.get_ff_model()
-                        if model:
-                            plot_data = model.apply(plot_data)
-
-                        plot_data = self.apply_filter(plot_data, True)
-                        plot_data = plot_data[pdata_cutter]
                         self.sync_form()
-                        bl, br, tl, tr = self.form_data["trigger"].get_triggering(self, plot_data)
+                        trigger:EdgeProcessor = self.form_data["trigger"]
+                        #bl, br, tl, tr = self.form_data["trigger"].get_triggering(self, plot_data)
+                        res = self.tf_model.trigger_split(plot_data, trigger.threshold)
+                        bl, br, tl, tr = [item.any() for item in res]
+
                         print(f"TRACK {index}:")
                         print_track(bl, br, tl, tr)
 
                         #self.tf_model.trigger_split(plot_data, threshold, broken, ts_filter)
 
-
+                        assert plot_data.shape[0] == ut0.shape[0]
                         h5_file.create_dataset("data0", data=plot_data)
                         h5_file.create_dataset("UT0", data=ut0)
                         h5_file.attrs["bottom_left"] = bl
@@ -315,15 +340,10 @@ class TrackMarkup(ToolBase, PopupPlotable):
             print(self.queue)
             event_start, event_end = self.current_event
             #plot_data = self.file["data0"][event_start:event_end]
-            plot_data, pdata_cutter = self.get_filter().prepare_array(self.file["data0"], event_start, event_end)
-
             model = self.get_ff_model()
             if model:
-                plot_data = model.apply(plot_data)
                 self.plotter.set_broken(model.broken_query())
-
-            plot_data = self.apply_filter(plot_data)
-            plot_data = plot_data[pdata_cutter]
+            plot_data = self._get_current_data()
             plot_data = np.max(plot_data, axis=0)
             pmt = form_data["pmt_select"]
             real_plot_data = np.zeros(shape=plot_data.shape)
@@ -388,6 +408,7 @@ class TrackMarkup(ToolBase, PopupPlotable):
         self.update_highlight_button()
 
     def on_auto(self):
+        gc.collect()
         self.sync_form()
         if self.tf_model is None:
             self.on_load_tf()
@@ -397,7 +418,15 @@ class TrackMarkup(ToolBase, PopupPlotable):
         if self.current_event is None:
             return
 
-        pos, neg = self.form_data["trigger"].apply(self)
+        trigger_params: EdgeProcessor = self.form_data["trigger"]
+
+        x_data = self._get_current_data(True)
+        event_start, event_end = self.current_event
+        booled_full = self.tf_model.trigger(x_data, trigger_params.threshold)
+        ranges = edged_intervals(booled_full)
+        pos, neg = split_intervals(np.array(ranges), event_start)
+
+        #pos, neg = self.form_data["trigger"].apply(self)
 
         if not self.event_in_queue[0]:
             if self.event_in_queue[1][1]:
@@ -413,7 +442,7 @@ class TrackMarkup(ToolBase, PopupPlotable):
 
         self.show_next_event()
         self.update_answer_panel()
-
+        gc.collect()
         if self.form_data["auto_cont"]:
             self.after(1000, self.on_auto_cont)
 
@@ -567,26 +596,40 @@ class TrackMarkup(ToolBase, PopupPlotable):
         plot_data = preprocessor.preprocess_whole(signal, broken)
         return plot_data
 
+
+    def _get_data_at(self, t1, t2, use_nn_filter=False):
+        # signal = self.file["data0"][t1:t2]
+        signal, signal_cutter = self.get_filter(use_nn_filter).prepare_array(self.file["data0"], t1, t2)
+        model = self.get_ff_model()
+        if model:
+            signal = model.apply(signal)
+            signal[:, np.logical_not(self.plotter.alive_pixels_matrix)] = 0
+
+        current_data = self.apply_filter(signal, use_nn_filter)
+        current_data = current_data[signal_cutter]
+        # print("ACCESSED", current_data.shape)
+        return current_data
+
+    def _get_current_data(self, use_nn_filter=False):
+        t1, t2 = self.current_event
+        return self._get_data_at(t1,t2,use_nn_filter)
+
     def get_plot_data(self):
         if self.file and self.current_event:
             t1, t2 = self.current_event
-            #signal = self.file["data0"][t1:t2]
-            signal, signal_cutter = self.get_filter().prepare_array(self.file["data0"], t1, t2)
-            model = self.get_ff_model()
-            if model:
-                signal = model.apply(signal)
-                signal[:, np.logical_not(self.plotter.alive_pixels_matrix)] = 0
-
-            plot_data = self.apply_filter(signal)
-            xs = np.linspace(t1, t2, len(plot_data))
+            plot_data = self._get_current_data()
+            xs = np.arange(t1, t2)
             return xs, plot_data
 
     def postprocess_plot(self, axes):
+        self.sync_form()
+        trigger_params: EdgeProcessor = self.form_data["trigger"]
         if self.tf_model and self.current_event:
             e_start, e_end = self.current_event
-            if abs(e_end - e_start) >= 128:
-                self.sync_form()
-                self.form_data["trigger"].get_prob(self, axes)
+            if trigger_params.max_plot >= abs(e_end - e_start) >= 128:
+                #self.form_data["trigger"].get_prob(self, axes)
+                x_data = self._get_current_data(True)
+                self.tf_model.plot_over_data(x_data, e_start, e_end, axes)
 
 
 

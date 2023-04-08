@@ -42,9 +42,9 @@ class UniversalModel(ModelWrapper):
         else:
             raise RuntimeError("Unknown mode")
 
-    def trigger(self, x, threshold, broken, ts_filter=None):
+    def trigger(self, x, threshold):
         mode = self.get_mode()
-        y_data = self._predict_raw(x, broken, ts_filter)
+        y_data = self._predict_raw(x)
         if mode == OUT_SPLIT:
             #y_data = 1 - np.prod(1 - y_data, axis=1)
             deconvolved = []
@@ -67,9 +67,9 @@ class UniversalModel(ModelWrapper):
         #booled_full = splat_select(booled, 128)
         return expand_window(booled_full,128)
     
-    def trigger_split(self, x, threshold, broken, ts_filter=None):
+    def trigger_split(self, x, threshold):
         mode = self.get_mode()
-        y_data = self._predict_raw(x, broken, ts_filter)
+        y_data = self._predict_raw(x)
         if mode == OUT_SPLIT:
             # y_data = 1 - np.prod(1 - y_data, axis=1)
             signals = []
@@ -80,11 +80,11 @@ class UniversalModel(ModelWrapper):
                 signals.append(signal)
             return signals
         else:
-            return super().trigger_split(x, threshold, broken, ts_filter)
+            return super().trigger_split(x, threshold)
 
-    def plot_over_data(self, x, start, end, axes, broken, ts_filter=None):
+    def plot_over_data(self, x, start, end, axes):
         mode = self.get_mode()
-        y_data = self._predict_raw(x, broken, ts_filter)
+        y_data = self._predict_raw(x)
         xs = np.arange(start, end)
         if mode == OUT_SPLIT:
             print("PLOT!")

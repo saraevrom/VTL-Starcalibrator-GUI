@@ -230,6 +230,7 @@
   "track_markup.btn.track_no": "Трек не виден",
   "track_markup.btn.im_too_lazy": "Авто",
   "track_markup.btn.export": "Экспортировать треки",
+  "track_markup.btn.export_bg": "Экспортировать фон",
   "track_markup.messagebox.reset.title": "Сброс данных",
   "track_markup.messagebox.reset.content": "Вы точно хотите стереть пустые интервалы и начать заново?",
   "track_markup.messagebox.markup_done.title": "Разметка данных",

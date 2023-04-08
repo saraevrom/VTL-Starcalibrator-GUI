@@ -126,68 +126,58 @@ class EdgeProcessor(object):
         self.stabilize_slide=stabilize_slide
         self.max_plot = max_plot
 
-
-    def _get_xdata(self, data_source):
-        gc.collect()
-        event_start, event_end = data_source.current_event
-        # x_data_true = np.array(data_source.file["data0"][event_start:event_end])
-        filt_obj = data_source.get_filter(True)
-        x_data_true, xdatacut = filt_obj.prepare_array(data_source.file["data0"], event_start, event_end)
-        #filt = data_source.get_filter_for_nn()
-        #broken = data_source.get_broken()
-        x_data = data_source.apply_filter(x_data_true, True)
-        x_data = x_data[xdatacut]
-        return x_data
-
-    def get_prob(self, data_source, ax):
-        event_start, event_end = data_source.current_event
-        length = event_end-event_start
-        if length > self.max_plot:
-            return
-        # x_data_true = np.array(data_source.file["data0"][event_start:event_end])
-        # filt = data_source.get_filter_for_nn()
-        # broken = data_source.get_broken()
-
-        x_data_true = self._get_xdata(data_source)
-        data_source.tf_model.plot_over_data(x_data_true,event_start, event_end, ax, ts_filter=filt, broken=broken)
-
-    def get_triggering(self, data_source, plot_data):
-        filt = data_source.get_filter_for_nn()
-        broken = data_source.get_broken()
-        data_source.tf_model.stabilize_slide = self.stabilize_slide
-        res = data_source.tf_model.trigger_split(plot_data, self.threshold, ts_filter=filt, broken=broken)
-        # print("RES",res)
-        return [item.any() for item in res]
-
-    def apply(self, data_source):
-        x_data = self._get_xdata(data_source)
-        event_start, event_end = data_source.current_event
-        #data_source.tf_model.stabilize_slide = self.stabilize_slide
-        booled_full = data_source.tf_model.trigger(x_data, self.threshold, ts_filter=filt, broken=broken)
-        # x_data = sliding_window_view(x_data, 128, axis=0)
-        # x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
-        # y_data: np.ndarray = data_source.tf_model.predict(x_data)[:, 1]
-        #
-        # booled = y_data > self.threshold
-        print("R1", booled_full)
-        ranges = edged_intervals(booled_full)
-        print("R2", ranges)
-
-        # assert len(booled)>0
-        # print(booled.shape)
-        #
-        # ranges = edged_intervals(booled)
-        # print("R0", ranges)
-        # if ranges[-1][2]:
-        #     ranges.append([ranges[-1][1], len(x_data_true), False])
-        # else:
-        #     ranges[-1][1] = len(x_data_true)
-        # print("R1", ranges)
-        # fix_ranges(ranges)
-        # print("R2", ranges)
-        # # ranges = shift_positives(np.array(ranges), - self.edge_shift, 128 + self.edge_shift)
-        # # print("R3", ranges)
-        # fix_ranges(ranges)
-        # print("R4", ranges)
-        #
-        return split_intervals(np.array(ranges), event_start)
+    # DO NOT COMPLICATE
+    # def _get_xdata(self, data_source):
+    #     gc.collect()
+    #     event_start, event_end = data_source.current_event
+    #     # x_data_true = np.array(data_source.file["data0"][event_start:event_end])
+    #     filt_obj = data_source.get_filter(True)
+    #     x_data_true, xdatacut = filt_obj.prepare_array(data_source.file["data0"], event_start, event_end)
+    #     #filt = data_source.get_filter_for_nn()
+    #     #broken = data_source.get_broken()
+    #     x_data = data_source.apply_filter(x_data_true, True)
+    #     x_data = x_data[xdatacut]
+    #     return x_data
+    #
+    # def get_prob(self, data_source, ax):
+    #     event_start, event_end = data_source.current_event
+    #     length = event_end-event_start
+    #     if length > self.max_plot:
+    #         return
+    #     # x_data_true = np.array(data_source.file["data0"][event_start:event_end])
+    #
+    #     x_data_true = self._get_xdata(data_source)
+    #     data_source.tf_model.plot_over_data(x_data_true,event_start, event_end, ax)
+    #
+    # def get_triggering(self, data_source, plot_data):
+    #     data_source.tf_model.stabilize_slide = self.stabilize_slide
+    #     res = data_source.tf_model.trigger_split(plot_data, self.threshold)
+    #     # print("RES",res)
+    #     return [item.any() for item in res]
+    #
+    # def apply(self, data_source):
+    #     x_data = self._get_xdata(data_source)
+    #     event_start, event_end = data_source.current_event
+    #     booled_full = data_source.tf_model.trigger(x_data, self.threshold)
+    #     print("R1", booled_full)
+    #     ranges = edged_intervals(booled_full)
+    #     print("R2", ranges)
+    #
+    #     # assert len(booled)>0
+    #     # print(booled.shape)
+    #     #
+    #     # ranges = edged_intervals(booled)
+    #     # print("R0", ranges)
+    #     # if ranges[-1][2]:
+    #     #     ranges.append([ranges[-1][1], len(x_data_true), False])
+    #     # else:
+    #     #     ranges[-1][1] = len(x_data_true)
+    #     # print("R1", ranges)
+    #     # fix_ranges(ranges)
+    #     # print("R2", ranges)
+    #     # # ranges = shift_positives(np.array(ranges), - self.edge_shift, 128 + self.edge_shift)
+    #     # # print("R3", ranges)
+    #     # fix_ranges(ranges)
+    #     # print("R4", ranges)
+    #     #
+    #     return split_intervals(np.array(ranges), event_start)
