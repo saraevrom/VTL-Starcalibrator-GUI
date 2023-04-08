@@ -120,12 +120,12 @@ class TrackMarkup(ToolBase, PopupPlotable):
 
         self.tf_filter_info = tk.StringVar()
         tk.Label(right_panel, textvariable=self.tf_filter_info, justify=tk.LEFT) \
-            .grid(row=5, column=0, sticky="nw")
+            .grid(row=6, column=0, sticky="nw")
 
         self.params_form_parser = TrackMarkupForm()
 
         self.params_form = TkDictForm(right_panel, self.params_form_parser.get_configuration_root())
-        self.params_form.grid(row=6, column=0, sticky="nsew")
+        self.params_form.grid(row=7, column=0, sticky="nsew")
         right_panel.rowconfigure(6, weight=1)
 
 
