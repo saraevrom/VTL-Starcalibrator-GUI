@@ -111,12 +111,12 @@ class TrackMarkup(ToolBase, PopupPlotable):
         tk.Button(right_panel, text=get_locale("track_markup.btn.export"),
                   command=self.on_export_data).grid(row=2, column=0, sticky="ew")
         tk.Button(right_panel, text=get_locale("track_markup.btn.export_bg"),
-                  command=self.on_export_bg).grid(row=2, column=0, sticky="ew")
+                  command=self.on_export_bg).grid(row=3, column=0, sticky="ew")
         tk.Button(right_panel, text=get_locale("track_markup.btn.load"),
-                  command=self.on_load_data).grid(row=3, column=0, sticky="ew")
+                  command=self.on_load_data).grid(row=4, column=0, sticky="ew")
         if TENSORFLOW_INSTALLED:
             tk.Button(right_panel, text=get_locale("track_markup.btn.load_tf"),
-                      command=self.on_load_tf).grid(row=4, column=0, sticky="ew")
+                      command=self.on_load_tf).grid(row=5, column=0, sticky="ew")
 
         self.tf_filter_info = tk.StringVar()
         tk.Label(right_panel, textvariable=self.tf_filter_info, justify=tk.LEFT) \
