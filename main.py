@@ -25,6 +25,7 @@ from helper import add_help_menu
 from vtl_common.workspace_manager import Workspace
 
 from vtl_common import localization
+from compatibility.h5py_aliased_fields import AliasedDataFile
 
 
 localization.set_locale(parameters.LOCALE)
@@ -98,7 +99,8 @@ class App(tk.Tk):
     def reload_mat_file(self, filename, silent=False):
         print("Loading file:", filename)
         if filename and os.path.isfile(filename):
-            new_file = h5py.File(filename, "r")
+            #new_file = h5py.File(filename, "r")
+            new_file = AliasedDataFile(filename,"r")
             if not friendliness.check_data_file(new_file):
                 self.update_title()
                 return

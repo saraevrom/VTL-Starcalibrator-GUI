@@ -27,6 +27,7 @@ class CompileDialog(simpledialog.Dialog):
 
     def apply(self):
         formdata = self.form.get_values()
+        self.formdata = formdata
         self.form_parser.parse_formdata(formdata)
         self.result = self.form_parser.get_data()
 
@@ -66,4 +67,5 @@ def create_model(tk_parent):
 def compile_model(model,  tk_parent):
     compile_params = CompileDialog(tk_parent)
     if compile_params.result:
-        compile_params.compile_model(model)
+        compile_params.compile_model(model.model)
+        model.set_compile_parameters(compile_params.formdata)

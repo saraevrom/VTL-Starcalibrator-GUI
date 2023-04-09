@@ -138,6 +138,7 @@ class MatPlayer(ToolBase, PopupPlotable):
             #frame = self.file["data0"][frame_num]
             ut0 = self.ut0_s[frame_num]
             #ut0 = self.file["UT0"][frame_num]
+            print("UT0:", ut0)
             time_str = datetime.utcfromtimestamp(ut0).strftime(DATETIME_FORMAT)
             ffmodel = self.get_ff_model()
             filter_obj = self.form_data["filter"]

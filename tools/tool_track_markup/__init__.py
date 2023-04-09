@@ -528,14 +528,16 @@ class TrackMarkup(ToolBase, PopupPlotable):
             self.clear_events()
             with open(load_path, "r") as fp:
                 save_data = json.load(fp)
+                self.clear_events()
                 self.queue = save_data["queue"]
                 for e in save_data["found_event"]:
                     self.add_trackless_event(e[0], e[1])
                 for e in save_data["rejected_event"]:
                     self.add_tracked_event(e[0],e[1])
                 self.params_form.set_values(save_data["configuration"])
-                self.show_next_event()
+
                 self.just_started = False
+                self.show_next_event()
                 self.update_highlight_button()
                 self.update_answer_panel()
 

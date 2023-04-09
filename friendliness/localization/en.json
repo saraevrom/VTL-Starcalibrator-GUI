@@ -1,4 +1,5 @@
 {
   "attention": "Attention",
-  "attention.convert_data": "This is not converted data file. Use converter tool to make converted one.mbl;"
+  "attention.convert_data": "This is not converted data file. Use converter tool to make converted one.",
+  "attention.keras_nocompile": "Model is not compiled. Compile it before saving."
 }

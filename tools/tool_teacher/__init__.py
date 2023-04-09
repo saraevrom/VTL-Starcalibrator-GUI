@@ -1,3 +1,5 @@
+import json
+
 import matplotlib.pyplot as plt
 import tqdm
 
@@ -27,7 +29,7 @@ from extension.optional_pydot import PYDOT_INSTALLED
 import numba as nb
 from vtl_common.common_GUI.button_panel import ButtonPanel
 from tkinter.simpledialog import askinteger
-
+from friendliness import show_attention
 
 TENSORFLOW_MODELS_WORKSPACE = Workspace("ann_models")
 MDATA_WORKSPACE = Workspace("merged_data")
@@ -79,6 +81,7 @@ def plot_event(x_gen, y_par, block=False):
 class ToolTeacher(ToolBase):
     def __init__(self, master):
         super().__init__(master)
+        self._model_compile_params = None
         self.bg_pool = RandomIntervalAccess(self, "teacher.pool_bg.title", workspace=MDATA_WORKSPACE)
         self.bg_pool.grid(row=0, column=0, sticky="nsew")
         self.fg_pool = RandomFileAccess(self, "teacher.pool_fg.title", workspace=MODELED_TRACK_WORKSPACE)
@@ -145,7 +148,7 @@ class ToolTeacher(ToolBase):
 
     def try_recompile_model(self):
         if self.workon_model:
-            compile_model(self.workon_model.model, self)
+            self._model_compile_params = compile_model(self.workon_model, self)
 
     def ensure_model(self):
         if self.workon_model is None:
@@ -184,7 +187,11 @@ class ToolTeacher(ToolBase):
                                show_layer_activations=True,
                               )
                 else:
+                    if not self.workon_model.has_compile_parameters():
+                        show_attention("keras_nocompile")
+                        return
                     self.workon_model.save_model(filename)
+
 
     def on_load_model(self):
         filename = TENSORFLOW_MODELS_WORKSPACE.askopenfilename(

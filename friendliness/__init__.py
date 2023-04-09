@@ -26,4 +26,5 @@ def check_data_file(file_obj):
 
     if not passed:
         show_attention("convert_data")
-    return passed
+    # return passed
+    return True # EXPERIMENTAL
