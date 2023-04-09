@@ -85,7 +85,8 @@ class DataThreeStagePreProcessor(object):
 
         return res
 
-    def preprocess_bulk_robust(self, src):
+    def preprocess_bulk_robust(self, src_in):
+        src = src_in.astype(float)
         ma_win = self.ma_win
         mstd_win = self.mstd_win
         use_antiflash = self.use_antiflash

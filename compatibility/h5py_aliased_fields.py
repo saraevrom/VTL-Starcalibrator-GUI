@@ -2,8 +2,8 @@ import h5py
 import numpy as np
 
 SUBSTITUTIONS = {
-    "data0":("pdm_2d_rot_global",False, float),
-    "UT0": ("unixtime_dbl_global",True, float)
+    "data0":("pdm_2d_rot_global", lambda x: x),
+    "UT0": ("unixtime_dbl_global", lambda x: x[:,0])
 }
 
 class AliasedDataFile(h5py.File):
@@ -16,10 +16,7 @@ class AliasedDataFile(h5py.File):
             return got_item
         except KeyError as err:
             if item in SUBSTITUTIONS.keys():
-                new_key, flatten, dtype = SUBSTITUTIONS[item]
+                new_key, transformation = SUBSTITUTIONS[item]
                 retrieved = super().__getitem__(new_key)
-                if flatten:
-                    return np.array(retrieved, dtype=dtype).flatten()
-                else:
-                    return np.array(retrieved, dtype=dtype)
+                return transformation(retrieved)
             raise err
