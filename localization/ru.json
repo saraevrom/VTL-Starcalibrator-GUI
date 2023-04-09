@@ -222,6 +222,7 @@
   "track_markup.title": "Выделение фона",
   "track_markup.btn.remove_selected": "Удалить выбранный элемент",
   "track_markup.btn.reset": "Сброс",
+  "track_markup.btn.recheck_tracks": "Перепроверить треки",
   "track_markup.btn.save": "Сохранить выбор",
   "track_markup.btn.load": "Загрузить выбор",
   "track_markup.btn.load_tf": "Загрузить нейросеть",

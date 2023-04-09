@@ -224,6 +224,7 @@
   "track_markup.title": "Background extractor",
   "track_markup.btn.remove_selected": "Remove selected",
   "track_markup.btn.reset": "Reset",
+  "track_markup.btn.recheck_tracks": "Recheck tracks",
   "track_markup.btn.save": "Save selection",
   "track_markup.btn.load": "Load selection",
   "track_markup.btn.load_tf": "Load neural network",

@@ -29,7 +29,7 @@ def edged_intervals(array):
             persistent_value = v
 
     if len(ranges) == 0:
-        ranges.append([start_index, len(array), False])
+        ranges.append([start_index, len(array), bool(array[start_index])])
     elif start_index < len(array):
         ranges.append([start_index, len(array), not ranges[-1][2]])
 

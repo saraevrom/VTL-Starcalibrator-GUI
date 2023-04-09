@@ -19,7 +19,7 @@ import zipfile, h5py, io
 import os.path as ospath
 from .edges import EdgeProcessor
 from preprocessing.three_stage_preprocess import DataThreeStagePreProcessor
-
+from vtl_common.common_GUI.button_panel import ButtonPanel
 
 if TENSORFLOW_INSTALLED:
     from tensorflow import keras
@@ -104,29 +104,39 @@ class TrackMarkup(ToolBase, PopupPlotable):
         tk.Label(left_panel,text=get_locale("track_markup.label.rejected")).pack(side="bottom", fill="x", expand=False)
         right_panel = tk.Frame(self)
         right_panel.pack(side="right", fill="y")
-        tk.Button(right_panel, text=get_locale("track_markup.btn.reset"),
-                  command=self.on_reset).grid(row=0, column=0, sticky="ew")
-        tk.Button(right_panel, text=get_locale("track_markup.btn.save"),
-                  command=self.on_save_data).grid(row=1, column=0, sticky="ew")
-        tk.Button(right_panel, text=get_locale("track_markup.btn.export"),
-                  command=self.on_export_data).grid(row=2, column=0, sticky="ew")
-        tk.Button(right_panel, text=get_locale("track_markup.btn.export_bg"),
-                  command=self.on_export_bg).grid(row=3, column=0, sticky="ew")
-        tk.Button(right_panel, text=get_locale("track_markup.btn.load"),
-                  command=self.on_load_data).grid(row=4, column=0, sticky="ew")
+        self.button_panel = ButtonPanel(right_panel)
+        self.button_panel.grid(row=0, column=0, sticky="ew")
+        #right_panel.rowconfigure(0, weight=1)
+
+        self.button_panel.add_button(text=get_locale("track_markup.btn.reset"),
+             command=self.on_reset, row=0)
+        self.button_panel.add_button(text=get_locale("track_markup.btn.recheck_tracks"),
+                                     command=self.on_recheck_tracks, row=0)
+        self.button_panel.add_button(text=get_locale("track_markup.btn.save"),
+             command=self.on_save_data, row=1)
+        self.button_panel.add_button(text=get_locale("track_markup.btn.export"),
+             command=self.on_export_data, row=2)
+        self.button_panel.add_button(text=get_locale("track_markup.btn.export_bg"),
+             command=self.on_export_bg, row=3)
+        self.button_panel.add_button(text=get_locale("track_markup.btn.load"),
+             command=self.on_load_data, row=4)
+
+
         if TENSORFLOW_INSTALLED:
-            tk.Button(right_panel, text=get_locale("track_markup.btn.load_tf"),
-                      command=self.on_load_tf).grid(row=5, column=0, sticky="ew")
+            self.button_panel.add_button(text=get_locale("track_markup.btn.load_tf"),
+                      command=self.on_load_tf, row=5)
+            # tk.Button(right_panel, text=get_locale("track_markup.btn.load_tf"),
+            #           command=self.on_load_tf).grid(row=5, column=0, sticky="ew")
 
         self.tf_filter_info = tk.StringVar()
         tk.Label(right_panel, textvariable=self.tf_filter_info, justify=tk.LEFT) \
-            .grid(row=6, column=0, sticky="nw")
+            .grid(row=1, column=0, sticky="nw")
 
         self.params_form_parser = TrackMarkupForm()
 
         self.params_form = TkDictForm(right_panel, self.params_form_parser.get_configuration_root())
-        self.params_form.grid(row=7, column=0, sticky="nsew")
-        right_panel.rowconfigure(7, weight=1)
+        self.params_form.grid(row=2, column=0, sticky="nsew")
+        right_panel.rowconfigure(2, weight=1)
 
 
         self.plotter.pack(side="top", expand=True, fill="both")
@@ -165,6 +175,8 @@ class TrackMarkup(ToolBase, PopupPlotable):
         self.rejected_data.bind('<<ListboxSelect>>', self.on_review_tracked_select)
         self.update_highlight_button()
         self.update_answer_panel()
+
+
 
 
     def on_export_bg(self):
@@ -281,12 +293,18 @@ class TrackMarkup(ToolBase, PopupPlotable):
             self.reset_events()
 
 
+    def clear_tracks(self):
+        self.tracked_events.clear()
+        self.rejected_data.delete(0, tk.END)
+
+    def clear_trackless(self):
+        self.trackless_events.clear()
+        self.selected_data.delete(0, tk.END)
+
     def clear_events(self):
         self.current_event = None
-        self.selected_data.delete(0, tk.END)
-        self.rejected_data.delete(0, tk.END)
-        self.trackless_events.clear()
-        self.tracked_events.clear()
+        self.clear_tracks()
+        self.clear_trackless()
         self.queue.clear()
         self.update_highlight_button()
         self.update_answer_panel()
@@ -407,6 +425,15 @@ class TrackMarkup(ToolBase, PopupPlotable):
         self.update_answer_panel()
         self.update_highlight_button()
 
+    def on_recheck_tracks(self):
+        self.retract_event()
+        self.queue = self.queue + list(self.tracked_events)
+        self.clear_tracks()
+        self.show_next_event()
+        self.update_answer_panel()
+        gc.collect()
+
+
     def on_auto(self):
         gc.collect()
         self.sync_form()
@@ -423,11 +450,15 @@ class TrackMarkup(ToolBase, PopupPlotable):
         x_data = self._get_current_data(True)
         event_start, event_end = self.current_event
         booled_full = self.tf_model.trigger(x_data, trigger_params.threshold)
+        print(booled_full.any())
+        print(booled_full)
         ranges = edged_intervals(booled_full)
+        print(ranges)
         pos, neg = split_intervals(np.array(ranges), event_start)
 
         #pos, neg = self.form_data["trigger"].apply(self)
-
+        print("TRACKS:", pos)
+        print("NO TRACKS", neg)
         if not self.event_in_queue[0]:
             if self.event_in_queue[1][1]:
                 self.pop_event(self.event_in_queue[1][0], True)
