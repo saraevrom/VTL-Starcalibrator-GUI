@@ -505,8 +505,11 @@ class TrackMarkup(ToolBase, PopupPlotable):
             return self.tracked_events.pop(index)
 
     def on_save_data(self):
+        fbase = self.get_loaded_filename()
+        fbase = ospath.splitext(fbase)[0]
+
         save_path = MARKUP_WORKSPACE.asksaveasfilename(initialdir=".",filetypes=(("JSON", "*.json"),),
-                                                         initialfile="progress.json", parent=self)
+                                                         initialfile=f"track_progress-{fbase}.json", parent=self)
         if save_path:
             current_queue = self.queue.copy()
             if self.current_event is not None and self.retractable_event:
