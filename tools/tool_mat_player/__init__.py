@@ -58,8 +58,7 @@ class MatPlayer(ToolBase, PopupPlotable):
 
     def on_export(self):
         filename = WORKSPACE_EXPORT.asksaveasfilename(title=get_locale("matplayer.dialog.gif_target"),
-                                                          filetypes=[
-                                                              (get_locale("app.filedialog_formats.h5"), "*.h5")],
+                                                          auto_formats=["h5"],
                                                           parent=self)
         if filename and self.file:
             self.click_callback()
