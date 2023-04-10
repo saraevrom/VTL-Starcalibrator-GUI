@@ -294,8 +294,16 @@
   "mat_converter.downloader.button.access": "Войти",
   "mat_converter.downloader.download_directory": "Скачать всю папку",
 
+  "mat_converter.label.cut": "Режим вырезки",
   "mat_converter.label.l_cut": "Обрезка в начале",
-  "mat_converter.label.r_cut": "Оббрезка в конце",
+  "mat_converter.label.r_cut": "Обрезка в конце",
+  "mat_converter.label.cut_start": "От",
+  "mat_converter.label.cut_end": "До",
+  "mat_converter.label.length": "Длина",
+  "mat_converter.label.units": "Единицы",
+  "mat_converter.label.mode.cutoff": "Вырезка",
+  "mat_converter.label.mode.slice": "Срез",
+  "mat_converter.label.mode.interval": "Интервал с длиной",
 
   "mat_converter.downloader.messagebox.login_error.title": "Доступ",
   "mat_converter.downloader.messagebox.login_error.msg": "Не удалось соединиться с сервером {server}",

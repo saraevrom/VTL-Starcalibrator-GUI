@@ -218,6 +218,8 @@ class MatPlayer(ToolBase, PopupPlotable):
                 ys = filter_obj.preprocess_whole(ys, self.plotter.get_broken())
 
             ys = ys[ys_slice]
+            print("Y shape", ys.shape)
+            assert xs.shape[0] == ys.shape[0]
             return xs, ys
         else:
             return None
