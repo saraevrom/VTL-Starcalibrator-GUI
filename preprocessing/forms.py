@@ -4,10 +4,10 @@ from vtl_common.localization import get_locale
 from .three_stage_preprocess import DataThreeStagePreProcessor
 from .sliding_median_normalizer import SlidingMedianNormalizer
 
-def create_int_option(default_value):
+def create_int_option(default_value,win_key="win"):
         class IntOptionWrapped(OptionNode):
             SEL__none = create_label(get_locale("app.preprocess.advform.none"))
-            ITEM_TYPE = create_value_field(IntNode, get_locale("app.preprocess.advform.win"), default_value)
+            ITEM_TYPE = create_value_field(IntNode, get_locale("app.preprocess.advform."+win_key), default_value)
             DEFAULT_VALUE = default_value
 
         return IntOptionWrapped
@@ -31,8 +31,8 @@ class DataThreeStagesFilter(FormNode):
     USE_SCROLLVIEW = False
     DISPLAY_NAME = get_locale("app.preprocess.form.preprocess.tsf.title")
     FIELD__use_robust = create_value_field(BoolNode, get_locale("app.preprocess.form.preprocess.robust"), False)
-    FIELD__ma_win = create_value_field(create_int_option(10), get_locale("app.preprocess.form.preprocess.stage1"))
-    FIELD__mstd_win = create_value_field(create_int_option(100), get_locale("app.preprocess.form.preprocess.stage2"))
+    FIELD__ma_win = create_value_field(create_int_option(10,"ma_win"), get_locale("app.preprocess.form.preprocess.stage1"))
+    FIELD__mstd_win = create_value_field(create_int_option(100,"mstd_win"), get_locale("app.preprocess.form.preprocess.stage2"))
     FIELD__use_antiflash = create_value_field(BoolNode, get_locale("app.preprocess.form.preprocess.stage3"), True)
     FIELD__independent_pmt = create_value_field(BoolNode,
                                                 get_locale("app.preprocess.form.preprocess.independent_pmt"), False)

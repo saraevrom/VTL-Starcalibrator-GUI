@@ -6,10 +6,10 @@ from vtl_common.parameters import USE_DATASET_CREATOR, USE_TRAINER
 
 def add_tools(adder):
         if USE_VIEWER:
-                from .tool_mat_player import MatPlayer
+                from .tool_viewer import MatPlayer
                 adder("app.menu.tools.mat_player", MatPlayer)
         if USE_CONVERTER:
-                from tools.tool_mat_converter import MatConverter
+                from tools.tool_converter import MatConverter
                 adder("app.menu.tools.mat_converter", MatConverter)
         if USE_FLATFIELDER:
                 from .tool_flatfielder import FlatFielder

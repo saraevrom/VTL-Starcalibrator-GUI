@@ -14,7 +14,6 @@ from astropy.time import Time
 from vtl_common.astronomy import range_calculate, to_altaz
 import json
 from .random_roaming import RandomRoaming, maximize
-from tools.tool_mat_converter import MatConverter
 
 import matplotlib.pyplot as plt
 from vtl_common.parameters import MAIN_LATITUDE, MAIN_LONGITUDE
@@ -338,5 +337,3 @@ class StarCalibrator(ToolBase):
         self.settings_dict["f"] = f
         self.settings_push(["dec0", "ra0", "psi", "f"])
 
-    def on_converter_open(self):
-        MatConverter(self)

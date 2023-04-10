@@ -18,6 +18,9 @@ UNPROCESSED_DATA_WORKSPACE = Workspace("unprocessed_data")
 class FtpBrowser(simpledialog.Dialog):
 
     def __init__(self, parent, ftp_obj):
+        self.result_filelist = None
+        self.result_directory = None
+        self.download_all_dir = None
         self.ftp_obj = ftp_obj
         super().__init__(parent)
 
@@ -32,8 +35,12 @@ class FtpBrowser(simpledialog.Dialog):
         self.ftp_obj.dir()
 
     def body(self, master):
+        self.download_all_dir = tk.IntVar(self)
         print("BROWSER BUILDING")
-        self.files_listbox = tk.Listbox(self)
+        topcheck = tk.Checkbutton(master, text=get_locale("mat_converter.downloader.download_directory"),
+                                  variable=self.download_all_dir)
+        topcheck.pack(side="top", fill="x")
+        self.files_listbox = tk.Listbox(self, selectmode=tk.EXTENDED)
         self.files_listbox.bind("<Double-1>", self.on_doubleclick)
         self.cwd = tk.StringVar(self)
         self.listdir()
@@ -46,7 +53,7 @@ class FtpBrowser(simpledialog.Dialog):
     def on_doubleclick(self, event):
         cs = self.files_listbox.curselection()
         if cs:
-            sel = self.files_listbox.get(cs)
+            sel = self.files_listbox.get(cs[0])
             print(sel)
             try:
                 self.ftp_obj.cwd(sel)
@@ -57,7 +64,14 @@ class FtpBrowser(simpledialog.Dialog):
 
     def apply(self):
         self.result_directory = self.cwd.get()
-        self.result_filelist = self.files_listbox.get(1,tk.END)
+        if self.download_all_dir.get():
+            print("ENTIRE SELECT")
+            self.result_filelist = self.files_listbox.get(1,tk.END)
+        else:
+            print("PARTIAL SELECT")
+            cs = self.files_listbox.curselection()
+            self.result_filelist = [self.files_listbox.get(i) for i in cs]
+
 
 
 def verify_mat(file_path: str):
@@ -72,6 +86,11 @@ def verify_mat(file_path: str):
     except OSError:
         return False
 
+
+class TransmissionInterrupt(Exception):
+    def __init__(self, text):
+        super().__init__(text)
+        self.text = text
 
 class DownloaderWorker(Process):
     def __init__(self, conndata, src_dir, dst_dir, filelist, conn_pipe, *args, **kwargs):
@@ -98,7 +117,16 @@ class DownloaderWorker(Process):
             else:
                 finished = False
                 with open(ftp_destination, "ab") as fp:
+
+                    def write_hook(*args, **kwargs):
+                        if self.ftp_pipe.poll():
+                            if self.ftp_pipe.recv() == "STOP":
+                                print("DOWNLOADER STOP")
+                                raise TransmissionInterrupt("Transmission is interrupted by user")
+                        fp.write(*args, **kwargs)
+
                     while not finished:
+
                         if ftp is None:
                             ftp = FTP(self.ftp_addr, user=self.ftp_login, passwd=self.ftp_passwd, timeout=10)
                             ftp.cwd(self.ftp_src_dir)
@@ -110,9 +138,12 @@ class DownloaderWorker(Process):
                             else:
                                 print(f"Resuming transfer from {rest} for", filename)
 
-                            ftp.retrbinary(f'RETR {filename}', fp.write, rest=rest)
+                            ftp.retrbinary(f'RETR {filename}', write_hook, rest=rest)
                             print("Done")
                             finished = True
+                        except TransmissionInterrupt as inter:
+                            print(inter.text)
+                            break
                         except Exception as e:
                             ftp = None
                             gc.collect()
@@ -138,6 +169,10 @@ class Downloader(tk.Frame):
         self.add_entry("mat_converter.downloader.password", self.passwd, 3, show="*")
         ok_btn = tk.Button(self, text=get_locale("mat_converter.downloader.button.access"), command=self.on_access)
         ok_btn.grid(row=5, column=0, columnspan=2, sticky="nsew")
+
+        stop_btn = tk.Button(self, text=get_locale("mat_converter.downloader.button.stop"), command=self.on_stop)
+        stop_btn.grid(row=6, column=0, columnspan=2, sticky="nsew")
+
         progress_panel = tk.Frame(self)
         self.progressbar = ttk.Progressbar(progress_panel)
         self.current_file = tk.StringVar(self)
@@ -183,6 +218,10 @@ class Downloader(tk.Frame):
 
     def start_watching_pipe(self):
         self.after(20, self.watch_pipe)
+
+    def on_stop(self):
+        if self.downloader_process is not None:
+            self.download_pipe.send("STOP")
 
     def on_access(self):
         if self.downloader_process is not None:

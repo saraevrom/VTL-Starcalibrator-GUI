@@ -21,7 +21,7 @@ class ValueWrapper(tk.Frame):
         self.display_value.set("0")
         self.actual_value = 0
         self.utc_explorer = None
-        self.entry = EntryWithEnterKey(self, textvariable=self.display_value)
+        self.entry = EntryWithEnterKey(self, textvariable=self.display_value, justify=tk.CENTER)
         self.entry.on_commit = self.on_entry_commit
         self.entry.grid(row=0, column=0, sticky="nsew")
         self.columnconfigure(0, weight=1)
@@ -132,15 +132,24 @@ class PlayingPosition(Plotter):
         starter = tk.Button(subframe, text=get_locale("matplayer.button.set_start"), command=self.on_lcut)
         starter.grid(row=0, column=0, sticky="ew")
 
+        rewinder = tk.Button(subframe, text=get_locale("matplayer.button.jump_start"), command=self.on_ljump)
+        rewinder.grid(row=1, column=0, sticky="ew")
+
         self.min_cutter = ValueWrapper(subframe, self.validate_intervals, MARK_LOW)
-        self.min_cutter.grid(row=0, column=1, sticky="nsew")
+        self.min_cutter.grid(row=0, column=1, sticky="nsew", rowspan=2)
         self.pointer = ValueWrapper(subframe, self.validate_intervals, MARK_PTR, color="#CC0000")
-        self.pointer.grid(row=0, column=2, sticky="nsew")
+        self.pointer.grid(row=0, column=2, sticky="nsew", rowspan=2)
         self.max_cutter = ValueWrapper(subframe, self.validate_intervals, MARK_HIGH)
-        self.max_cutter.grid(row=0, column=3, sticky="nsew")
+        self.max_cutter.grid(row=0, column=3, sticky="nsew", rowspan=2)
+
+        resetter = tk.Button(subframe, text=get_locale("matplayer.button.select_all"), command=self.on_reset_view)
+        resetter.grid(row=2, column=1, sticky="ew", columnspan=3)
 
         ender = tk.Button(subframe, text=get_locale("matplayer.button.set_end"), command=self.on_rcut)
         ender.grid(row=0, column=4, sticky="ew")
+
+        fast_forwarder = tk.Button(subframe, text=get_locale("matplayer.button.jump_end"), command=self.on_rjump)
+        fast_forwarder.grid(row=1, column=4, sticky="ew")
 
         self._range_patch = Rectangle((0, -1), 1, 2, color="gray", alpha=0.25)
         self.axes.add_patch(self._range_patch)
@@ -161,6 +170,16 @@ class PlayingPosition(Plotter):
 
     def on_rcut(self):
         self.max_cutter.sync_to(self.pointer)
+
+    def on_ljump(self):
+        self.pointer.sync_to(self.min_cutter)
+
+    def on_rjump(self):
+        self.pointer.sync_to(self.max_cutter)
+
+    def on_reset_view(self):
+        self.min_cutter.set_value(self._low)
+        self.max_cutter.set_value(self._high)
 
     def set_mouse_pointer(self, new_x):
         self._mouse_pointer_position = new_x

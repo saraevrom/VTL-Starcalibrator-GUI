@@ -81,8 +81,12 @@ class ParallelWorker(Process):
         self.lcut = conf["lcut"]
         self.rcut = conf["rcut"]
         self.average_window = conf["average"]
+        self.cut_units = conf["units"]
 
     def run(self):
+        if self.cut_units == "Frames":
+            self.lcut *= self.average_window
+            self.rcut *= self.average_window
         simplified_files = simplify_files(self.filelist, self.lcut, self.rcut)
         start_time = time.time()
 

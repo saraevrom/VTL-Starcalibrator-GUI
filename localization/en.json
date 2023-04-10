@@ -80,12 +80,13 @@
   "app.preprocess.form.preprocess.title": "Preprocessing",
   "app.preprocess.form.preprocess.tsf.title": "Three stage filter",
   "app.preprocess.form.preprocess.robust": "Robust",
-  "app.preprocess.form.preprocess.independent_pmt" : "Independent PMT",
+  "app.preprocess.form.preprocess.independent_pmt" : "For each PMT separately",
   "app.preprocess.form.preprocess.mn.title": "Median normalization",
-  "app.preprocess.form.preprocess.stage1": "Apply MA",
-  "app.preprocess.form.preprocess.stage2": "Apply MSTD",
-  "app.preprocess.form.preprocess.stage3": "Apply antiflash",
-  "app.preprocess.advform.win": "Window",
+  "app.preprocess.form.preprocess.stage1": "Subtract Base Levels",
+  "app.preprocess.form.preprocess.stage2": "Scale by Noise Level",
+  "app.preprocess.form.preprocess.stage3": "Subtract Flash",
+  "app.preprocess.advform.ma_win": "MA Window",
+  "app.preprocess.advform.mstd_win": "MSTD Window",
   "app.preprocess.advform.none": "None",
 
   "app.model.form.title_create": "Create model",
@@ -217,8 +218,11 @@
 
   "matplayer.button.datetime_entry": "Enter date/time",
   "matplayer.dialog.datetime_prompt": "Enter target date and time",
-  "matplayer.button.set_start": "Set start to current frame",
-  "matplayer.button.set_end": "Set end to current frame",
+  "matplayer.button.set_start": "Set start",
+  "matplayer.button.set_end": "Set end",
+  "matplayer.button.jump_start": "Jump to start",
+  "matplayer.button.jump_end": "Jump to end",
+  "matplayer.button.select_all": "Select entire view",
   "matplayer.button.attach_ff": "Attach flat fielding to file",
 
   "track_markup.title": "Background extractor",
@@ -286,15 +290,18 @@
 
   "mat_converter.label.l_cut": "Cutoff start",
   "mat_converter.label.r_cut": "Cutoff end",
+  "mat_converter.label.units": "Cutoff units",
 
   "mat_converter.downloader.title": "Downloader",
   "mat_converter.downloader.addr": "Address",
   "mat_converter.downloader.login": "Login",
   "mat_converter.downloader.password": "Password",
   "mat_converter.downloader.button.access": "Access",
+  "mat_converter.downloader.button.stop": "Stop download",
   "mat_converter.downloader.messagebox.login_error.title": "Access",
   "mat_converter.downloader.messagebox.login_error.msg": "Accessing {server} failed.",
   "mat_converter.downloader.fieldialog.title": "Choose local directory",
+  "mat_converter.downloader.download_directory": "Download entire directory",
 
   "app.settings.separator.stars_selection": "Star selection",
   "app.settings.separator.orientation_parameters": "Orientation parameters",
@@ -354,8 +361,8 @@
 
 
 
-  "app.ff_warning": "NO FLAT FIELDING USED",
-  "app.loaded_file": "Loaded File {}",
+  "app.ff_warning": "NO FF",
+  "app.loaded_file": "DATA: {}",
 
   "app.menu.extension": "Extension",
   "app.extension.action_install_pkg": "Install {}",
