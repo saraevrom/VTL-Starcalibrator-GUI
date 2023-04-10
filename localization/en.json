@@ -288,9 +288,18 @@
   "mat_converter.messagebox.conversion.title": "Conversion",
   "mat_converter.messagebox.conversion.msg": "A file with {frames} frames will be created. Continue?",
 
+
+  "mat_converter.label.cut": "Cut",
   "mat_converter.label.l_cut": "Cutoff start",
   "mat_converter.label.r_cut": "Cutoff end",
+  "mat_converter.label.cut_start": "From",
+  "mat_converter.label.cut_end": "To",
+  "mat_converter.label.length": "Length",
   "mat_converter.label.units": "Cutoff units",
+  "mat_converter.label.mode.cutoff": "Cutoff",
+  "mat_converter.label.mode.slice": "Slice",
+  "mat_converter.label.mode.interval": "Interval with length",
+
 
   "mat_converter.downloader.title": "Downloader",
   "mat_converter.downloader.addr": "Address",

@@ -211,7 +211,7 @@ class DataThreeStagePreProcessor(object):
         if self.is_working():
             return slice_for_preprocess(src, slice_start, slice_end, self.get_affected_range())
         else:
-            return src, slice(None,None,None)
+            return src[slice_start:slice_end], slice(None,None,None)
 
 def get_window_data(signal_source, index, filter_obj:DataThreeStagePreProcessor):
     affect_window = filter_obj.get_affected_range()

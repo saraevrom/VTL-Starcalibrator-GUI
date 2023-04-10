@@ -37,7 +37,7 @@ def where_is_index_inverse(lengths, index):
     return source_i, index
 
 
-def simplify_files(file_list, lcut, rcut):
+def simplify_files(file_list, cutter, multiplier=1):
     '''
     Simplify representation of files for merging
     :param file_list: sit of files
@@ -53,6 +53,9 @@ def simplify_files(file_list, lcut, rcut):
             file_len = times.shape[0]
             file_lengths.append(file_len)
             full_len += file_len
+    lcut, rcut = cutter.cut(full_len)
+    lcut *= multiplier
+    rcut *= multiplier
     assert lcut < full_len
     assert rcut < full_len
     start_i,lcut1 = where_is_index(file_lengths, lcut)
@@ -78,16 +81,19 @@ class ParallelWorker(Process):
         self.conn = conn
         self.filelist = filelist
         self.output_filename = output_filename
-        self.lcut = conf["lcut"]
-        self.rcut = conf["rcut"]
+        self.cutter = conf["cutter"]
+        #self.lcut = conf["lcut"]
+        #self.rcut = conf["rcut"]
         self.average_window = conf["average"]
         self.cut_units = conf["units"]
 
     def run(self):
         if self.cut_units == "Frames":
-            self.lcut *= self.average_window
-            self.rcut *= self.average_window
-        simplified_files = simplify_files(self.filelist, self.lcut, self.rcut)
+            multiplier = self.average_window
+        else:
+            multiplier = 1
+
+        simplified_files = simplify_files(self.filelist, self.cutter, multiplier)
         start_time = time.time()
 
         with h5py.File(self.output_filename, "w") as output_file:
