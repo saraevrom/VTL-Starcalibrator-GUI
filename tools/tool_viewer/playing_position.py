@@ -1,5 +1,5 @@
 from vtl_common.localized_GUI.plotter import Plotter
-from .datetime_parser import parse_datetimes
+from vtl_common.datetime_parser import parse_datetimes
 import tkinter as tk
 from vtl_common.localization import get_locale
 from vtl_common.common_GUI.modified_base import EntryWithEnterKey
