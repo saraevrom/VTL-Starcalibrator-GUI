@@ -219,7 +219,6 @@ class MatPlayer(ToolBase, PopupPlotable):
 
             ys = ys[ys_slice]
             print("Y shape", ys.shape)
-            assert xs.shape[0] == ys.shape[0]
             return xs, ys
         else:
             return None
