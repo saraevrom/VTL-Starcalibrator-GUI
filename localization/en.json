@@ -222,7 +222,7 @@
   "matplayer.button.set_end": "Set end",
   "matplayer.button.jump_start": "Jump to start",
   "matplayer.button.jump_end": "Jump to end",
-  "matplayer.button.select_all": "Select entire view",
+  "matplayer.button.select_all": "Reset",
   "matplayer.button.attach_ff": "Attach flat fielding to file",
 
   "track_markup.title": "Background extractor",
