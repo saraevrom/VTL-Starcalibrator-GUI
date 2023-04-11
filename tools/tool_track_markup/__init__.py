@@ -217,7 +217,7 @@ class TrackMarkup(ToolBase, PopupPlotable):
                         h5_file = h5py.File(buffer, "w")
 
                         #plot_data = self.file["data0"][track_start:track_end]
-                        plot_data, plot_data_cutter = self._get_data_at_semiprepared(track_start, track_end, True, margin_add=128)
+                        plot_data, plot_data_cutter = self._get_data_at_semiprepared(track_start, track_end, True, margin_add=256)
                         ut0 = self.file["UT0"][track_start:track_end]
                         self.sync_form()
                         trigger:EdgeProcessor = self.form_data["trigger"]
@@ -676,7 +676,7 @@ class TrackMarkup(ToolBase, PopupPlotable):
             e_start, e_end = self.current_event
             if trigger_params.max_plot >= abs(e_end - e_start) >= 128:
                 #self.form_data["trigger"].get_prob(self, axes)
-                x_data, cutter = self._get_current_data_semiprepared(True, margin_add=128)
+                x_data, cutter = self._get_current_data_semiprepared(True, margin_add=256)
                 self.tf_model.plot_over_data(x_data, e_start, e_end, axes, cutter=cutter)
 
 
