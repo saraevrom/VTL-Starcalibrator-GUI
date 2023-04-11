@@ -217,12 +217,13 @@ class TrackMarkup(ToolBase, PopupPlotable):
                         h5_file = h5py.File(buffer, "w")
 
                         #plot_data = self.file["data0"][track_start:track_end]
-                        plot_data = self._get_data_at(track_start, track_end, True)
+                        plot_data, plot_data_cutter = self._get_data_at_semiprepared(track_start, track_end, True, margin_add=128)
                         ut0 = self.file["UT0"][track_start:track_end]
                         self.sync_form()
                         trigger:EdgeProcessor = self.form_data["trigger"]
                         #bl, br, tl, tr = self.form_data["trigger"].get_triggering(self, plot_data)
                         res = self.tf_model.trigger_split(plot_data, trigger.threshold)
+                        plot_data = plot_data[plot_data_cutter]
                         bl, br, tl, tr = [item.any() for item in res]
 
                         print(f"TRACK {index}:")
@@ -447,9 +448,10 @@ class TrackMarkup(ToolBase, PopupPlotable):
 
         trigger_params: EdgeProcessor = self.form_data["trigger"]
 
-        x_data = self._get_current_data(True)
+        x_data, xdata_cut = self._get_current_data_semiprepared(True, margin_add=128)
         event_start, event_end = self.current_event
         booled_full = self.tf_model.trigger(x_data, trigger_params.threshold)
+        booled_full = booled_full[xdata_cut]
         print(booled_full.any())
         print(booled_full)
         ranges = edged_intervals(booled_full)
@@ -633,18 +635,28 @@ class TrackMarkup(ToolBase, PopupPlotable):
         return plot_data
 
 
-    def _get_data_at(self, t1, t2, use_nn_filter=False):
+    def _get_data_at_semiprepared(self, t1, t2, use_nn_filter=False, margin_add=0):
         # signal = self.file["data0"][t1:t2]
-        signal, signal_cutter = self.get_filter(use_nn_filter).prepare_array(self.file["data0"], t1, t2)
+        signal, signal_cutter = self.get_filter(use_nn_filter).prepare_array(self.file["data0"], t1, t2,
+                                                                             margin_add=margin_add)
         model = self.get_ff_model()
         if model:
             signal = model.apply(signal)
             signal[:, np.logical_not(self.plotter.alive_pixels_matrix)] = 0
 
         current_data = self.apply_filter(signal, use_nn_filter)
-        current_data = current_data[signal_cutter]
+        # current_data = current_data[signal_cutter]
         # print("ACCESSED", current_data.shape)
-        return current_data
+        return current_data, signal_cutter
+
+    def _get_current_data_semiprepared(self, use_nn_filter=False, margin_add=0):
+        t1, t2 = self.current_event
+        return self._get_data_at_semiprepared(t1,t2,use_nn_filter,margin_add)
+
+    def _get_data_at(self, t1, t2, use_nn_filter=False):
+        # signal = self.file["data0"][t1:t2]
+        current_data, signal_cutter = self._get_data_at_semiprepared(t1, t2, use_nn_filter, margin_add=0)
+        return current_data[signal_cutter]
 
     def _get_current_data(self, use_nn_filter=False):
         t1, t2 = self.current_event
@@ -664,8 +676,8 @@ class TrackMarkup(ToolBase, PopupPlotable):
             e_start, e_end = self.current_event
             if trigger_params.max_plot >= abs(e_end - e_start) >= 128:
                 #self.form_data["trigger"].get_prob(self, axes)
-                x_data = self._get_current_data(True)
-                self.tf_model.plot_over_data(x_data, e_start, e_end, axes)
+                x_data, cutter = self._get_current_data_semiprepared(True, margin_add=128)
+                self.tf_model.plot_over_data(x_data, e_start, e_end, axes, cutter=cutter)
 
 
 

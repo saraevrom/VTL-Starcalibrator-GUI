@@ -207,9 +207,9 @@ class DataThreeStagePreProcessor(object):
     def is_working(self):
         return self.is_sliding() or self.use_antiflash
 
-    def prepare_array(self, src, slice_start, slice_end):
+    def prepare_array(self, src, slice_start, slice_end, margin_add=0):
         if self.is_working():
-            return slice_for_preprocess(src, slice_start, slice_end, self.get_affected_range())
+            return slice_for_preprocess(src, slice_start, slice_end, self.get_affected_range()+margin_add)
         else:
             return src[slice_start:slice_end], slice(None,None,None)
 

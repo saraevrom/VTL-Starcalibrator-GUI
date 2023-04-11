@@ -124,7 +124,7 @@ class ModelWrapper(object):
         arr = self.trigger(x, threshold)
         return arr, arr, arr, arr
 
-    def plot_over_data(self, x, start, end, axes):
+    def plot_over_data(self, x, start, end, axes, cutter):
         raise NotImplementedError()
 
     def get_y_spec(self):

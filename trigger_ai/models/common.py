@@ -41,8 +41,10 @@ def splat_select(bool_arg, window):
         result_arr[i:i + window] = np.logical_or(bool_arg[i], result_arr[i:i + window])
     return result_arr
 
-def plot_offset(axes, xs, ys, offset, label, style):
+def plot_offset(axes, xs, ys, offset, label, style, cutter = None):
     draw_y = deconvolve_windows(ys,128) + offset
+    if cutter is not None:
+        draw_y = draw_y[cutter]
     print(draw_y)
     axes.plot(xs, draw_y, style, color="black", label=label)
     axes.fill_between(xs, offset, draw_y, color="gray")

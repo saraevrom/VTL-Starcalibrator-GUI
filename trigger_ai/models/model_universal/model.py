@@ -82,16 +82,17 @@ class UniversalModel(ModelWrapper):
         else:
             return super().trigger_split(x, threshold)
 
-    def plot_over_data(self, x, start, end, axes):
+    def plot_over_data(self, x, start, end, axes, cutter):
         mode = self.get_mode()
         y_data = self._predict_raw(x)
+        #y_data = y_data[cutter]
         xs = np.arange(start, end)
         if mode == OUT_SPLIT:
             print("PLOT!")
-            plot_offset(axes, xs, y_data[:, 0], 20, "bottom left", "-")
-            plot_offset(axes, xs, y_data[:, 1], 22, "bottom right", "--")
-            plot_offset(axes, xs, y_data[:, 2], 24, "top left", "-.")
-            plot_offset(axes, xs, y_data[:, 3], 26, "top right", ":")
+            plot_offset(axes, xs, y_data[:, 0], 20, "bottom left", "-", cutter=cutter)
+            plot_offset(axes, xs, y_data[:, 1], 22, "bottom right", "--", cutter=cutter)
+            plot_offset(axes, xs, y_data[:, 2], 24, "top left", "-.", cutter=cutter)
+            plot_offset(axes, xs, y_data[:, 3], 26, "top right", ":", cutter=cutter)
         else:
             if mode == OUT_SOFT:
                 y_data = y_data[:, 1]
