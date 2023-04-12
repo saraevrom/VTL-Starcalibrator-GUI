@@ -85,29 +85,14 @@ class DataThreeStagePreProcessor(object):
 
         return res
 
-    def preprocess_bulk_robust(self, src_in):
-        src = src_in.astype(float)
-        ma_win = self.ma_win
-        mstd_win = self.mstd_win
-        use_antiflash = self.use_antiflash
-        if ma_win != 0:
-            stage1 = moving_median_subtract(src, ma_win)
+    def preprocess_bulk(self, src):
+
+        if self.use_robust:
+            stage1_f = moving_median_subtract
+            stage2_f = reduce_noise_robust
         else:
-            stage1 = src[:]
-
-        if mstd_win != 0:
-            stage2 = reduce_noise_robust(stage1, mstd_win)
-        else:
-            stage2 = stage1[:]
-
-        if use_antiflash:
-            stage3 = antiflash(stage2)
-        else:
-            stage3 = stage2[:]
-
-        return stage3[:]
-
-    def preprocess_bulk_norobust(self, src):
+            stage1_f = moving_average_subtract
+            stage2_f = reduce_noise
 
         ma_win = self.ma_win
 
@@ -116,12 +101,12 @@ class DataThreeStagePreProcessor(object):
         use_antiflash = self.use_antiflash
 
         if ma_win != 0:
-            stage1 = moving_average_subtract(src, ma_win)
+            stage1 = stage1_f(src, ma_win)
         else:
             stage1 = src[:]
 
         if mstd_win != 0:
-            stage2 = reduce_noise(stage1, mstd_win)
+            stage2 =stage2_f(stage1, mstd_win)
         else:
             stage2 = stage1[:]
 
@@ -132,22 +117,15 @@ class DataThreeStagePreProcessor(object):
 
         return stage3
 
-
-    def _preprocess_bulk(self, src):
-        if self.use_robust:
-            return self.preprocess_bulk_robust(src)
-        else:
-            return self.preprocess_bulk_norobust(src)
-
     def preprocess_whole(self, src: np.ndarray, broken: np.ndarray):
         if self.independent_pmt:
             signal = np.zeros(src.shape)
-            signal[:, :8, :8] = self._preprocess_bulk(src[:, :8, :8])
-            signal[:, 8:, :8] = self._preprocess_bulk(src[:, 8:, :8])
-            signal[:, :8, 8:] = self._preprocess_bulk(src[:, :8, 8:])
-            signal[:, 8:, 8:] = self._preprocess_bulk(src[:, 8:, 8:])
+            signal[:, :8, :8] = self.preprocess_bulk(src[:, :8, :8])
+            signal[:, 8:, :8] = self.preprocess_bulk(src[:, 8:, :8])
+            signal[:, :8, 8:] = self.preprocess_bulk(src[:, :8, 8:])
+            signal[:, 8:, 8:] = self.preprocess_bulk(src[:, 8:, 8:])
         else:
-            signal = self._preprocess_bulk(src)
+            signal = self.preprocess_bulk(src)
 
         if broken is not None:
             # noise = np.std(signal[:, np.logical_not(broken)])
