@@ -85,8 +85,8 @@ class DataThreeStagePreProcessor(object):
 
         return res
 
-    def preprocess_bulk(self, src):
-
+    def preprocess_bulk(self, src_raw):
+        src = src_raw.astype(float)
         if self.use_robust:
             stage1_f = moving_median_subtract
             stage2_f = reduce_noise_robust
