@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt	#to plot
 import matplotlib.gridspec as gridspec	#subplots
 from scipy.optimize import curve_fit    #fit curves
 from scipy.special import erf   #error function
-import Coordinates as cor
+import coordinates as cor
 
 ###################################################################
 #colors

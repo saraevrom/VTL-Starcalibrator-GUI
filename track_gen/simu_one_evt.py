@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt	#to plot
 import matplotlib.gridspec as gridspec	#subplots
 from scipy.optimize import curve_fit    #fit curves
 from scipy.special import erf   #error function
-import Coordinates as cor
-import Tracks_functions as Trf
+import coordinates as cor
+import tracks_functions as Trf
 import pixel_map as PxM
 
 ####################################################

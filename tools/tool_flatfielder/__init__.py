@@ -1,5 +1,7 @@
+import gc
 from tkinter import ttk
 import tkinter as tk
+import numba as nb
 from .dual_highlighting_plotter import DualHighlightingplotter
 from vtl_common.common_GUI import SettingMenu
 from .settings_build import build_settings
@@ -23,6 +25,18 @@ REPLACE = 0
 APPEND = 1
 AMEND = 2
 
+
+@nb.njit(cache=True)
+def collapse_array(data0, skip):
+    frames, width, height = data0.shape()
+    res_length = int(np.ceil(frames/skip))
+    res_array = np.zeros((res_length,width,height))
+    j = 0
+    for i in range(0, len(data0), skip):
+        layer = np.mean(data0[i:i + skip], axis=0)
+        res_array[j] = layer
+        j+=1
+    return res_array
 
 class FlatFielder(ToolBase):
     def __init__(self, master):
@@ -60,6 +74,9 @@ class FlatFielder(ToolBase):
         self.rowconfigure(1, weight=1)
         self.settings_dict = dict()
         self.settings_menu.commit_action = self.on_apply_settings
+
+
+
         self.t1_setting = self.settings_menu.lookup_setting("time_1")
         self.t2_setting = self.settings_menu.lookup_setting("time_2")
 
@@ -216,6 +233,8 @@ class FlatFielder(ToolBase):
 
 
     def on_loaded_file_success(self):
+        self._last_skip = None
+        self._collapsed_data = None
         self.on_apply_settings()
         #self.propagate_limits()
         #self.draw_plot()
@@ -224,9 +243,12 @@ class FlatFielder(ToolBase):
         data0 = self.file["data0"]
         skip = self.settings_dict["samples_mean"]
         res_array = []
+        gc.collect()
         for i in range(0, len(data0), skip):
             layer = np.mean(data0[i:i+skip], axis=0)
             res_array.append(layer)
+        #res_array = collapse_array(np.array(data0), skip) # Lord have mercy
+
         self.drawn_data = np.array(res_array)
         apparent_data = self.drawn_data
         if (self.remembered_model is not None) and self.settings_dict["use_model"]:
