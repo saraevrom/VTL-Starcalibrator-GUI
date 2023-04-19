@@ -256,6 +256,8 @@
   "track_markup.form.trigger.max_data_plot": "Лимит данных для построения",
   "track_markup.label.accepted": "Интервалы без треков",
   "track_markup.label.rejected": "Интервалы с треками",
+  "track_markup.label.schedule": "Неразмеченные интервалы",
+  "track_markup.label.schedule_2": "Интервалы в процессе обработки",
   "track_markup.form.noise_suppress_use": "Использовать подавление шума",
   "track_markup.form.flash_suppress_use": "Использовать подавление вспышек",
   "track_markup.form.noise_suppress_window": "Окно для шумоподавления",

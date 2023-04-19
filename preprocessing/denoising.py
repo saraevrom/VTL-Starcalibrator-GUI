@@ -220,5 +220,5 @@ def slice_for_preprocess(source, slice_min, slice_max, margin):
 
     local_start = slice_min - truncate_start
     local_end = slice_max - truncate_start
-
+    print("CUT", truncate_start, truncate_end)
     return source[truncate_start:truncate_end], slice(local_start, local_end)

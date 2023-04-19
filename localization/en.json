@@ -256,6 +256,8 @@
   "track_markup.form.override_ann": "Override ANN filter",
   "track_markup.label.accepted": "Accepted intervals (without tracks)",
   "track_markup.label.rejected": "Rejected intervals (with tracks)",
+  "track_markup.label.schedule": "Unmarked intervals",
+  "track_markup.label.schedule_2": "Intervals under processing",
   "track_markup.form.noise_suppress_use": "Use noise suppression",
   "track_markup.form.flash_suppress_use": "Use flash suppression",
   "track_markup.form.noise_suppress_window": "Noise suppression MSTD window",
