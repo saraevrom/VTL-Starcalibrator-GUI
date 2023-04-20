@@ -1,6 +1,6 @@
 import tkinter as tk
 from vtl_common.localization import get_locale
-from .storage import ConservativeStorage
+from .storage import ConservativeStorage, IntervalStorage, ArrayStorage
 
 
 class Storing(object):
@@ -41,8 +41,9 @@ class DisplayStorage(tk.Frame, Storing):
         label = tk.Label(self,text=get_locale(label_key))
         label.pack(side="top", fill=tk.X)
         self.listbox = tk.Listbox(self)
+        self.listbox.bind('<<ListboxSelect>>', self.on_listbox_select)
         self.listbox.pack(side="bottom", fill=tk.BOTH, expand=True)
-        self.on_propose_item = None
+        self.propose_item_function = None
 
     def on_change(self):
         if self.storage:
@@ -58,5 +59,19 @@ class DisplayStorage(tk.Frame, Storing):
         self.on_change()
 
     def on_listbox_select(self, event):
-        if self.on_propose_item:
-            pass
+        if self.propose_item_function:
+            cursel = self.listbox.curselection()
+            if cursel:
+                index = cursel[0]
+                if isinstance(self.storage, IntervalStorage):
+                    arg = self.storage.get_available()[index]
+                elif isinstance(self.storage, ArrayStorage):
+                    arg = index
+                else:
+                    return
+                item = self.storage.take_external(arg)
+                if not self.propose_item_function(item):
+                    self.storage.store_external(item)
+                    self.listbox.selection_clear(0, tk.END)
+
+            self.on_change()

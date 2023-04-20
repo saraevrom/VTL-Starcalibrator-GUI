@@ -18,6 +18,16 @@ from .display import Display
 
 from vtl_common.workspace_manager import Workspace
 
+from extension.optional_tensorflow import TENSORFLOW_INSTALLED
+
+if TENSORFLOW_INSTALLED:
+    from tensorflow import keras
+    from trigger_ai.models.model_wrapper import ModelWrapper
+else:
+    keras = None
+    ModelWrapper = None
+
+
 MARKUP_WORKSPACE = Workspace("marked_up_tracks")
 TENSORFLOW_MODELS_WORKSPACE = Workspace("ann_models")
 TRACKS_WORKSPACE = Workspace("tracks")
@@ -46,6 +56,8 @@ def enwrap_interval_storage(outer, taken):
 class ToolMarkup(ToolBase, PopupPlotable):
     def __init__(self, master):
         ToolBase.__init__(self, master)
+        self.tf_model = None
+        self.tf_filter = None
         self.display = Display(self)
         PopupPlotable.__init__(self, self.display.plotter)
         self.get_mat_file()
@@ -70,9 +82,11 @@ class ToolMarkup(ToolBase, PopupPlotable):
 
         self.tracks = DisplayStorage(left_panel, "track_markup.label.rejected")
         self.tracks.grid(row=0, column=0, sticky="nsew")
+        self.tracks.propose_item_function = self.propose_event
 
         self.background = DisplayStorage(left_panel, "track_markup.label.accepted")
         self.background.grid(row=1, column=0, sticky="nsew")
+        self.background.propose_item_function = self.propose_event
 
 
         bottom_left_panel = tk.Frame(left_panel)
@@ -80,10 +94,12 @@ class ToolMarkup(ToolBase, PopupPlotable):
 
         self.schedule = DisplayStorage(bottom_left_panel, "track_markup.label.schedule")
         self.schedule.grid(row=0, column=0,sticky="nsew")
+        self.schedule.propose_item_function = self.propose_event
 
         self.afterprocessing = DisplayStorage(bottom_left_panel, "track_markup.label.schedule_2")
         self.afterprocessing.grid(row=0, column=1, sticky="nsew")
         self.afterprocessing.set_storage(ArrayStorage())
+        self.afterprocessing.propose_item_function = self.propose_event
 
         bottom_left_panel.columnconfigure(0,weight=1)
         bottom_left_panel.columnconfigure(1,weight=1)
@@ -101,7 +117,7 @@ class ToolMarkup(ToolBase, PopupPlotable):
 
         self.params_form = TkDictForm(right_panel, self.params_form_parser.get_configuration_root())
         self.params_form.grid(row=2, column=0, sticky="nsew")
-        self.params_form.on_commit = self.on_form_changed
+        #self.params_form.on_commit = self.on_form_changed
         right_panel.rowconfigure(2, weight=1)
 
         self.button_panel = ButtonPanel(right_panel)
@@ -119,6 +135,10 @@ class ToolMarkup(ToolBase, PopupPlotable):
         self.button_panel.add_button(text=get_locale("track_markup.btn.load"),
                                      command=self.on_load_data, row=4)
 
+        if TENSORFLOW_INSTALLED:
+            self.button_panel.add_button(text=get_locale("track_markup.btn.load_tf"),
+                      command=self.on_load_tf, row=5)
+
         self.button_panel.grid(row=0, column=0, sticky="ew")
 
         # Bottom panel
@@ -134,12 +154,19 @@ class ToolMarkup(ToolBase, PopupPlotable):
         self.no_btn = tk.Button(bottom_panel, text=get_locale("track_markup.btn.track_no"),
                                 command=self.on_track_invisible)
 
+        if TENSORFLOW_INSTALLED:
+            self.auto_btn = tk.Button(bottom_panel, text=get_locale("track_markup.btn.im_too_lazy"),
+                      command=self.on_auto)
+        else:
+            self.auto_btn = None
+
         self.start_btn = tk.Button(bottom_panel, text=get_locale("track_markup.btn.start"),
                                    command=self.on_start)
         self.start_btn.pack(expand=True, fill="both")
         self._formdata = None
 
-        self.on_form_changed()
+        self.sync_form()
+        self.propagate_formdata()
 
 
     def update_answer_panel(self):
@@ -147,30 +174,50 @@ class ToolMarkup(ToolBase, PopupPlotable):
             self.start_btn.pack_forget()
             self.yes_btn.pack(side="left", expand=True, fill="both")
             self.no_btn.pack(side="right", expand=True, fill="both")
-            # if self.auto_btn:
-            #     self.auto_btn.pack(expand=True, fill="both")
+            if self.auto_btn:
+                self.auto_btn.pack(expand=True, fill="both")
         else:
             self.yes_btn.pack_forget()
             self.no_btn.pack_forget()
-            # if self.auto_btn:
-            #     self.auto_btn.pack_forget()
+            if self.auto_btn:
+                self.auto_btn.pack_forget()
             self.start_btn.pack(expand=True, fill="both")
 
 
-    def on_form_changed(self):
+
+    def sync_form(self):
         formdata = self.params_form.get_values()
         self.params_form_parser.parse_formdata(formdata)
         formdata = self.params_form_parser.get_data()
-        self.display.set_formdata(formdata)
+
         self._formdata = formdata
+
+    def propagate_formdata(self, lazy=False):
+        self.display.set_formdata(self._formdata, lazy)
 
     #Button press events
     def on_redraw_event(self):
+        self.sync_form()
+        self.propagate_formdata()
+
+
+    def on_auto(self):
         pass
 
+    def on_load_tf(self):
+        filename = TENSORFLOW_MODELS_WORKSPACE.askopenfilename(
+            title=get_locale("app.filedialog.load_model.title"),
+            filetypes=[(get_locale("app.filedialog_formats.model"), "*.h5")]
+        )
+        if filename:
+            self.tf_model = ModelWrapper.load_model(filename)
+            self.tf_filter = self.tf_model.get_filter()
+            self.tf_filter_info.set("ANN " + self.tf_filter.get_representation())
 
     def on_track_visible(self):
         if self.ensure_storage():
+            self.sync_form()
+            self.propagate_formdata(True)
             interval:Interval
             interval = self.display.storage.take_external()
             if interval is not None:
@@ -191,6 +238,7 @@ class ToolMarkup(ToolBase, PopupPlotable):
             self.pull_next_interval()
 
     def on_start(self):
+        self.sync_form()
         if self.ensure_storage():
             self.pull_next_interval()
 
@@ -250,6 +298,8 @@ class ToolMarkup(ToolBase, PopupPlotable):
                 json.dump(save_data, fp, indent=4, sort_keys=True)
 
     def on_load_data(self):
+        if not self.file:
+            return
         load_path = MARKUP_WORKSPACE.askopenfilename(initialdir=".", filetypes=(("JSON", "*.json"),),
                                                      initialfile="progress.json", parent=self)
         if load_path:
@@ -329,3 +379,9 @@ class ToolMarkup(ToolBase, PopupPlotable):
 
     def get_plot_data(self):
         return self.display.get_plot_data()
+
+    def propose_event(self, item):
+        if self.display.storage.try_move_to(self.schedule.storage):
+            return self.display.storage.store_external(item)
+
+        return False

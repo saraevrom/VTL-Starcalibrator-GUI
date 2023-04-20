@@ -21,8 +21,8 @@ class ConservativeStorage(object):
     def take(self, *args):
         raise NotImplementedError("Cannot take obj from here")
 
-    def take_external(self):
-        item = self.take()
+    def take_external(self, *args):
+        item = self.take(*args)
         if item is not None and self.on_take:
             self.on_take()
         return item

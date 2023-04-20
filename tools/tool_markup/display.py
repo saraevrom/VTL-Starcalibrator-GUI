@@ -1,3 +1,4 @@
+import gc
 import tkinter as tk
 import numpy as np
 
@@ -26,9 +27,10 @@ class Display(tk.Frame):
         self._slicer_cache = None
         self._interval = None
 
-    def set_formdata(self, formdata):
+    def set_formdata(self, formdata, lazy=False):
         self._formdata = formdata
-        self.on_weak_change()
+        if not lazy:
+            self.on_weak_change()
 
     def drop(self):
         self.storage.drop()
@@ -51,6 +53,7 @@ class Display(tk.Frame):
         self.on_strong_change()
 
     def on_strong_change(self):
+        gc.collect()
         if self.storage.has_item() and self._formdata and self.controller.file:
             interval = self.storage.item
             start = interval.start
