@@ -5,6 +5,7 @@ class ConservativeStorage(object):
     def __init__(self):
         self.on_store = None
         self.on_take = None
+        self.last_source = None
 
     def get_available(self):
         raise NotImplementedError("Cannot determine what is here")
@@ -27,10 +28,11 @@ class ConservativeStorage(object):
             self.on_take()
         return item
 
-    def store_external(self, item):
+    def store_external(self, item, source=None):
         success = self.store(item)
         if success and self.on_store:
             self.on_store()
+        self.last_source = source
         return success
 
 
@@ -38,6 +40,7 @@ class ConservativeStorage(object):
         item = self.take(*args)
         if item is not None:
             if target.store(item):
+                target.last_source = self
                 if callback:
                     if target.on_store:
                         target.on_store()
@@ -47,6 +50,11 @@ class ConservativeStorage(object):
             else:
                 self.store(item)
                 return False
+        return False
+
+    def try_retract(self,*args, callback=True):
+        if self.last_source is not None:
+            return self.try_move_to(self.last_source,*args, callback=callback)
         return False
 
     def serialize(self):

@@ -70,7 +70,7 @@ class DisplayStorage(tk.Frame, Storing):
                 else:
                     return
                 item = self.storage.take_external(arg)
-                if not self.propose_item_function(item):
+                if not self.propose_item_function(item, self.storage):
                     self.storage.store_external(item)
                     self.listbox.selection_clear(0, tk.END)
 

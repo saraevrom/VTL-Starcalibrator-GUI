@@ -380,8 +380,8 @@ class ToolMarkup(ToolBase, PopupPlotable):
     def get_plot_data(self):
         return self.display.get_plot_data()
 
-    def propose_event(self, item):
-        if self.display.storage.try_move_to(self.schedule.storage):
-            return self.display.storage.store_external(item)
+    def propose_event(self, item, source=None):
+        if not self.display.storage.has_item() or self.display.storage.try_retract():
+            return self.display.storage.store_external(item, source)
 
         return False
