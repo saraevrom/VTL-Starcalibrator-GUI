@@ -43,6 +43,13 @@ class Display(tk.Frame):
         self.plotter.set_broken(broken)
         self.on_weak_change()
 
+    def serialize(self):
+        return  self.storage.serialize()
+
+    def deserialize_inplace(self, obj):
+        self.storage.deserialize_inplace(obj)
+        self.on_strong_change()
+
     def on_strong_change(self):
         if self.storage.has_item() and self._formdata and self.controller.file:
             interval = self.storage.item
@@ -59,6 +66,7 @@ class Display(tk.Frame):
             self._data_cache = None
             self._slicer_cache = None
             self._interval = None
+        self._processed_data = None
         self.on_weak_change()
 
 
@@ -82,3 +90,9 @@ class Display(tk.Frame):
             self.plotter.axes.set_title("---")
         self.plotter.update_matrix_plot(True)
         self.plotter.draw()
+
+    def get_plot_data(self):
+        if self._processed_data is None:
+            return None
+
+        return self._interval.to_arange(), self._processed_data

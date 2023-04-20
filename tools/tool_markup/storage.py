@@ -1,3 +1,4 @@
+import numpy as np
 from searching import comparing_binsearch
 
 class ConservativeStorage(object):
@@ -8,11 +9,17 @@ class ConservativeStorage(object):
     def get_available(self):
         raise NotImplementedError("Cannot determine what is here")
 
+    def get_first_accessible(self):
+        avail = self.get_available()
+        if avail:
+            return avail[0]
+        return None
+
     def store(self, item):
-        raise NotImplementedError("Cannot store item here")
+        raise NotImplementedError("Cannot store obj here")
 
     def take(self, *args):
-        raise NotImplementedError("Cannot take item from here")
+        raise NotImplementedError("Cannot take obj from here")
 
     def take_external(self):
         item = self.take()
@@ -26,19 +33,31 @@ class ConservativeStorage(object):
             self.on_store()
         return success
 
-    def try_move_to(self, target, *args):
+
+    def try_move_to(self, target, *args, callback=True):
         item = self.take(*args)
         if item is not None:
             if target.store(item):
-                if target.on_store:
-                    target.on_store()
-                if self.on_take:
-                    self.on_take()
+                if callback:
+                    if target.on_store:
+                        target.on_store()
+                    if self.on_take:
+                        self.on_take()
                 return True
             else:
                 self.store(item)
                 return False
         return False
+
+    def serialize(self):
+        raise NotImplementedError("Cannot serialize storage")
+
+    @staticmethod
+    def deserialize(obj):
+        raise NotImplementedError("Cannot deserialize storage")
+
+    def deserialize_inplace(self, obj):
+        raise NotImplementedError("Cannot deserialize storage inplace")
 
 
 
@@ -64,6 +83,20 @@ class ArrayStorage(ConservativeStorage):
     def clear(self):
         self.storage.clear()
 
+    def serialize(self):
+        return [item.serialize() for item in self.storage]
+
+    @staticmethod
+    def deserialize(obj):
+        stor = [Interval.deserialize(item) for item in obj]
+        res = ArrayStorage()
+        res.storage = stor
+        return res
+        
+    def deserialize_inplace(self, obj):
+        stor = [Interval.deserialize(item) for item in obj]
+        self.storage = stor
+
 class SingleStorage(ConservativeStorage):
     def __init__(self):
         super().__init__()
@@ -86,6 +119,30 @@ class SingleStorage(ConservativeStorage):
 
     def has_item(self):
         return self.item is not None
+
+    def serialize(self):
+        if self.has_item():
+            return self.item.serialize()
+        else:
+            return None
+
+    @staticmethod
+    def deserialize(obj):
+        if obj is None:
+            item = None
+        else:
+            item = obj.deserialize()
+        res = SingleStorage()
+        res.item = item
+        return res
+
+    def deserialize_inplace(self, obj):
+        if obj is None:
+            item = None
+        else:
+            item = Interval.deserialize(obj)
+        self.item = item
+
 
 class Interval(object):
     def __init__(self,start,end):
@@ -124,6 +181,18 @@ class Interval(object):
 
     def is_same_as(self, other):
         return self.start == other.start and self.end == other.end
+
+    def serialize(self):
+        return [self.start, self.end]
+
+    @staticmethod
+    def deserialize(item):
+        start,end = item
+        return Interval(start, end)
+
+    def to_arange(self):
+        return np.arange(self.start, self.end)
+
 
 
 class IntervalStorage(ConservativeStorage):
@@ -183,9 +252,22 @@ class IntervalStorage(ConservativeStorage):
         else:
             return None
 
+    def simplify(self):
+        i = 0
+        while i<len(self.taken_intervals)-1:
+            e1 = self.taken_intervals[i].end
+            s1 = self.taken_intervals[i + 1].start
+            if e1<s1:
+                i+=1
+            else:
+                assert e1==s1
+                nextint = self.taken_intervals.pop(i + 1)
+                s = self.taken_intervals[i].start
+                e = nextint.end
+                self.taken_intervals[i] = Interval(s, e)
+
     def simplify_from(self,index):
-        simplifying = True
-        while simplifying and index<len(self.taken_intervals)-1:
+        while index<len(self.taken_intervals)-1:
             e1 = self.taken_intervals[index].end
             s1 = self.taken_intervals[index+1].start
             if e1<s1:
@@ -254,3 +336,27 @@ class IntervalStorage(ConservativeStorage):
         free = self.get_available()
         rs = [str(item) for item in free]
         return f"U({', '.join(rs)})"
+
+    def serialize(self):
+        outer = self.outer.serialize()
+        taken = [item.serialize() for item in self.taken_intervals]
+        return {
+            "outer":outer,
+            "taken":taken
+        }
+
+    @staticmethod
+    def deserialize(obj):
+        outer = obj["outer"]
+        result = IntervalStorage(outer[0],outer[1])
+        taken = obj["taken"]
+        result.taken_intervals = [Interval.deserialize(item) for item in taken]
+        result.simplify()
+        return result
+
+    def deserialize_inplace(self, obj):
+        outer = obj["outer"]
+        taken = obj["taken"]
+        self.outer = outer
+        self.taken_intervals = [Interval.deserialize(item) for item in taken]
+        self.simplify()

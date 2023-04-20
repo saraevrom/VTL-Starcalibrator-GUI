@@ -1,6 +1,6 @@
 import tkinter as tk
 from vtl_common.localization import get_locale
-from .storage import IntervalStorage
+from .storage import ConservativeStorage
 
 
 class Storing(object):
@@ -12,12 +12,23 @@ class Storing(object):
             self.storage.on_take = None
             self.storage.on_store = None
         self.storage = None
+        self.on_change()
 
-    def set_storage(self, new_storage):
+    def set_storage(self, new_storage: ConservativeStorage):
         self.storage = new_storage
         self.storage.on_store = self.on_change
         self.storage.on_take = self.on_change
         self.on_change()
+
+    def deserialize_inplace(self, obj):
+        self.storage.deserialize_inplace(obj)
+        self.on_change()
+
+    def deserialize_disconnected(self, obj, cls):
+        self.set_storage(cls.deserialize(obj))
+
+    def serialize(self):
+        return self.storage.serialize()
 
     def on_change(self):
         pass
@@ -39,6 +50,8 @@ class DisplayStorage(tk.Frame, Storing):
             self.listbox.delete(0,tk.END)
             for item in intervals:
                 self.listbox.insert(tk.END, f"{item.start} - {item.end}")
+        else:
+            self.listbox.delete(0, tk.END)
 
     def clear(self):
         self.storage.clear()

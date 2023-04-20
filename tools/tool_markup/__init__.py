@@ -1,4 +1,5 @@
-
+import os.path as ospath
+import json
 
 import tkinter as tk
 
@@ -15,10 +16,38 @@ from .storage import IntervalStorage, Interval, ArrayStorage
 from .reset import ResetAsker
 from .display import Display
 
-class ToolMarkup(ToolBase):
+from vtl_common.workspace_manager import Workspace
+
+MARKUP_WORKSPACE = Workspace("marked_up_tracks")
+TENSORFLOW_MODELS_WORKSPACE = Workspace("ann_models")
+TRACKS_WORKSPACE = Workspace("tracks")
+
+
+def dualcollapse(arr0, func):
+    arr = [item for item in arr0 if item]
+    v1 = func(arr)
+    v1 = [item for item in v1 if item]
+    v2 = func(v1)
+    v2 = [item for item in v2 if item]
+    return func(v2)
+
+def min_of_mins(arr0):
+    return dualcollapse(arr0, min)
+
+def max_of_maxes(arr0):
+    return dualcollapse(arr0, max)
+
+def enwrap_interval_storage(outer, taken):
+    return {
+        "outer": outer,
+        "taken": taken
+    }
+
+class ToolMarkup(ToolBase, PopupPlotable):
     def __init__(self, master):
         ToolBase.__init__(self, master)
         self.display = Display(self)
+        PopupPlotable.__init__(self, self.display.plotter)
         self.get_mat_file()
 
         # PANELS
@@ -202,10 +231,59 @@ class ToolMarkup(ToolBase):
             self.tracks.storage.try_move_to(self.schedule.storage,item)
 
     def on_save_data(self):
-        pass
+        fbase = self.get_loaded_filename()
+        fbase = ospath.splitext(fbase)[0]
+
+        save_path = MARKUP_WORKSPACE.asksaveasfilename(initialdir=".", filetypes=(("JSON", "*.json"),),
+                                                       initialfile=f"track_progress-{fbase}.json", parent=self)
+        if save_path:
+
+            save_data = {
+                "queue": self.afterprocessing.serialize(),
+                "unprocessed": self.schedule.serialize(),
+                "tracks": self.tracks.serialize(),
+                "background": self.background.serialize(),
+                "display": self.display.serialize(),
+                "configuration": self.params_form.get_values(),
+            }
+            with open(save_path, "w") as fp:
+                json.dump(save_data, fp, indent=4, sort_keys=True)
 
     def on_load_data(self):
-        pass
+        load_path = MARKUP_WORKSPACE.askopenfilename(initialdir=".", filetypes=(("JSON", "*.json"),),
+                                                     initialfile="progress.json", parent=self)
+        if load_path:
+            with open(load_path, "r") as fp:
+                save_data = json.load(fp)
+            if "tracks" in save_data.keys(): # if not legacy
+                self.clear_storage()
+                self.schedule.deserialize_disconnected(save_data["unprocessed"], IntervalStorage)
+                self.tracks.deserialize_disconnected(save_data["tracks"], IntervalStorage)
+                self.background.deserialize_disconnected(save_data["background"], IntervalStorage)
+                self.afterprocessing.deserialize_inplace(save_data["queue"])
+                self.display.deserialize_inplace(save_data["display"])
+                self.params_form.set_values(save_data["configuration"])
+            else:
+                self.clear_storage()
+                self.params_form.set_values(save_data["configuration"])
+                # "queue": current_queue,
+                # "found_event": self.trackless_events,
+                # "rejected_event": self.tracked_events,
+                # "configuration": self.params_form.get_values()
+                KEYS = ["queue", "found_event", "rejected_event"]
+                outer_min = min_of_mins([save_data[i] for i in KEYS])
+                outer_max = max_of_maxes([save_data[i] for i in KEYS])
+                outer = [outer_min, outer_max]
+                self.afterprocessing.deserialize_inplace(save_data["queue"])
+
+                self.tracks.deserialize_disconnected(enwrap_interval_storage(outer, save_data["rejected_event"]),
+                                                     IntervalStorage)
+                self.background.deserialize_disconnected(enwrap_interval_storage(outer, save_data["found_event"]),
+                                                         IntervalStorage)
+
+                self.schedule.set_storage(IntervalStorage(outer_min, outer_max, empty=True))
+
+
 
     def on_export_data(self):
         pass
@@ -248,3 +326,6 @@ class ToolMarkup(ToolBase):
                 self.tracks.set_storage(IntervalStorage(s,e,empty=True))
                 self.background.set_storage(IntervalStorage(s,e,empty=True))
         self.update_answer_panel()
+
+    def get_plot_data(self):
+        return self.display.get_plot_data()
