@@ -201,6 +201,8 @@ class Interval(object):
     def to_arange(self):
         return np.arange(self.start, self.end)
 
+    def to_istorage(self):
+        return IntervalStorage(self.start,self.end)
 
 
 class IntervalStorage(ConservativeStorage):
@@ -210,6 +212,13 @@ class IntervalStorage(ConservativeStorage):
         self.taken_intervals = []
         if empty:
             self.taken_intervals.append(Interval(start,end))
+
+
+    def is_empty(self):
+        if self.taken_intervals:
+            take1 = self.taken_intervals[0]
+            return take1.is_same_as(self.outer)
+        return False
 
     def has_interval(self,interval):
         return interval.inside_of(self.outer)

@@ -1,3 +1,4 @@
+import gc
 import os.path as ospath
 import json
 
@@ -14,6 +15,7 @@ from ..tool_base import ToolBase
 from .interval_storage_with_display import DisplayStorage
 from .storage import IntervalStorage, Interval, ArrayStorage
 from .reset import ResetAsker
+from .direct_asker import RangeAsker
 from .display import Display
 
 from vtl_common.workspace_manager import Workspace
@@ -56,6 +58,8 @@ def enwrap_interval_storage(outer, taken):
 class ToolMarkup(ToolBase, PopupPlotable):
     def __init__(self, master):
         ToolBase.__init__(self, master)
+
+        self.tf_filter_info = tk.StringVar(self)
         self.tf_model = None
         self.tf_filter = None
         self.display = Display(self)
@@ -117,8 +121,13 @@ class ToolMarkup(ToolBase, PopupPlotable):
 
         self.params_form = TkDictForm(right_panel, self.params_form_parser.get_configuration_root())
         self.params_form.grid(row=2, column=0, sticky="nsew")
-        #self.params_form.on_commit = self.on_form_changed
+        self.params_form.on_commit = self.on_form_changed
+
         right_panel.rowconfigure(2, weight=1)
+
+        tf_filter_data = tk.Label(right_panel, textvariable=self.tf_filter_info, justify="left")
+        tf_filter_data.grid(row=1, column=0, sticky="nsew")
+
 
         self.button_panel = ButtonPanel(right_panel)
 
@@ -147,6 +156,10 @@ class ToolMarkup(ToolBase, PopupPlotable):
         #                          text=get_locale("track_markup.btn.spawn_window"),
         #                          command=self.on_spawn_figure_press)
         # spawn_button.pack(side="bottom", expand=True, fill="both")
+        manual_button = tk.Button(bottom_panel,
+                                  text=get_locale("track_markup.btn.direct_interval"),
+                                  command=self.on_direct_ask)
+        manual_button.pack(side="bottom", expand=True, fill="both")
         tk.Button(bottom_panel, text=get_locale("track_markup.btn.track_fuzzy"),
                   command=self.on_redraw_event).pack(side="bottom", expand=True, fill="both")
         self.yes_btn = tk.Button(bottom_panel, text=get_locale("track_markup.btn.track_yes"),
@@ -164,9 +177,9 @@ class ToolMarkup(ToolBase, PopupPlotable):
                                    command=self.on_start)
         self.start_btn.pack(expand=True, fill="both")
         self._formdata = None
+        self._form_changed = False
 
-        self.sync_form()
-        self.propagate_formdata()
+        self.sync_form(True)
 
 
     def update_answer_panel(self):
@@ -184,25 +197,43 @@ class ToolMarkup(ToolBase, PopupPlotable):
             self.start_btn.pack(expand=True, fill="both")
 
 
+    def on_form_changed(self):
+        self._form_changed = True
 
-    def sync_form(self):
-        formdata = self.params_form.get_values()
-        self.params_form_parser.parse_formdata(formdata)
-        formdata = self.params_form_parser.get_data()
 
-        self._formdata = formdata
+    def sync_form(self, force=False):
+        if self._form_changed or force:
+            print("Applying form")
+            formdata = self.params_form.get_values()
+            self.params_form_parser.parse_formdata(formdata)
+            formdata = self.params_form_parser.get_data()
 
-    def propagate_formdata(self, lazy=False):
-        self.display.set_formdata(self._formdata, lazy)
+            self._formdata = formdata
+            self.display.set_formdata(self._formdata)
+            self._form_changed = False
+
 
     #Button press events
     def on_redraw_event(self):
-        self.sync_form()
-        self.propagate_formdata()
+        self.sync_form(force=True)
 
 
-    def on_auto(self):
-        pass
+    def ensure_tfmodel(self):
+        if self.tf_model is None:
+            self.on_load_tf()
+        return  self.tf_model is not None
+
+    def on_auto(self, auto_call=False):
+        if self.ensure_tfmodel():
+            self.sync_form()
+            if auto_call and not self._formdata["auto_cont"]:
+                return
+            gc.collect()
+            self.display.trigger(self.tf_model, self.tracks.storage, self.background.storage)
+            self.pull_next_interval()
+            if self.display.storage.has_item() and self._formdata["auto_cont"]:
+                self.after(5000, lambda: self.on_auto(True))
+
 
     def on_load_tf(self):
         filename = TENSORFLOW_MODELS_WORKSPACE.askopenfilename(
@@ -215,9 +246,8 @@ class ToolMarkup(ToolBase, PopupPlotable):
             self.tf_filter_info.set("ANN " + self.tf_filter.get_representation())
 
     def on_track_visible(self):
+        self.sync_form()
         if self.ensure_storage():
-            self.sync_form()
-            self.propagate_formdata(True)
             interval:Interval
             interval = self.display.storage.take_external()
             if interval is not None:
@@ -233,6 +263,7 @@ class ToolMarkup(ToolBase, PopupPlotable):
                 self.pull_next_interval()
 
     def on_track_invisible(self):
+        self.sync_form()
         if self.ensure_storage():
             self.display.storage.try_move_to(self.background.storage)
             self.pull_next_interval()
@@ -242,27 +273,35 @@ class ToolMarkup(ToolBase, PopupPlotable):
         if self.ensure_storage():
             self.pull_next_interval()
 
+    def on_direct_ask(self):
+        asked = RangeAsker(self)
+        if asked.result is not None:
+            if not self.display.storage.has_item() or self.display.storage.try_retract():
+                self.schedule.storage.try_move_to(self.display.storage, asked.result)
+        self.update_answer_panel()
 
     def pull_next_interval(self):
+        self.sync_form()
         if not self.pull_next_interval_from_schedule():
             self.pull_next_interval_from_afterprocessing()
         self.update_answer_panel()
 
     def pull_next_interval_from_schedule(self):
-        print("PULLING NEXT INTERVAL")
+        self.sync_form()
+        #print("PULLING NEXT INTERVAL")
         if self.schedule.storage:
             accessible_interval = self.schedule.storage.get_first_accessible()
             if accessible_interval:
                 requested_length = self._formdata["max_frame"]
-                print("ALLOWED",accessible_interval)
+                #print("ALLOWED",accessible_interval)
 
                 if accessible_interval.length() > requested_length > 0:
                     desired_interval = Interval(accessible_interval.start,
                                                 accessible_interval.start+requested_length)
                 else:
                     desired_interval = accessible_interval
-                print("DESIRED CHECK",desired_interval)
-                print("SLOT",self.display.storage.item)
+                #print("DESIRED CHECK",desired_interval)
+                #print("SLOT",self.display.storage.item)
                 return self.schedule.storage.try_move_to(self.display.storage, desired_interval)
         return False
 
@@ -271,6 +310,7 @@ class ToolMarkup(ToolBase, PopupPlotable):
 
 
     def on_reset(self):
+        self.sync_form()
         self.reset()
 
     def on_recheck_tracks(self):
@@ -316,10 +356,6 @@ class ToolMarkup(ToolBase, PopupPlotable):
             else:
                 self.clear_storage()
                 self.params_form.set_values(save_data["configuration"])
-                # "queue": current_queue,
-                # "found_event": self.trackless_events,
-                # "rejected_event": self.tracked_events,
-                # "configuration": self.params_form.get_values()
                 KEYS = ["queue", "found_event", "rejected_event"]
                 outer_min = min_of_mins([save_data[i] for i in KEYS])
                 outer_max = max_of_maxes([save_data[i] for i in KEYS])
@@ -347,8 +383,10 @@ class ToolMarkup(ToolBase, PopupPlotable):
         if model:
             self.display.set_ffmodel(model)
 
+
     def on_loaded_file_success(self):
         self.clear_storage()
+        self.update_answer_panel()
 
     def clear_storage(self):
         self.tracks.disconnect_storage()
@@ -385,3 +423,7 @@ class ToolMarkup(ToolBase, PopupPlotable):
             return self.display.storage.store_external(item, source)
 
         return False
+
+    def postprocess_plot(self, axes):
+        if self.tf_model:
+            self.display.postprocess(self.tf_model, axes)

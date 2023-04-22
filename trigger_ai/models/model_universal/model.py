@@ -65,7 +65,8 @@ class UniversalModel(ModelWrapper):
 
         #print("R0", booled)
         #booled_full = splat_select(booled, 128)
-        return expand_window(booled_full,128)
+        return booled_full
+        #return expand_window(booled_full,128)
     
     def trigger_split(self, x, threshold):
         mode = self.get_mode()
@@ -76,7 +77,8 @@ class UniversalModel(ModelWrapper):
             for i in range(4):
                 deconv = deconvolve_windows(y_data[:, i], 128)
                 booled_full = deconv > threshold
-                signal = expand_window(booled_full,128)
+                signal = booled_full
+                #signal = expand_window(booled_full,128)
                 signals.append(signal)
             return signals
         else:

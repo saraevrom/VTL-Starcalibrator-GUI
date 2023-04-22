@@ -234,6 +234,7 @@
   "track_markup.btn.track_yes": "Трек виден",
   "track_markup.btn.track_no": "Трек не виден",
   "track_markup.btn.im_too_lazy": "Авто",
+  "track_markup.btn.direct_interval": "Ручной выбор интервала",
   "track_markup.btn.export": "Экспортировать треки",
   "track_markup.btn.export_bg": "Экспортировать фон",
   "track_markup.messagebox.reset.title": "Сброс данных",
@@ -339,7 +340,8 @@
 
   "app.title": "Обработка данных верхнетуломской обсерватории",
   "app.menu.file": "Файл",
-  "app.menu.file.open_mat": "Oткрыть mat файл",
+  "app.menu.file.open_mat": "Oткрыть файл данных",
+  "app.menu.file.drop_ff": "Убрать выравнивание пикселей",
   "app.menu.file.load_settings": "Загрузить настройки",
   "app.menu.file.save_settings": "Сохранить настройки",
   "app.menu.tools": "Инструменты",

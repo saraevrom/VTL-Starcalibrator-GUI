@@ -31,9 +31,32 @@ def get_noise(signal, broken):
     return mean, stdev
 
 
+@nb.njit(nb.float64(nb.float64[:,:,:], nb.boolean[:,:]))
+def get_noise_meanless(signal, broken):
+    '''
+    gets std from signal[:, np.logical_not(broken)] assuming mean=0
+    :return:
+    '''
+    acc_sqr = 0
+    n = 0
+    for i in range(signal.shape[0]):
+        for j in range(signal.shape[1]):
+            for k in range(signal.shape[2]):
+                if not broken[j,k]:
+                    acc_sqr += signal[i, j, k]**2
+                    n += 1
+    if n == 0:
+        return 0.0
+    stdev = np.sqrt(acc_sqr/n)
+    return stdev
+
 @nb.njit()
-def noisy(signal, broken):
-    mean, stdev = get_noise(signal, broken)
+def noisy(signal, broken, ignore_mean=False):
+    if ignore_mean:
+        mean = 0.0
+        stdev = get_noise_meanless(signal, broken)
+    else:
+        mean, stdev = get_noise(signal, broken)
     # res = np.zeros(signal.shape)
     for i in range(signal.shape[0]):
         for j in range(signal.shape[1]):
@@ -44,6 +67,36 @@ def noisy(signal, broken):
                     signal[i,j,k] = signal[i,j,k]
     return signal
 
+
+@nb.njit()
+def independent_noisy(signal, broken, ignore_mean=False):
+    res = np.zeros(signal.shape)
+    res[:,:8,:8] = noisy(signal[:,:8,:8],broken[:8,:8], ignore_mean)
+    res[:,8:,:8] = noisy(signal[:,8:,:8],broken[8:,:8], ignore_mean)
+    res[:,:8,8:] = noisy(signal[:,:8,8:],broken[:8,8:], ignore_mean)
+    res[:,8:,8:] = noisy(signal[:,8:,8:],broken[8:,8:], ignore_mean)
+    return res
+
+def means_square(signal):
+    res = np.zeros(signal.shape)
+    res[:,:8,:8] = np.expand_dims(np.median(signal[:,:8,:8], axis=(1,2)),axis=(1,2))
+    res[:,8:,:8] = np.expand_dims(np.median(signal[:,8:,:8], axis=(1,2)),axis=(1,2))
+    res[:,:8,8:] = np.expand_dims(np.median(signal[:,:8,8:], axis=(1,2)),axis=(1,2))
+    res[:,8:,8:] = np.expand_dims(np.median(signal[:,8:,8:], axis=(1,2)),axis=(1,2))
+    return res
+
+
+@nb.njit(nb.float64[:,:,:](nb.float64[:,:,:], nb.boolean[:,:], nb.float64[:,:,:]),cache=True)
+def put_mask_2d(target_arr, mask, repl):
+    res = np.zeros(shape=target_arr.shape)
+    for k in range(res.shape[0]):
+        for i in range(res.shape[1]):
+            for j in range(res.shape[2]):
+                if mask[i,j]:
+                    res[k,i,j] = repl[k,i,j]
+                else:
+                    res[k,i,j] = target_arr[k,i,j]
+    return res
 
 #@jitclass()
 class DataThreeStagePreProcessor(object):
@@ -132,7 +185,10 @@ class DataThreeStagePreProcessor(object):
             # mean = np.mean(signal[:, np.logical_not(broken)])
             # mean, noise = get_noise(signal, broken)
             # broken_exp = np.expand_dims(broken, 0)
-            signal = noisy(signal, broken)
+            #signal_means = means_square(signal)
+            signal[:,broken] = 0
+            #signal = put_mask_2d(signal, broken, signal_means)
+            #signal = independent_noisy(signal, broken, self.ma_win!=0)
             # np.putmask(signal, np.repeat(broken_exp, signal.shape[0], axis=0),
             #            np.random.normal(mean, noise, signal.shape))
         return signal
@@ -189,7 +245,7 @@ class DataThreeStagePreProcessor(object):
         if self.is_working():
             return slice_for_preprocess(src, slice_start, slice_end, self.get_affected_range()+margin_add)
         else:
-            return src[slice_start:slice_end], slice(None,None,None)
+            return slice_for_preprocess(src, slice_start, slice_end, margin_add)
 
 def get_window_data(signal_source, index, filter_obj:DataThreeStagePreProcessor):
     affect_window = filter_obj.get_affected_range()
