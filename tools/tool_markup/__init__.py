@@ -1,8 +1,12 @@
 import gc
 import os.path as ospath
 import json
+import zipfile
+import io
 
 import tkinter as tk
+
+import h5py
 
 from vtl_common.localized_GUI.signal_plotter import PopupPlotable
 from vtl_common.common_GUI import TkDictForm
@@ -16,7 +20,7 @@ from .interval_storage_with_display import DisplayStorage
 from .storage import IntervalStorage, Interval, ArrayStorage
 from .reset import ResetAsker
 from .direct_asker import RangeAsker
-from .display import Display
+from .display import Display, prepare_data
 
 from vtl_common.workspace_manager import Workspace
 
@@ -54,6 +58,23 @@ def enwrap_interval_storage(outer, taken):
         "outer": outer,
         "taken": taken
     }
+
+
+def track_sym(a):
+    if a:
+        return "#"
+    else:
+        return "."
+
+def print_track(bl,br,tl,tr):
+    r = ""
+    r += track_sym(tl)
+    r += track_sym(tr)
+    r += "\n"
+    r += track_sym(bl)
+    r += track_sym(br)
+    print(r)
+
 
 class ToolMarkup(ToolBase, PopupPlotable):
     def __init__(self, master):
@@ -372,10 +393,90 @@ class ToolMarkup(ToolBase, PopupPlotable):
 
 
     def on_export_data(self):
-        pass
+        if not self.tracks.storage.is_empty() and self.file:
+            fbase = self.get_loaded_filename()
+            fbase = ospath.splitext(fbase)[0]
+            filename = TRACKS_WORKSPACE.asksaveasfilename(auto_formats=["zip"], initialfile=f"tracks-{fbase}.zip")
+            if filename:
+                with zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                    index = 1
+                    for track_interval in self.tracks.storage.get_available():
+                        track_start = track_interval.start
+                        track_end = track_interval.end
+                        buffer = io.BytesIO(b"")
+
+                        #plot_data = self.file["data0"][track_start:track_end]
+                        #plot_data, plot_data_cutter = self._get_data_at_semiprepared(track_start, track_end, True, margin_add=256)
+                        self.sync_form()
+                        data, slicer, preprocessor = prepare_data(track_interval, self._formdata, self.file)
+
+                        plot_data = preprocessor.preprocess_whole(data, self.display.plotter.get_broken())
+
+                        ut0 = self.file["UT0"][track_start:track_end]
+
+                        if self.tf_model is not None:
+                            trigger = self._formdata["trigger"]
+                            threshold = trigger["threshold"]
+                            #bl, br, tl, tr = self.form_data["trigger"].get_triggering(self, plot_data)
+                            res = self.tf_model.trigger_split(plot_data, threshold)
+                            plot_data = plot_data[slicer]
+                            bl, br, tl, tr = [item[slicer].any() for item in res]
+
+                            print(f"TRACK {index}:")
+                            print_track(bl, br, tl, tr)
+                        else:
+                            plot_data = plot_data[slicer]
+                            bl, br, tl, tr = [True for _ in range(4)]
+
+                            #self.tf_model.trigger_split(plot_data, threshold, broken, ts_filter)
+                        if bl or br or tl or tr:
+                            assert plot_data.shape[0] == ut0.shape[0]
+                            h5_file = h5py.File(buffer, "w")
+                            h5_file.create_dataset("data0", data=plot_data)
+                            h5_file.create_dataset("UT0", data=ut0)
+                            h5_file.attrs["bottom_left"] = bl
+                            h5_file.attrs["bottom_right"] = br
+                            h5_file.attrs["top_left"] = tl
+                            h5_file.attrs["top_right"] = tr
+
+                            h5_file.close()
+                            zipf.writestr(f"f{index}_track_{track_start}_{track_end}.h5", buffer.getvalue())
+                        index += 1
+                        # tgtfile = zipf.open(f"track_{track_start}_{track_end}", "w")
+                        #tgtfile.close()
 
     def on_export_bg(self):
-        pass
+        if not self.background.storage.is_empty() and self.file:
+            fbase = self.get_loaded_filename()
+            fbase = ospath.splitext(fbase)[0]
+            filename = TRACKS_WORKSPACE.asksaveasfilename(auto_formats=["zip"], initialfile=f"bg-{fbase}.zip")
+            if filename:
+                with zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                    index = 1
+                    for bg_interval in self.background.storage.get_available():
+                        bg_start = bg_interval.start
+                        bg_end = bg_interval.end
+                        buffer = io.BytesIO(b"")
+                        h5_file = h5py.File(buffer, "w")
+
+                        self.sync_form()
+                        # plot_data = self.file["data0"][track_start:track_end]
+                        #plot_data = self._get_data_at(bg_start, bg_end, True)
+
+                        data, slicer, preprocessor = prepare_data(bg_interval, self._formdata, self.file)
+
+                        plot_data = preprocessor.preprocess_whole(data, self.display.plotter.get_broken())
+                        plot_data = plot_data[slicer]
+
+                        ut0 = self.file["UT0"][bg_start:bg_end]
+
+                        assert plot_data.shape[0] == ut0.shape[0]
+                        h5_file.create_dataset("data0", data=plot_data)
+                        h5_file.create_dataset("UT0", data=ut0)
+
+                        h5_file.close()
+                        zipf.writestr(f"f{index}_bg_{bg_start}_{bg_end}.h5", buffer.getvalue())
+                        index += 1
 
 
     def on_ff_reload(self):

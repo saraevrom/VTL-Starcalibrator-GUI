@@ -22,6 +22,9 @@ class ConservativeStorage(object):
     def take(self, *args):
         raise NotImplementedError("Cannot take obj from here")
 
+    def is_empty(self):
+        raise NotImplementedError("Cannot determine if storage is empty")
+
     def take_external(self, *args):
         item = self.take(*args)
         if item is not None and self.on_take:
@@ -88,6 +91,9 @@ class ArrayStorage(ConservativeStorage):
         else:
             return None
 
+    def is_empty(self):
+        return not self.storage
+
     def clear(self):
         self.storage.clear()
 
@@ -127,6 +133,9 @@ class SingleStorage(ConservativeStorage):
 
     def has_item(self):
         return self.item is not None
+
+    def is_empty(self):
+        return self.item is None
 
     def serialize(self):
         if self.has_item():

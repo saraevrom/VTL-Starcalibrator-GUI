@@ -9,6 +9,16 @@ from vtl_common.common_flatfielding.models import FlatFieldingModel
 from preprocessing.three_stage_preprocess import DataThreeStagePreProcessor
 from .edges import split_intervals, edged_intervals
 
+
+def prepare_data(interval:Interval, formdata, file_src):
+    start = interval.start
+    end = interval.end
+    preprocessor: DataThreeStagePreProcessor
+    preprocessor = formdata["preprocessing"]
+    # print("SLICE", start, end)
+    data, slicer = preprocessor.prepare_array(file_src["data0"], start, end, margin_add=256)
+    return data, slicer, preprocessor
+
 class Display(tk.Frame):
     def __init__(self, master, controller=None):
         if controller is None:
@@ -31,7 +41,7 @@ class Display(tk.Frame):
     def set_formdata(self, formdata, lazy=False):
         self._formdata = formdata
         if not lazy:
-            self.on_weak_change()
+            self.on_strong_change()
 
     def drop(self):
         self.storage.drop()
@@ -57,12 +67,14 @@ class Display(tk.Frame):
         gc.collect()
         if self.storage.has_item() and self._formdata and self.controller.file:
             interval = self.storage.item
-            start = interval.start
-            end = interval.end
-            preprocessor: DataThreeStagePreProcessor
-            preprocessor = self._formdata["preprocessing"]
-            #print("SLICE", start, end)
-            data, slicer = preprocessor.prepare_array(self.controller.file["data0"], start, end, margin_add=256)
+            data, slicer, preprocessor = prepare_data(interval, self._formdata, self.controller.file)
+            # start = interval.start
+            # end = interval.end
+            # preprocessor: DataThreeStagePreProcessor
+            # preprocessor = self._formdata["preprocessing"]
+            # #print("SLICE", start, end)
+            # data, slicer = preprocessor.prepare_array(self.controller.file["data0"], start, end, margin_add=256)
+
             self._data_cache = data
             self._slicer_cache = slicer
             self._interval = interval
