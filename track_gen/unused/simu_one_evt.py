@@ -60,7 +60,7 @@ if __name__=="__main__":
 
 
     #OK now my turn
-    track_data = generate_track(trajectory, lc_par, psf_par_obj,DURATION, 10)
+    track_data, = generate_track(trajectory, lc_par, psf_par_obj,DURATION, 10)
     for i in range(8):
         for j in range(8):
             ax2.plot(track_data[:, i, j])

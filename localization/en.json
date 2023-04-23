@@ -56,6 +56,20 @@
   "teacher.form.probing": "Probing",
   "teacher.form.probing.size": "Size",
 
+  "teacher.form.trackgen": "Track generation",
+  "teacher.form.trackgen.file": "Source: file list",
+  "teacher.form.trackgen.file.threshold": "Minimal length for shifting",
+  "teacher.form.trackgen.random": "Source: custom generator",
+  "teacher.form.trackgen.random.speed": "Speed",
+  "teacher.form.trackgen.random.a": "Acceleration",
+  "teacher.form.trackgen.random.t_peak": "Peak time",
+  "teacher.form.trackgen.random.psf": "PSF",
+  "teacher.form.trackgen.random.length.min": "Min length",
+  "teacher.form.trackgen.random.length.max": "Max length",
+  "teacher.form.trackgen.random.start_energy": "Start energy",
+  "teacher.form.trackgen.random.subframes": "Subframes",
+
+
   "teacher.advform.constant": "Constant",
   "teacher.advform.amount": "Amount",
   "teacher.advform.lower": "Lower",

@@ -74,6 +74,9 @@ class LearnParameters(object):
     def get_preprocessor(self):
         return self.config["preprocessing"]
 
+    def get_trackgen(self):
+        return self.config["trackgen"]
+
     def process_fg(self, data, rng):
         modifier = self.config["modification"]
         augmenter = self.config["augment"]

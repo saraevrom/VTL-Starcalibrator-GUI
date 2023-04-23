@@ -74,6 +74,20 @@
   "teacher.weight.prompt": "Вес:",
 
 
+  "teacher.form.trackgen": "Генерация треков",
+  "teacher.form.trackgen.file": "Источник: список файлов",
+  "teacher.form.trackgen.file.threshold": "Минимальная длина для сдвига",
+  "teacher.form.trackgen.random": "Источник: собственный генератор",
+  "teacher.form.trackgen.random.speed": "Скорость",
+  "teacher.form.trackgen.random.a": "Ускорение",
+  "teacher.form.trackgen.random.t_peak": "Время максимума",
+  "teacher.form.trackgen.random.psf": "PSF",
+  "teacher.form.trackgen.random.length.min": "Минимальная длина",
+  "teacher.form.trackgen.random.length.max": "Максимальная длина",
+  "teacher.form.trackgen.random.start_energy": "Стартовая энергия",
+  "teacher.form.trackgen.random.subframes": "Дополнительные кадры",
+
+
   "app.preprocess.form.preprocess.title": "Предобработка",
   "app.preprocess.form.preprocess.tsf.title": "Трёхступенчатый фильтр",
   "app.preprocess.form.preprocess.robust": "Робастность",

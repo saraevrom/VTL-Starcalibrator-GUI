@@ -6,6 +6,7 @@ from .parameters_processing import Augmenter, DualProcessing, LearnParameters
 from preprocessing import DataPreProcessorField
 from .signal_modulator import ProcessingSubform, PostprocessingSubform
 from .noising import FloatDistributedAlter
+from .track_generator import TrackGeneratorField
 
 def create_dual(shared_field, common_title, title_master, title_slave):
     class MasterField(shared_field):
@@ -68,9 +69,12 @@ class SettingForm(FormNode):
                                                      get_locale("teacher.form.quick_track_attempts"), 5)
     FIELD__flash_probability = create_value_field(FloatNode,
                                                   get_locale("teacher.form.flash_probability"), 0.0)
-    FIELD__shift_threshold = create_value_field(IntNode, get_locale("teacher.form.shift_allow_threshold"), 64)
+
+    #FIELD__shift_threshold = create_value_field(IntNode, get_locale("teacher.form.shift_allow_threshold"), 64)
     FIELD__flash_maxsize = create_value_field(IntNode, get_locale("teacher.form.flash_maxsize"), 10)
     FIELD__flash_attempts = create_value_field(IntNode, get_locale("teacher.form.flash_attempts"), 0)
+
+    FIELD__trackgen = TrackGeneratorField
     FIELD__modification = create_dual(ProcessingSubform,
                                       get_locale("teacher.form.dataset_modification"),
                                       get_locale("teacher.status.msg_fg"),

@@ -20,13 +20,15 @@ class TriangularLightCurve(LightCurve):
         Tmax = dT * np.floor(self.t_peak / dT)
         Emax = self.e_peak
         Emin = self.e_min
-        if Tmax < Dk:
+        if Tmax > Dk:
+            LC = Emin / Nt + ((Emax - Emin) / Nt) * (T - dT) / (Tmax - dT)
+        elif Tmax<=dT:
+            LC = Emin / Nt + ((Emax - Emin) / Nt) * (Dk - T) / (Dk - dT - Tmax)
+        else:
             LC1 = Emin / Nt + ((Emax - Emin) / Nt) * (T - dT) / (Tmax - dT)
             LC2 = Emin / Nt + ((Emax - Emin) / Nt) * (Dk - T) / (Dk - dT - Tmax)
             if Emax>Emin:
                 LC = np.minimum(LC1,LC2)
             else:
                 LC = np.maximum(LC1, LC2)
-        else:
-            LC = Emin / Nt + ((Emax - Emin) / Nt) * (T - dT) / (Tmax - dT)
         return LC

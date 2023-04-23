@@ -31,6 +31,8 @@ from vtl_common.common_GUI.button_panel import ButtonPanel
 from tkinter.simpledialog import askinteger
 from friendliness import show_attention
 
+from .track_generator import TrackSource
+
 TENSORFLOW_MODELS_WORKSPACE = Workspace("ann_models")
 MDATA_WORKSPACE = Workspace("merged_data")
 MODELED_TRACK_WORKSPACE = Workspace("modelled_tracks")
@@ -82,6 +84,7 @@ class ToolTeacher(ToolBase):
     def __init__(self, master):
         super().__init__(master)
         self._model_compile_params = None
+        self._formdata = None
         self.bg_pool = RandomIntervalAccess(self, "teacher.pool_bg.title", workspace=MDATA_WORKSPACE)
         self.bg_pool.grid(row=0, column=0, sticky="nsew")
         self.fg_pool = RandomFileAccess(self, "teacher.pool_fg.title", workspace=MODELED_TRACK_WORKSPACE)
@@ -135,10 +138,15 @@ class ToolTeacher(ToolBase):
         self.reset_generator()
 
 
-    def reset_generator(self):
+    def sync_form(self):
         conf = self.settings_menu.get_values()
         self.settings_form.parse_formdata(conf)
-        conf = self.settings_form.get_data()
+        self._formdata = self.settings_form.get_data()
+        return conf
+
+    def reset_generator(self):
+        self.sync_form()
+        conf = self._formdata
         self.rng = numpy_rng.Generator(numpy_rng.MT19937(seed=conf.seed))
 
     def try_reset_model(self):
@@ -209,6 +217,7 @@ class ToolTeacher(ToolBase):
         self.try_recompile_model()
 
     def on_teach(self):
+        self.sync_form()
         self.clear_caches()
         if self.ensure_model():
             pre_conf = self._prepare_files()
@@ -216,7 +225,7 @@ class ToolTeacher(ToolBase):
                 self.interference_pool.fast_cache = pre_conf["fastcache"]
                 preferred_filter = pre_conf["preprocessing"]
                 self.workon_model.set_preferred_filter_data(preferred_filter)
-                conf = self.settings_form.get_data()
+                conf = self._formdata
                 gc.collect()
 
                 if conf.pregenerate is not None:
@@ -244,12 +253,10 @@ class ToolTeacher(ToolBase):
         self.check_files()
         if self.check_passed and self.ensure_model():
             self.close_mat_file()
-            conf = self.settings_menu.get_values()
-            self.fg_pool.fast_cache = conf["fastcache"]
-            self.bg_pool.fast_cache = conf["fastcache"]
-            self.settings_form.parse_formdata(conf)
-            conf = self.settings_form.get_data()
-            generator = self.data_generator(conf)
+            raw_conf = self.sync_form()
+            self.fg_pool.fast_cache = raw_conf["fastcache"]
+            self.bg_pool.fast_cache = raw_conf["fastcache"]
+            generator = self.data_generator(self._formdata)
             batch_size = ask_test()
             return self.generate_batch(generator, batch_size)
 
@@ -293,8 +300,9 @@ class ToolTeacher(ToolBase):
 
 
     def on_probe_save(self, needstrack):
+        self.sync_form()
         if self._prepare_files() is not None:
-            conf = self.settings_form.get_data()
+            conf = self._formdata
             probe_params = conf.probe_params
             gen = self.data_generator(conf, **probe_params)
             x_gen, y_par = next(gen)
@@ -312,9 +320,9 @@ class ToolTeacher(ToolBase):
 
 
     def on_probe(self, needstrack):
-
+        self.sync_form()
         if self._prepare_files() is not None:
-            conf = self.settings_form.get_data()
+            conf = self._formdata
             probe_params = conf.probe_params
             gc.collect()
             gen = self.data_generator(conf, **probe_params)
@@ -376,7 +384,9 @@ class ToolTeacher(ToolBase):
 
     def get_interference(self, conf, use_artificial, frame_size):
         if use_artificial:
-            source_foreground, e_length = self.fg_pool.random_access(self.rng, frame_size)
+            track_gen: TrackSource = self._formdata.get_trackgen()
+            #source_foreground, e_length = self.fg_pool.random_access(self.rng, frame_size)
+            source_foreground = track_gen.get_track(self.fg_pool, self.rng, frame_size)
             # We can create artificial "meteor" interference signal from foreground signal
             flattened = np.sum(source_foreground, axis=0)
             interference = np.zeros(source_foreground.shape)
@@ -389,6 +399,7 @@ class ToolTeacher(ToolBase):
         i = 0
         cycle_forever = amount is None
         preprocessor : preprocessing.DataThreeStagePreProcessor = conf.get_preprocessor()
+        track_src: TrackSource = conf.get_trackgen()
         while cycle_forever or i < amount:
             # bg_sample, (bg_start, bg_end), broken = self.bg_pool.random_access(self.rng, frame_size)
             # if np.abs(bg_end-bg_start) < frame_size:
@@ -439,20 +450,24 @@ class ToolTeacher(ToolBase):
                 pass
             else:
                 fg = np.zeros(x_data.shape)
-                self.fg_pool.set_shift_threshold(conf.shift_threshold)
+                #self.fg_pool.set_shift_threshold(conf.shift_threshold)
                 rng_append = self.rng.integers(1, 16)
                 if rng_append % 2 == 1:
                     y_params.pmt_bottom_left = True
-                    fg[:, :8, :8] = conf.process_fg(self.fg_pool.random_access(self.rng, frame_size)[0], rng=self.rng)
+                    #fg[:, :8, :8] = conf.process_fg(self.fg_pool.random_access(self.rng, frame_size)[0], rng=self.rng)
+                    fg[:, :8, :8] = conf.process_fg(track_src.get_track(self.fg_pool,self.rng, frame_size), rng=self.rng)
                 if rng_append // 2 % 2 == 1:
                     y_params.pmt_bottom_right = True
-                    fg[:, 8:, :8] = conf.process_fg(self.fg_pool.random_access(self.rng, frame_size)[0], rng=self.rng)
+                    #fg[:, 8:, :8] = conf.process_fg(self.fg_pool.random_access(self.rng, frame_size)[0], rng=self.rng)
+                    fg[:, 8:, :8] = conf.process_fg(track_src.get_track(self.fg_pool,self.rng, frame_size), rng=self.rng)
                 if rng_append // 4 % 2 == 1:
                     y_params.pmt_top_left = True
-                    fg[:, :8, 8:] = conf.process_fg(self.fg_pool.random_access(self.rng, frame_size)[0], rng=self.rng)
+                    #fg[:, :8, 8:] = conf.process_fg(self.fg_pool.random_access(self.rng, frame_size)[0], rng=self.rng)
+                    fg[:, :8, 8:] = conf.process_fg(track_src.get_track(self.fg_pool,self.rng, frame_size), rng=self.rng)
                 if rng_append // 8 % 2 == 1:
                     y_params.pmt_top_right = True
-                    fg[:, 8:, 8:] = conf.process_fg(self.fg_pool.random_access(self.rng, frame_size)[0], rng=self.rng)
+                    #fg[:, 8:, 8:] = conf.process_fg(self.fg_pool.random_access(self.rng, frame_size)[0], rng=self.rng)
+                    fg[:, 8:, 8:] = conf.process_fg(track_src.get_track(self.fg_pool,self.rng, frame_size), rng=self.rng)
                 fg[:, broken] = 0
                 x_data = x_data + fg
             i += 1
@@ -483,8 +498,10 @@ class ToolTeacher(ToolBase):
 
 
     def check_files(self):
+        self.sync_form()
+        track_src: TrackSource = self._formdata.get_trackgen()
         self.check_passed = True
         self.check_pool("teacher.status.msg_bg", self.bg_pool, ["data0", "marked_intervals", "broken"])
-        self.check_pool("teacher.status.msg_fg", self.fg_pool, ["EventsIJ"])
+        self.check_pool("teacher.status.msg_fg", self.fg_pool, ["EventsIJ"], not track_src.uses_files())
         self.check_pool("teacher.status.msg_it", self.interference_pool, ["EventsIJ"], True)
 
