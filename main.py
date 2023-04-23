@@ -48,6 +48,7 @@ class App(tk.Tk):
 
         self.filemenu = tk.Menu(self.topmenu, tearoff=0)
         self.filemenu.add_command(label=get_locale("app.menu.file.open_mat"), command=self.on_open_mat_file)
+        self.filemenu.add_command(label=get_locale("app.menu.file.drop_ff"), command=self.on_drop_ffmodel)
         self.filemenu.add_command(label=get_locale("app.filedialog.load_ff_settings.title"),
                                   command=self.on_open_ffmodel)
         #self.filemenu.add_command(label=get_locale("app.menu.file.load_settings"), command=self.on_settings_load)
@@ -127,6 +128,11 @@ class App(tk.Tk):
             self.file = None
             self.filename = ""
         print("File closed")
+        self.update_title()
+
+
+    def on_drop_ffmodel(self):
+        self.set_ffmodel(None)
         self.update_title()
 
     def on_open_ffmodel(self):

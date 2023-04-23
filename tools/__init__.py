@@ -18,8 +18,10 @@ def add_tools(adder):
                 from .tool_starcalibrator import StarCalibrator
                 adder("app.menu.tools.starcalibrator", StarCalibrator)
         if USE_BACKGROUND_EXTRACTOR:
-                from .tool_track_markup import TrackMarkup
-                adder("app.menu.tools.track_markup", TrackMarkup)
+                #from .tool_track_markup_old import TrackMarkup as TrackMarkupOld
+                #adder("app.menu.tools.track_markup_Old", TrackMarkupOld)
+                from .tool_markup import ToolMarkup
+                adder("app.menu.tools.track_markup", ToolMarkup)
         if USE_DATASET_CREATOR:
                 from .tool_dataset_generation import DatasetGenerator
                 adder("app.menu.tools.dataset_generator", DatasetGenerator)

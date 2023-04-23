@@ -153,7 +153,7 @@ class EdgeProcessor(object):
     #     data_source.tf_model.stabilize_slide = self.stabilize_slide
     #     res = data_source.tf_model.trigger_split(plot_data, self.threshold)
     #     # print("RES",res)
-    #     return [item.any() for item in res]
+    #     return [obj.any() for obj in res]
     #
     # def apply(self, data_source):
     #     x_data = self._get_xdata(data_source)
