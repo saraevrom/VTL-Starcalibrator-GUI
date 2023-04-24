@@ -326,6 +326,8 @@
   "mat_converter.downloader.messagebox.login_error.msg": "Не удалось соединиться с сервером {server}",
   "mat_converter.downloader.fieldialog.title": "Выберите локальную папку для сохранения данных.",
 
+  "track_toolbox.btn.create_track": "Создать трек",
+  "track_toolbox.btn.export": "Экспорт",
   "track_toolbox.form.duration": "Длительность",
   "track_toolbox.form.subframes": "Дополнительные кадры",
   "track_toolbox.form.time_cap": "Ограничение времени",

@@ -333,6 +333,7 @@
   "mat_converter.downloader.download_directory": "Download entire directory",
 
   "track_toolbox.btn.create_track": "Create track",
+  "track_toolbox.btn.export": "Export",
   "track_toolbox.form.duration": "Duration",
   "track_toolbox.form.subframes": "Subframes",
   "track_toolbox.form.time_cap": "Time cap",

@@ -1,6 +1,7 @@
 import tkinter as tk
 
 import numpy as np
+import h5py
 
 from ..tool_base import ToolBase
 from vtl_common.localized_GUI.plotter import GridPlotter
@@ -8,6 +9,7 @@ from vtl_common.common_GUI.button_panel import ButtonPanel
 from vtl_common.common_GUI.tk_forms import TkDictForm
 from vtl_common.localization import get_locale
 from vtl_common.localized_GUI.signal_plotter import PopupPlotable
+from vtl_common.workspace_manager import Workspace
 from .form import ToolboxForm
 from track_gen import generate_track
 from track_gen.track_dynamics import Track
@@ -23,6 +25,9 @@ GAP_OFFSET_X = GAP_SIZE * pixel_size_a/PIXEL_SIZE
 GAP_OFFSET_Y = GAP_SIZE * pixel_size_b/PIXEL_SIZE
 
 
+
+WORKSPACE_EXPORT = Workspace("export")
+
 class TrackToolbox(ToolBase, PopupPlotable):
     def __init__(self, parent):
         ToolBase.__init__(self,parent)
@@ -33,6 +38,7 @@ class TrackToolbox(ToolBase, PopupPlotable):
         right_panel.pack(side=tk.LEFT, fill=tk.Y)
         self.button_panel = ButtonPanel(right_panel)
         self.button_panel.add_button(get_locale("track_toolbox.btn.create_track"), self.on_create_track, row=0)
+        self.button_panel.add_button(get_locale("track_toolbox.btn.export"), self.on_export, row=1)
 
         self.button_panel.pack(side=tk.TOP, fill=tk.X)
         self.form_parser = ToolboxForm()
@@ -98,6 +104,18 @@ class TrackToolbox(ToolBase, PopupPlotable):
         self.plotter.buffer_matrix = plot_data
         self.plotter.update_matrix_plot(True)
         self.plotter.draw()
+
+    def on_export(self):
+        if self._track:
+            filename = WORKSPACE_EXPORT.asksaveasfilename(title=get_locale("matplayer.dialog.gif_target"),
+                                                      auto_formats=["h5"],
+                                                      parent=self)
+            if filename:
+                ut0,data = self.get_plot_data()
+
+                with h5py.File(filename, "w") as fp:
+                    fp.create_dataset("data0", data=data)
+                    fp.create_dataset("UT0", data=ut0)
 
     def get_plot_data(self):
         if self._track is None:
