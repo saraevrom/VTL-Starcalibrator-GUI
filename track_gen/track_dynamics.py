@@ -5,6 +5,9 @@ class Track(object):
     def generate(self, duration, nt):
         raise NotImplementedError("Cannot generate track")
 
+    def offset(self, dx, dy):
+        raise NotImplementedError("Cannot offset track")
+
     def get_time_bound(self):
         raise NotImplementedError("Cannot estimate time bound")
 
@@ -16,6 +19,15 @@ class LinearTrack(Track):
         self.phi0 = phi0
         self.u0 = u0
         self.a = a
+
+    def offset(self,dx,dy):
+        return LinearTrack(
+            self.x0+dx,
+            self.y0+dy,
+            self.phi0,
+            self.u0,
+            self.a
+        )
 
     def generate(self, duration, nt):
         #t = np.arange(1 / Nt, actual_time, 1 / Nt)

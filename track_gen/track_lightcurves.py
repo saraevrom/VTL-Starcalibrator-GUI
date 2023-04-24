@@ -4,14 +4,25 @@ class LightCurve(object):
     def generate(self,Dk,Nt):
         raise NotImplementedError("Cannot generate light curve")
 
+    def set_time_bound(self,t):
+        raise NotImplementedError("Cannot set time bound")
+
 
 class TriangularLightCurve(LightCurve):
-    def __init__(self,t_peak,e_peak,e_min):
+    def __init__(self,t_peak,e_peak,e_min, end_time=None):
         self.t_peak = t_peak
         self.e_peak = e_peak
         self.e_min = e_min
+        self.end_time = end_time
 
-    def generate(self,Dk,Nt):
+    def set_time_bound(self,t):
+        self.end_time = t
+
+    def generate(self,track_end_time,Nt):
+        if self.end_time is None:
+            Dk = track_end_time
+        else:
+            Dk = self.end_time
         dT = 1 / Nt
         #T = np.arange(dT, Dk + dT, dT)
         T = np.linspace(0,Dk,Dk*Nt,endpoint=False)

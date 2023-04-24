@@ -2,7 +2,7 @@ from extension.optional_tensorflow import TENSORFLOW_INSTALLED
 import vtl_common.parameters
 print(dir(vtl_common.parameters))
 from vtl_common.parameters import USE_VIEWER, USE_CONVERTER, USE_FLATFIELDER, USE_STARCALIBRATOR, USE_BACKGROUND_EXTRACTOR
-from vtl_common.parameters import USE_DATASET_CREATOR, USE_TRAINER
+from vtl_common.parameters import USE_DATASET_CREATOR, USE_TRAINER, USE_TRACK_TOOLBOX
 
 def add_tools(adder):
         if USE_VIEWER:
@@ -14,6 +14,9 @@ def add_tools(adder):
         if USE_FLATFIELDER:
                 from .tool_flatfielder import FlatFielder
                 adder("app.menu.tools.flatfielder", FlatFielder)
+        if USE_TRACK_TOOLBOX:
+                from .tool_track_toolbox import TrackToolbox
+                adder("app.menu.tools.track_toolbox", TrackToolbox)
         if USE_STARCALIBRATOR:
                 from .tool_starcalibrator import StarCalibrator
                 adder("app.menu.tools.starcalibrator", StarCalibrator)

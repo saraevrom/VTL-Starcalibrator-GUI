@@ -4,7 +4,7 @@ import numba as nb
 from .track_dynamics import LinearTrack, Track
 from .track_lightcurves import TriangularLightCurve, LightCurve
 from .track_psf import GaussianPSF, TrackPSF
-from track_gen.unused.coordinates import side_a, side_b
+from .pdm_params import side_a, side_b
 
 
 @nb.njit()
@@ -19,10 +19,14 @@ def signals_2d(subframes, actual_time, duration, lc, energies):
 
     return SGNs
 
-def generate_track(trajectory:Track, light_curve:LightCurve, psf:TrackPSF, duration, subframes):
-    track_trajectory = trajectory.generate(duration, subframes)
+def generate_track(trajectory:Track, light_curve:LightCurve, psf:TrackPSF, duration, subframes, time_cap=None):
+    if time_cap is None:
+        time_cap = duration
+    else:
+        time_cap = min(time_cap, duration)
+    track_trajectory = trajectory.generate(time_cap, subframes)
     t_bound = trajectory.get_time_bound()
-    actual_time = int(np.amin([duration, t_bound]))
+    actual_time = int(np.amin([time_cap, t_bound]))
     track_light_curve = light_curve.generate(actual_time, subframes)
     ensquared_energy = psf.generate(track_trajectory)
     return signals_2d(subframes, actual_time, duration, track_light_curve, ensquared_energy), actual_time

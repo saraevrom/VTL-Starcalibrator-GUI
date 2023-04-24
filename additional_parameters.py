@@ -7,5 +7,6 @@ ADD_PARAMS = [
     ["USE_STARCALIBRATOR", BoolNode, True],
     ["USE_BACKGROUND_EXTRACTOR", BoolNode, True],
     ["USE_DATASET_CREATOR", BoolNode, True],
-    ["USE_TRAINER", BoolNode, True]
+    ["USE_TRAINER", BoolNode, True],
+    ["USE_TRACK_TOOLBOX", BoolNode, True]
 ]

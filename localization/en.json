@@ -332,6 +332,13 @@
   "mat_converter.downloader.fieldialog.title": "Choose local directory",
   "mat_converter.downloader.download_directory": "Download entire directory",
 
+  "track_toolbox.btn.create_track": "Create track",
+  "track_toolbox.form.duration": "Duration",
+  "track_toolbox.form.subframes": "Subframes",
+  "track_toolbox.form.time_cap": "Time cap",
+  "track_toolbox.form.time": "Time",
+
+
   "app.settings.separator.stars_selection": "Star selection",
   "app.settings.separator.orientation_parameters": "Orientation parameters",
   "app.settings.separator.amplitude_parameters": "Optimizer parameters (change amplitudes)",
@@ -372,6 +379,17 @@
   "app.menu.tools.starcalibrator": "Orientation (legacy)",
   "app.menu.tools.dataset_generator": "Dataset generator",
   "app.menu.tools.teacher": "ANN model",
+  "app.menu.tools.track_toolbox": "Track toolbox",
+
+
+
+  "app.trackgen.trajectory": "Trajectory",
+  "app.trackgen.trajectory.linear": "Linear",
+  "app.trackgen.light_curve": "Light curve",
+  "app.trackgen.light_curve.triangular": "Triangular",
+  "app.trackgen.psf": "PSF",
+  "app.trackgen.psf.gauss": "Gaussian",
+
 
 
   "app.parameters.USE_VIEWER": "Enable viewer tool",
@@ -381,6 +399,7 @@
   "app.parameters.USE_BACKGROUND_EXTRACTOR": "Enable background markup tool",
   "app.parameters.USE_DATASET_CREATOR": "Enable dataset creation tool",
   "app.parameters.USE_TRAINER": "Enable trainer tool",
+  "app.parameters.USE_TRACK_TOOLBOX": "Enable track toolbox",
 
 
   "app.filedialog.save_model.title": "Save model",

@@ -326,6 +326,12 @@
   "mat_converter.downloader.messagebox.login_error.msg": "Не удалось соединиться с сервером {server}",
   "mat_converter.downloader.fieldialog.title": "Выберите локальную папку для сохранения данных.",
 
+  "track_toolbox.form.duration": "Длительность",
+  "track_toolbox.form.subframes": "Дополнительные кадры",
+  "track_toolbox.form.time_cap": "Ограничение времени",
+  "track_toolbox.form.time": "Время",
+
+
   "app.settings.separator.stars_selection": "Выбор звёзд",
   "app.settings.separator.orientation_parameters": "Параметры ориентации",
   "app.settings.separator.amplitude_parameters": "Параметры оптимизатора (амлитуды изменения)",
@@ -368,6 +374,13 @@
   "app.menu.tools.teacher": "Обучение модели",
 
 
+  "app.trackgen.trajectory": "Траектория",
+  "app.trackgen.trajectory.linear": "Линейная",
+  "app.trackgen.light_curve": "Кривая свечения",
+  "app.trackgen.light_curve.triangular": "Треугольная",
+  "app.trackgen.psf": "PSF",
+  "app.trackgen.psf.gauss": "Гаусс",
+
   "app.parameters.USE_VIEWER": "Включить инструмент просмотра",
   "app.parameters.USE_CONVERTER": "Включить инструмент преобразования",
   "app.parameters.USE_FLATFIELDER": "Включить инструмент выравнивания пикселей",
@@ -375,6 +388,7 @@
   "app.parameters.USE_BACKGROUND_EXTRACTOR": "Включить инструмент разметки фона",
   "app.parameters.USE_DATASET_CREATOR": "Включить инструмент создания обучающих выборок",
   "app.parameters.USE_TRAINER": "Включить инструмент обучения нейросети",
+  "app.parameters.USE_TRACK_TOOLBOX": "Включить инструмент генерации треков",
 
   "app.filedialog.save_model.title": "Сохранение модели",
   "app.filedialog.load_model.title": "Загрузка модели",
