@@ -75,9 +75,13 @@
 
 
   "teacher.form.trackgen": "Генерация треков",
+  "teacher.form.trackgen.generator": "Генератор",
+  "teacher.form.trackgen.generators": "Генераторы",
+  "teacher.form.trackgen.weight": "Вес",
   "teacher.form.trackgen.file": "Источник: список файлов",
   "teacher.form.trackgen.file.threshold": "Минимальная длина для сдвига",
   "teacher.form.trackgen.random": "Источник: собственный генератор",
+  "teacher.form.trackgen.random.duration": "Длительность",
   "teacher.form.trackgen.random.speed": "Скорость",
   "teacher.form.trackgen.random.a": "Ускорение",
   "teacher.form.trackgen.random.t_peak": "Время максимума",

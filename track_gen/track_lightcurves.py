@@ -16,7 +16,7 @@ class TriangularLightCurve(LightCurve):
         self.end_time = end_time
 
     def set_time_bound(self,t):
-        self.end_time = t
+        self.end_time = int(t)
 
     def generate(self,track_end_time,Nt):
         if self.end_time is None:

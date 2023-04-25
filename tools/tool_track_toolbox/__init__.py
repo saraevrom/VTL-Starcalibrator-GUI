@@ -106,7 +106,7 @@ class TrackToolbox(ToolBase, PopupPlotable):
         self.plotter.draw()
 
     def on_export(self):
-        if self._track:
+        if self._track is not None:
             filename = WORKSPACE_EXPORT.asksaveasfilename(title=get_locale("matplayer.dialog.gif_target"),
                                                       auto_formats=["h5"],
                                                       parent=self)

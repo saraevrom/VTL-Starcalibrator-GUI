@@ -57,9 +57,13 @@
   "teacher.form.probing.size": "Size",
 
   "teacher.form.trackgen": "Track generation",
+  "teacher.form.trackgen.generator": "Generator",
+  "teacher.form.trackgen.generators": "Generators",
+  "teacher.form.trackgen.weight": "Weight",
   "teacher.form.trackgen.file": "Source: file list",
   "teacher.form.trackgen.file.threshold": "Minimal length for shifting",
   "teacher.form.trackgen.random": "Source: custom generator",
+  "teacher.form.trackgen.random.duration": "Duration",
   "teacher.form.trackgen.random.speed": "Speed",
   "teacher.form.trackgen.random.a": "Acceleration",
   "teacher.form.trackgen.random.t_peak": "Peak time",
