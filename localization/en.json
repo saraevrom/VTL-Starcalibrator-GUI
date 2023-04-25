@@ -342,6 +342,8 @@
   "track_toolbox.form.subframes": "Subframes",
   "track_toolbox.form.time_cap": "Time cap",
   "track_toolbox.form.time": "Time",
+  "track_toolbox.form.noise": "Noise",
+  "track_toolbox.form.seed": "Seed",
 
 
   "app.settings.separator.stars_selection": "Star selection",

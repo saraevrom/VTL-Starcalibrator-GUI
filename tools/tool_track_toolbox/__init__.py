@@ -2,6 +2,7 @@ import tkinter as tk
 
 import numpy as np
 import h5py
+import numpy.random as np_rng
 
 from ..tool_base import ToolBase
 from vtl_common.localized_GUI.plotter import GridPlotter
@@ -99,6 +100,9 @@ class TrackToolbox(ToolBase, PopupPlotable):
         # TOP RIGHT
         kwargs["trajectory"] = tr_trajectory
         self._track[:, 8:, 8:], _ = generate_track(**kwargs)
+
+        rng = np_rng.default_rng(self._formdata["seed"])
+        self._track+=self._formdata["noise"].sample(rng=rng, shape=self._track.shape)
 
         plot_data = np.max(self._track, axis=0)
         self.plotter.buffer_matrix = plot_data

@@ -336,6 +336,8 @@
   "track_toolbox.form.subframes": "Дополнительные кадры",
   "track_toolbox.form.time_cap": "Ограничение времени",
   "track_toolbox.form.time": "Время",
+  "track_toolbox.form.noise": "Шум",
+  "track_toolbox.form.seed": "Зерно",
 
 
   "app.settings.separator.stars_selection": "Выбор звёзд",
