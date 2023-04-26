@@ -17,13 +17,13 @@ def ee_gauss(dx, sigmax):
         f[i] = 0.5*(erf((dx[i] + ax/2)/np.sqrt(2)/sigmax) - erf((dx[i] - ax/2)/np.sqrt(2)/sigmax))
     return f
 
-@nb.njit(nb.float64[:,:,:](nb.float64[:,:], nb.float64, nb.float64))
+@nb.njit(nb.float64[:,:,:](nb.float64[:,:], nb.float64, nb.float64), parallel=True)
 def ens_energy_no_id_gauss(center, width, height):
     N = len(center)
     EEs = np.zeros((N, side_a, side_b))
 
-    for i in range(side_a):
-        for j in range(side_b):
+    for i in nb.prange(side_a):
+        for j in nb.prange(side_b):
             x,y = ij_to_xy((i,j))
             EEs[:, i, j] = ee_gauss(x - center[:, 0], width) * ee_gauss(y - center[:, 1], height)
 

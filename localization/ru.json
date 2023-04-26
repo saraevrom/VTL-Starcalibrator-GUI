@@ -60,6 +60,7 @@
   "teacher.advform.multiplier": "Множитель",
   "teacher.advform.offset": "Сдвиг",
   "teacher.advform.parameters": "Параметры",
+  "teacher.form.false_track_probability": "Вероятность ложного трека",
   "teacher.form.artificial_interference": "Искусственная помеха",
   "teacher.form.quick_track_probability": "Вероятность быстрого трека",
   "teacher.form.quick_track_attempts": "Количество попыток сгенерировать быстрый трек",
@@ -75,6 +76,7 @@
 
 
   "teacher.form.trackgen": "Генерация треков",
+  "teacher.form.trackgen_false": "False Tracks",
   "teacher.form.trackgen.generator": "Генератор",
   "teacher.form.trackgen.generators": "Генераторы",
   "teacher.form.trackgen.weight": "Вес",

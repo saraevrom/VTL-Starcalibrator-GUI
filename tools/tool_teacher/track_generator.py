@@ -1,10 +1,9 @@
 import numpy as np
-import numpy.random as random
 from .filepool import RandomFileAccess
 from vtl_common.common_GUI.tk_forms_assist import FormNode, IntNode, AlternatingNode, FloatNode, ArrayNode, OptionNode
 from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field
 from vtl_common.localization import get_locale
-from .noising import FloatDistributedAlter
+from noise.noising import FloatDistributedAlter
 from track_gen import generate_track, LinearTrack, GaussianPSF, TriangularLightCurve
 from track_gen.pdm_params import side_a, side_b
 
@@ -82,7 +81,11 @@ class GeneratorTrackSource(TrackSource):
                 #print("NAN WARN", nans)
                 assert not np.isnan(track).any()
 
-                shift = rng.integers(low=0,high=track.shape[0]-actual_duration)
+                assert track.shape[0]>=actual_duration
+                if track.shape[0]>actual_duration:
+                    shift = rng.integers(low=0,high=track.shape[0]-actual_duration)
+                else:
+                    shift = 0
 
 
                 return np.roll(track,shift, axis=0)
@@ -123,7 +126,7 @@ class ShuffleSource(TrackSource):
         return self.sources[0].uses_files()
 
     def get_track(self, filelist:RandomFileAccess, rng, frame_size):
-        print("SOURCES:", self.sources)
+        #print("SOURCES:", self.sources)
         if self.sources:
             src = rng.choice(self.sources, p=self.probabilities)
             return src.get_track(filelist, rng, frame_size)

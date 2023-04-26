@@ -384,14 +384,18 @@ class ToolTeacher(ToolBase):
 
     def get_interference(self, conf, use_artificial, frame_size):
         if use_artificial:
-            track_gen: TrackSource = self._formdata.get_trackgen()
-            #source_foreground, e_length = self.fg_pool.random_access(self.rng, frame_size)
-            source_foreground = track_gen.get_track(self.fg_pool, self.rng, frame_size)
-            # We can create artificial "meteor" interference signal from foreground signal
-            flattened = np.sum(source_foreground, axis=0)
-            interference = np.zeros(source_foreground.shape)
-            interference[self.rng.integers(source_foreground.shape[0])] = flattened
-            return conf.process_it(interference/np.max(interference)*np.max(source_foreground), rng=self.rng)
+            if self._formdata.false_track_gen.sources and self.rng.random()<self._formdata.false_track_probability:
+                false_track = self._formdata.false_track_gen.get_track(self.interference_pool, self.rng, frame_size)
+                return conf.process_it(false_track, rng=self.rng)
+            else:
+                track_gen: TrackSource = self._formdata.get_trackgen()
+                #source_foreground, e_length = self.fg_pool.random_access(self.rng, frame_size)
+                source_foreground = track_gen.get_track(self.fg_pool, self.rng, frame_size)
+                # We can create artificial "meteor" interference signal from foreground signal
+                flattened = np.sum(source_foreground, axis=0)
+                interference = np.zeros(source_foreground.shape)
+                interference[self.rng.integers(source_foreground.shape[0])] = flattened
+                return conf.process_it(interference/np.max(interference)*np.max(source_foreground), rng=self.rng)
         else:
             return conf.process_it(self.interference_pool.random_access(self.rng)[0], rng=self.rng)
 

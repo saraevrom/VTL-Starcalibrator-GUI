@@ -1,7 +1,7 @@
 from vtl_common.common_GUI.tk_forms_assist import FormNode, IntNode, OptionNode
 from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field
 from vtl_common.localization import get_locale
-from ..tool_teacher.noising import FloatDistributedAlter
+from noise.noising import FloatDistributedAlter
 
 from track_gen.track_forms import TrajectoryField, LightCurveField, PSFField
 

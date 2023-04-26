@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-import compatibility.tf_cuda
+
+#import compatibility.tf_cuda
+
 from additional_parameters import ADD_PARAMS
 
 import vtl_common.parameters as parameters

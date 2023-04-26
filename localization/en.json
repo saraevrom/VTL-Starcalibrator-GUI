@@ -48,6 +48,7 @@
   "teacher.form.artificial_interference": "Artificial interference",
   "teacher.form.quick_track_probability": "Quick track probability",
   "teacher.form.quick_track_attempts": "Quick track attempts",
+  "teacher.form.false_track_probability": "False track probability",
   "teacher.form.flash_probability": "Flash probability",
   "teacher.form.flash_maxsize": "Flash maximum length",
   "teacher.form.flash_attempts": "Flash attempts",
@@ -56,6 +57,7 @@
   "teacher.form.probing": "Probing",
   "teacher.form.probing.size": "Size",
 
+  "teacher.form.trackgen_false": "False Tracks",
   "teacher.form.trackgen": "Track generation",
   "teacher.form.trackgen.generator": "Generator",
   "teacher.form.trackgen.generators": "Generators",

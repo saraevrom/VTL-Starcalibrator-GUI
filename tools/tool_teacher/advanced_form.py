@@ -1,12 +1,11 @@
-from vtl_common.common_GUI.tk_forms_assist import FormNode, FloatNode, AlternatingNode, IntNode
+from vtl_common.common_GUI.tk_forms_assist import FormNode, FloatNode, IntNode
 from vtl_common.common_GUI.tk_forms_assist import BoolNode, OptionNode
 from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field, create_label
 from vtl_common.localization import get_locale
 from .parameters_processing import Augmenter, DualProcessing, LearnParameters
 from preprocessing import DataPreProcessorField
 from .signal_modulator import ProcessingSubform, PostprocessingSubform
-from .noising import FloatDistributedAlter
-from .track_generator import TrackGeneratorField
+from .track_generator import TrackGeneratorField, GeneratorArray
 
 def create_dual(shared_field, common_title, title_master, title_slave):
     class MasterField(shared_field):
@@ -75,6 +74,8 @@ class SettingForm(FormNode):
     FIELD__flash_attempts = create_value_field(IntNode, get_locale("teacher.form.flash_attempts"), 0)
 
     FIELD__trackgen = TrackGeneratorField
+    FIELD__false_track_probability = create_value_field(FloatNode, get_locale("teacher.form.false_track_probability"), 0.5)
+    FIELD__false_track_gen = create_value_field(GeneratorArray,get_locale("teacher.form.trackgen_false"))
     FIELD__modification = create_dual(ProcessingSubform,
                                       get_locale("teacher.form.dataset_modification"),
                                       get_locale("teacher.status.msg_fg"),
