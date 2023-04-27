@@ -19,7 +19,7 @@ from .coordinates import side_a, side_b
 # Dk -> frames actual_time,
 # Nt -> division for each frame
 def Light_curve(par:LightCurve, Dk, Nt):
-    return par.generate(Dk, Nt)
+    return par.get_curve(Dk, Nt)
         
 #par = [80,100,50]; Dk = 128; Nt = 100
 #L = Light_curve('Triangular',par,Dk,Nt)

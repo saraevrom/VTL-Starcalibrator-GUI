@@ -22,7 +22,7 @@ class TriggerParameters(FormNode):
 
 
 class TrackMarkupForm(FormNode):
-    FIELD__max_frame = create_value_field(IntNode, get_locale("track_markup.form.max_frame"), 0)
+    FIELD__max_frame = create_value_field(IntNode, get_locale("track_markup.form.max_frame"), 9000)
     FIELD__preprocessing = DataPreProcessorField
     FIELD__min_frame = create_value_field(IntNode, get_locale("track_markup.form.min_frame"), 256)
     FIELD__pmt_select = PmtSelect

@@ -69,13 +69,15 @@ class GeneratorTrackSource(TrackSource):
             trajectory = LinearTrack(x0, y0, phi0, speed, a)
             if self.time_cap is None:
                 t_peak = t_peak*trajectory.length(frame_size) # Modify t_peak according to track length
+                time_cap = None
             else:
-                t_peak = t_peak * trajectory.length(min(frame_size, self.time_cap)) # Modify t_peak according to track length
+                time_cap = int(self.time_cap.sample(rng))
+                t_peak = t_peak * trajectory.length(min(frame_size, time_cap)) # Modify t_peak according to track length
             lc = TriangularLightCurve(t_peak, 1.0, e_min)
             psf = GaussianPSF(psf,psf)
             if self.min_len<=trajectory.length(frame_size)<=self.max_len:
                 track, actual_duration = generate_track(trajectory,lc,psf, frame_size, self.subframes,
-                                                        time_cap=self.time_cap)
+                                                        time_cap=time_cap)
                 # nans=np.logical_or.reduce(np.isnan(track),axis=(1,2))
                 #print(track[0])
                 #print("NAN WARN", nans)

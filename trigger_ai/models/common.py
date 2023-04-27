@@ -26,6 +26,29 @@ def deconvolve_windows(convolved, window):
     #print("NORM:", norm_arr)
     return result_arr/norm_arr
 
+
+
+@nb.njit
+def max_arrayscalar(array, scalar):
+    res = np.zeros(shape=array.shape)
+    for i in range(array.shape[0]):
+        if scalar>array[i]:
+            res[i] = scalar
+        else:
+            res[i] = array[i]
+    return res
+
+@nb.njit
+def deconvolve_windows_max(convolved, window):
+    result_arr = np.full(convolved.shape[0] + window - 1, 0.0)
+    for i in range(convolved.shape[0]):
+
+        result_arr[i: i + window] = max_arrayscalar(result_arr[i: i + window], convolved[i])
+    #print("SRC:", convolved)
+    #print("RES:",result_arr)
+    #print("NORM:", norm_arr)
+    return result_arr
+
 @nb.njit
 def expand_window(booled_full, window):
     result_arr = np.full(booled_full.shape[0], False)

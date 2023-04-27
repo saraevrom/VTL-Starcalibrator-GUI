@@ -27,7 +27,7 @@ def generate_track(trajectory:Track, light_curve:LightCurve, psf:TrackPSF, durat
     track_trajectory = trajectory.generate(time_cap, subframes)
     t_bound = trajectory.get_time_bound()
     actual_time = int(np.amin([time_cap, t_bound]))
-    track_light_curve = light_curve.generate(actual_time, subframes)
+    track_light_curve = light_curve.get_curve(actual_time, subframes)
     ensquared_energy = psf.generate(track_trajectory)
     return signals_2d(subframes, actual_time, duration, track_light_curve, ensquared_energy), actual_time
 
