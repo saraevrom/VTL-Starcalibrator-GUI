@@ -13,17 +13,17 @@ from vtl_common.localized_GUI.signal_plotter import PopupPlotable
 from vtl_common.workspace_manager import Workspace
 from .form import ToolboxForm
 from track_gen import generate_track
-from track_gen.track_dynamics import Track
+from track_gen.track_dynamics import TrackTrajectory
 
 from vtl_common.parameters import PIXEL_SIZE, HALF_GAP_SIZE, HALF_PIXELS
-from track_gen.pdm_params import pixel_size_a, pixel_size_b, side_a, side_b
+from track_gen.pdm_params import PIXEL_SIZE_A, PIXEL_SIZE_B, SIDE_A, SIDE_B
 
 
 GAP_SIZE = HALF_GAP_SIZE*2
 PIXELS = HALF_PIXELS*2
 
-GAP_OFFSET_X = GAP_SIZE * pixel_size_a/PIXEL_SIZE
-GAP_OFFSET_Y = GAP_SIZE * pixel_size_b/PIXEL_SIZE
+GAP_OFFSET_X = GAP_SIZE * PIXEL_SIZE_A / PIXEL_SIZE
+GAP_OFFSET_Y = GAP_SIZE * PIXEL_SIZE_B / PIXEL_SIZE
 
 
 
@@ -64,12 +64,12 @@ class TrackToolbox(ToolBase, PopupPlotable):
         # FIELD__time_cap = TimeCapOption
         kwargs = {k:self._formdata[k] for k in "trajectory light_curve psf duration subframes time_cap".split(" ")}
 
-        off_x = GAP_OFFSET_X + HALF_PIXELS*pixel_size_a
-        off_y = GAP_OFFSET_Y + HALF_PIXELS*pixel_size_b
+        off_x = GAP_OFFSET_X + HALF_PIXELS * PIXEL_SIZE_A
+        off_y = GAP_OFFSET_Y + HALF_PIXELS * PIXEL_SIZE_B
 
-        bl_trajectory:Track = kwargs["trajectory"]
+        bl_trajectory:TrackTrajectory = kwargs["trajectory"]
         br_trajectory = bl_trajectory.offset(-off_x,0)
-        tl_trajectory:Track = bl_trajectory.offset(0, -off_y)
+        tl_trajectory:TrackTrajectory = bl_trajectory.offset(0, -off_y)
         tr_trajectory = bl_trajectory.offset(-off_x, -off_y)
         max_time_bound = max(
             bl_trajectory.get_time_bound(),

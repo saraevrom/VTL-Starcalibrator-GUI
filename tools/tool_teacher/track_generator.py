@@ -4,8 +4,8 @@ from vtl_common.common_GUI.tk_forms_assist import FormNode, IntNode, Alternating
 from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field
 from vtl_common.localization import get_locale
 from noise.noising import FloatDistributedAlter
-from track_gen import generate_track, LinearTrack, GaussianPSF, TriangularLightCurve
-from track_gen.pdm_params import side_a, side_b
+from track_gen import generate_track, LinearTrackTrajectory, GaussianPSF, TriangularLightCurve
+from track_gen.pdm_params import SIDE_A, SIDE_B
 
 class TrackSource(object):
     def get_track(self, filelist:RandomFileAccess, rng, frame_size):
@@ -62,11 +62,11 @@ class GeneratorTrackSource(TrackSource):
             psf = self.psf_sampler.sample(rng)
             a = self.a_sampler.sample(rng)
             t_peak = self.t_peak_sampler.sample(rng) # 0.0=start of track, 1.0=end of track
-            x0 = (rng.random()*2-1)*side_a/2
-            y0 = (rng.random()*2-1)*side_b/2
+            x0 = (rng.random()*2-1) * SIDE_A / 2
+            y0 = (rng.random()*2-1) * SIDE_B / 2
             phi0 = (rng.random()*2-1)*np.pi
             e_min = self.start_energy_sampler.sample(rng)
-            trajectory = LinearTrack(x0, y0, phi0, speed, a)
+            trajectory = LinearTrackTrajectory(x0, y0, phi0, speed, a)
             if self.time_cap is None:
                 t_peak = t_peak*trajectory.length(frame_size) # Modify t_peak according to track length
                 time_cap = None

@@ -2,7 +2,7 @@ import numpy as np
 from vtl_common.localization import get_locale
 from vtl_common.common_GUI.tk_forms_assist import FormNode, AlternatingNode, FloatNode, IntNode
 from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field
-from .track_dynamics import LinearTrack
+from .track_dynamics import LinearTrackTrajectory
 from .track_lightcurves import TriangularLightCurve
 from .track_psf import GaussianPSF
 
@@ -17,7 +17,7 @@ class LinearTrajectoryField(FormNode):
     def get_data(self):
         kwargs = super().get_data()
         kwargs["phi0"] = kwargs["phi0"]*np.pi/180
-        return LinearTrack(**kwargs)
+        return LinearTrackTrajectory(**kwargs)
 
 class TrajectoryField(AlternatingNode):
     DISPLAY_NAME = get_locale("app.trackgen.trajectory")

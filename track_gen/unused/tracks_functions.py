@@ -7,7 +7,7 @@ import matplotlib.gridspec as gridspec	#subplots
 from scipy.optimize import curve_fit    #fit curves
 from scipy.special import erf   #error function
 from .coordinates import xy2id, ij2id, id2xy, id2ij, ij2xy_simple
-from track_gen.track_dynamics import Track
+from track_gen.track_dynamics import TrackTrajectory
 from track_gen.track_lightcurves import LightCurve
 from .coordinates import side_a, side_b
 
@@ -29,13 +29,13 @@ def Light_curve(par:LightCurve, Dk, Nt):
 #plt.show()
 
 ####################################################
-#Generation of Track
+#Generation of TrackTrajectory
 # For Linear track the parameters should be:
 # X0, Y0 -> initial points of the track
 # Phi0 -> direction of the track (constant)
 # U0 -> magnitud of initial velocity
 # A -> magnitude of linear acceleration (constant)
-def Gen_track(par:Track, DURATION, Nt):
+def Gen_track(par:TrackTrajectory, DURATION, Nt):
 
     Rs_track = par.generate(DURATION, Nt)
     t_bound = par.get_time_bound()

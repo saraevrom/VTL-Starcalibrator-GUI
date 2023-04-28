@@ -1,32 +1,32 @@
 import numpy as np
 import numba as nb
 
-side_a = 8
-side_b = 8
-pixel_size_a = 1
-pixel_size_b = 1
+SIDE_A = 8
+SIDE_B = 8
+PIXEL_SIZE_A = 1
+PIXEL_SIZE_B = 1
 
 
 @nb.njit()
 def Xmax():
-    return (side_a/2)*pixel_size_a
+    return (SIDE_A / 2)*PIXEL_SIZE_A
 
 @nb.njit()
 def Xmin():
-    return -(side_a/2)*pixel_size_a
+    return -(SIDE_A / 2)*PIXEL_SIZE_A
 
 @nb.njit()
 def Ymax():
-    return (side_b/2)*pixel_size_b
+    return (SIDE_B / 2)*PIXEL_SIZE_B
 
 @nb.njit()
 def Ymin():
-    return -(side_b/2)*pixel_size_b
+    return -(SIDE_B / 2)*PIXEL_SIZE_B
 
 
 @nb.njit()
 def ij_to_xy(ij):
     i,j = ij
-    x = (-side_a / 2 + 0.5 + i) * pixel_size_a
-    y = (-side_b / 2 + 0.5 + j) * pixel_size_b
+    x = (-SIDE_A / 2 + 0.5 + i) * PIXEL_SIZE_A
+    y = (-SIDE_B / 2 + 0.5 + j) * PIXEL_SIZE_B
     return x,y

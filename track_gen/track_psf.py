@@ -1,10 +1,18 @@
 import numpy as np
 import numba as nb
 from scipy.special import erf
-from .pdm_params import ij_to_xy, side_a, side_b
+from .pdm_params import ij_to_xy, SIDE_A, SIDE_B
 
 class TrackPSF(object):
+    '''
+    Base class for PSF
+    '''
     def generate(self, center):
+        '''
+        Create
+        :param center: (N,2) array produced by TrackTrajectory instance
+        :return: (N, SIDE_A, SIDE_B) array of intensities
+        '''
         raise NotImplementedError("Cannot generate light curve")
 
 @nb.njit(nb.float64[:](nb.float64[:], nb.float64))
@@ -20,10 +28,10 @@ def ee_gauss(dx, sigmax):
 @nb.njit(nb.float64[:,:,:](nb.float64[:,:], nb.float64, nb.float64), parallel=True)
 def ens_energy_no_id_gauss(center, width, height):
     N = len(center)
-    EEs = np.zeros((N, side_a, side_b))
+    EEs = np.zeros((N, SIDE_A, SIDE_B))
 
-    for i in nb.prange(side_a):
-        for j in nb.prange(side_b):
+    for i in nb.prange(SIDE_A):
+        for j in nb.prange(SIDE_B):
             x,y = ij_to_xy((i,j))
             EEs[:, i, j] = ee_gauss(x - center[:, 0], width) * ee_gauss(y - center[:, 1], height)
 

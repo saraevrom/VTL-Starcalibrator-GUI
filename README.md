@@ -52,8 +52,8 @@ There are moving average filter settings for viewing dim tracks.
 ## Extracting background
 Also done when file is opened in main window.
 Set up cutoffs, min and max intervals (max interval=0 means start with whole file).
-After setup press either "Track visible", either "Track not visible" button.
-Then process is straightforward: if you see track, press "Track visible", otherwise press "Track not visible".
+After setup press either "TrackTrajectory visible", either "TrackTrajectory not visible" button.
+Then process is straightforward: if you see track, press "TrackTrajectory visible", otherwise press "TrackTrajectory not visible".
 Pressing "Image is unclear" will redraw image without advancing.
 During the process state can be reset using corresponding button. You will be asked to confirm action.
 It is possible to review selected/rejected events by clicking them in listbox.

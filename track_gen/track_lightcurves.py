@@ -1,14 +1,28 @@
 import numpy as np
 
 class LightCurve(object):
+    '''
+    Base class for light curves
+    '''
 
     def __init__(self, end_time=None):
         self.end_time = end_time
 
     def set_time_bound(self,t):
+        '''
+        Override end time. Can be useful if track is generated for 4 pmts
+        :param t: time for override
+        :return:
+        '''
         self.end_time = int(t)
 
     def get_curve(self, Dk, Nt):
+        '''
+        Create light curve
+        :param Dk: Frames. Usage of this argument can be suppressed by set_time_bound method.
+        :param Nt: Subframes
+        :return:
+        '''
         if self.end_time is None:
             Dk = Dk
         else:
@@ -16,6 +30,12 @@ class LightCurve(object):
         return self.generate(Dk, Nt)
 
     def generate(self, Dk, Nt):
+        '''
+
+        :param Dk: Required frames
+        :param Nt: Subframes
+        :return: Dk*Nt array of lightcurve
+        '''
         raise NotImplementedError("Cannot generate light curve")
 
 

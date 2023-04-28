@@ -1,17 +1,15 @@
 import numpy as np
 import numba as nb
 
-from .track_dynamics import LinearTrack, Track
+from .track_dynamics import LinearTrackTrajectory, TrackTrajectory
 from .track_lightcurves import TriangularLightCurve, LightCurve
 from .track_psf import GaussianPSF, TrackPSF
-from .pdm_params import side_a, side_b
+from .pdm_params import SIDE_A, SIDE_B
 
 
 @nb.njit()
 def signals_2d(subframes, actual_time, duration, lc, energies):
-    SGNs = np.zeros((duration, side_a, side_b))
-    #print("ENERGY TEST", energies[0])
-    #print("LC TEST", lc[0])
+    SGNs = np.zeros((duration, SIDE_A, SIDE_B))
     for k in range(actual_time):
         # SGNs[k] == 0 from start
         for k1 in range(k*subframes,subframes*(k+1)):
@@ -19,7 +17,7 @@ def signals_2d(subframes, actual_time, duration, lc, energies):
 
     return SGNs
 
-def generate_track(trajectory:Track, light_curve:LightCurve, psf:TrackPSF, duration, subframes, time_cap=None):
+def generate_track(trajectory:TrackTrajectory, light_curve:LightCurve, psf:TrackPSF, duration, subframes, time_cap=None):
     if time_cap is None:
         time_cap = duration
     else:

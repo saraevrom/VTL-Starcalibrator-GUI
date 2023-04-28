@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt	#to plot
 import track_gen.unused.coordinates as cor
 import track_gen.unused.tracks_functions as Trf
 import track_gen.unused.pixel_map as PxM
-from track_gen import LinearTrack
+from track_gen import LinearTrackTrajectory
 from track_gen import TriangularLightCurve
 from track_gen import GaussianPSF
 from track_gen import generate_track
@@ -18,11 +18,11 @@ if __name__=="__main__":
     # (1) KINEMATICS:
     #Dk is full actual_time should be <= min(DURATION, T_boundary)
     DURATION = 128; Nt = 10
-    trajectory = LinearTrack(-4.333,-3.5,0.0,0.125,0)
+    trajectory = LinearTrackTrajectory(-4.333, -3.5, 0.0, 0.125, 0)
     #trajectory = [-4,-3,0.1,0.125,0]    #[X0,Y0,Phi0,U0,A]
 
     IDs, Rc, Dk = Trf.Gen_track(trajectory,DURATION,Nt)
-    #IDs = Track[0]; Rc = Track[1]; Dk = Track[2]
+    #IDs = TrackTrajectory[0]; Rc = TrackTrajectory[1]; Dk = TrackTrajectory[2]
 
     ####################################################
     # (2) LIGHT CURVE:
