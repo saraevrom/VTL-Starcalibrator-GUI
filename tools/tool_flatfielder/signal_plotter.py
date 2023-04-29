@@ -24,7 +24,7 @@ class SignalPlotter(Plotter):
             left, right = right, left
         # print(left, right)
         self.left_line.set_xdata([left, left])
-        self.right_line.set_xdata([right, right])
+        self.right_line.set_xdata([right-1, right-1])
         self.left_cut = left
         self.right_cut = right
 
@@ -35,17 +35,17 @@ class SignalPlotter(Plotter):
         self.left_line.set_ydata([bottom, top])
         self.right_line.set_ydata([bottom, top])
 
-    def plot_data(self,drawing_data):
+    def plot_data(self,drawing_data,offset=0):
         datalen = drawing_data.shape[0]
         if datalen == self.remembered_length:
             assert len(self.plots)>0
-            self._plot_data(drawing_data, True)
+            self._plot_data(drawing_data, True, offset)
         else:
-            self._plot_data(drawing_data, False)
+            self._plot_data(drawing_data, False, offset)
             self.remembered_length = datalen
 
-    def _plot_data(self, drawing_data, fastplot=False):
-        xs = np.arange(0,drawing_data.shape[0],1)
+    def _plot_data(self, drawing_data, fastplot=False, offset=0):
+        xs = np.arange(0,drawing_data.shape[0],1)+offset
         if not fastplot:
             for l in self.plots:
                 l.remove()

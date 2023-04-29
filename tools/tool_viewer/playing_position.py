@@ -8,6 +8,7 @@ from tkinter.simpledialog import askstring
 import numpy as np
 from matplotlib.patches import Rectangle
 from vtl_common.utilities import set_vlines_position
+from searching import comparing_binsearch
 
 MARK_LOW = 0
 MARK_HIGH = 1
@@ -49,12 +50,16 @@ class ValueWrapper(tk.Frame):
             if ans:
                 start_dt = datetime.utcfromtimestamp(self.utc_explorer[self.get_value()])
                 ut0 = parse_datetimes(ans, start_dt)
-                print("got UTC:", ut0)
-                if ut0 < np.min(self.utc_explorer):
-                    return
-                if ut0 > np.max(self.utc_explorer):
-                    return
-                frame = np.argmin(np.abs(self.utc_explorer - ut0))
+
+                frame = comparing_binsearch(self.utc_explorer, ut0)
+
+                # print("got UTC:", ut0)
+                # if ut0 < np.min(self.utc_explorer):
+                #     return
+                # if ut0 > np.max(self.utc_explorer):
+                #     return
+                # frame = np.argmin(np.abs(self.utc_explorer - ut0))
+
                 print("INTERVAL OK")
                 self.set_value(frame)
 

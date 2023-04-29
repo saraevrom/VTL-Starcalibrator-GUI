@@ -104,6 +104,7 @@ class App(tk.Tk):
         if filename and os.path.isfile(filename):
             #new_file = h5py.File(filename, "r")
             new_file = AliasedDataFile(filename,"r")
+            print("hdf5 loaded")
             if not friendliness.check_data_file(new_file):
                 self.update_title()
                 return
@@ -120,6 +121,7 @@ class App(tk.Tk):
                     messagebox.showinfo(title=get_locale("app.load_file_with_ff.title"),
                                         message=get_locale("app.load_file_with_ff.message"))
             for tool in self.tool_list:
+                print("Informing ", tool)
                 tool.propagate_mat_file(self.file)
             print("Loaded file:", filename)
         self.update_title()

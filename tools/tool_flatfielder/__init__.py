@@ -1,6 +1,8 @@
 import gc
 from tkinter import ttk
 import tkinter as tk
+
+import tqdm
 import numba as nb
 from .dual_highlighting_plotter import DualHighlightingplotter
 from vtl_common.common_GUI import SettingMenu
@@ -76,7 +78,7 @@ class FlatFielder(ToolBase):
         self.settings_menu.commit_action = self.on_apply_settings
 
 
-
+        self.samples_mean_setting = self.settings_menu.lookup_setting("samples_mean")
         self.t1_setting = self.settings_menu.lookup_setting("time_1")
         self.t2_setting = self.settings_menu.lookup_setting("time_2")
 
@@ -116,7 +118,9 @@ class FlatFielder(ToolBase):
         if self.file:
             self.t1_setting.set_limits(0, maxlen)
             self.t2_setting.set_limits(0, maxlen)
-            self.signal_plotter.view_x(0, maxlen)
+            t1 = self.settings_dict["time_1"]
+            t2 = self.settings_dict["time_2"]
+            self.signal_plotter.view_x(t1, t2)
 
     def on_apply_settings(self):
         self.sync_settings()
@@ -140,10 +144,11 @@ class FlatFielder(ToolBase):
 
     def on_calculate_common(self):
         if self.drawn_data is not None:
-            t1 = self.settings_dict["time_1"]
-            t2 = self.settings_dict["time_2"]
-            assert t2 > t1
-            requested_data = self.drawn_data[t1:t2]
+            # t1 = self.settings_dict["time_1"]
+            # t2 = self.settings_dict["time_2"]
+            #assert t2 > t1
+            #requested_data = self.drawn_data[t1:t2]
+            requested_data = self.drawn_data[:]
             if (self.model_change_mode == APPEND) and (self.remembered_model is not None):
                 #apply data for next stage
                 requested_data = self.remembered_model.apply(requested_data)
@@ -235,6 +240,12 @@ class FlatFielder(ToolBase):
     def on_loaded_file_success(self):
         self._last_skip = None
         self._collapsed_data = None
+        elements = self.file["data0"].shape[0]
+        CLAMP_SAMPLES = 8*3600
+        if elements>CLAMP_SAMPLES:
+            print("FF: too many samples!", elements)
+            self.samples_mean_setting.set_value(elements//CLAMP_SAMPLES)
+
         self.on_apply_settings()
         #self.propagate_limits()
         #self.draw_plot()
@@ -242,49 +253,64 @@ class FlatFielder(ToolBase):
     def draw_plot(self):
         data0 = self.file["data0"]
         skip = self.settings_dict["samples_mean"]
-        res_array = []
+        t1 = self.settings_dict["time_1"]
+        t2 = self.settings_dict["time_2"]
+        if t1 > t2:
+            t1, t2 = t2, t1
+
+
+        def get_range():
+            return range(t1*skip, t2*skip, skip)
+            #return range(0, len(data0), skip)
+
+        res_array = np.zeros(shape=(len(get_range()),data0.shape[1],data0.shape[2]))
         gc.collect()
-        for i in range(0, len(data0), skip):
+        j = 0
+        for i in tqdm.tqdm(get_range()):
             layer = np.mean(data0[i:i+skip], axis=0)
-            res_array.append(layer)
+            res_array[j]=layer
+            j+=1
+        assert j==res_array.shape[0]
         #res_array = collapse_array(np.array(data0), skip) # Lord have mercy
 
         self.drawn_data = np.array(res_array)
         apparent_data = self.drawn_data
         if (self.remembered_model is not None) and self.settings_dict["use_model"]:
-            apparent_data = self.remembered_model.apply(apparent_data)
+            apparent_data = self.remembered_model.apply_nobreak(apparent_data)
             broke = self.remembered_model.get_broken()
             apparent_data[:, broke] = 0
         self.apparent_data = apparent_data
-        self.signal_plotter.plot_data(apparent_data)
+        self.signal_plotter.plot_data(apparent_data,offset=t1)
         bottom = -10
         top = np.max(apparent_data)
         print("LIMITS:", bottom, top)
         self.signal_plotter.view_y(bottom, top)
+
         self.signal_plotter.set_yrange(0, top)
 
     def on_dual_draw(self,p1,p2):
         if self.apparent_data is None:
             return
-        t1 = self.settings_dict["time_1"]
-        t2 = self.settings_dict["time_2"]
-        if t1 > t2:
-            t1, t2 = t2, t1
-        requested_data = self.apparent_data[t1:t2,:,:]
-        outdata = np.concatenate([self.apparent_data[:t1,:,:], self.apparent_data[t2:,:,:]])
+        # t1 = self.settings_dict["time_1"]
+        # t2 = self.settings_dict["time_2"]
+        # if t1 > t2:
+        #     t1, t2 = t2, t1
+        # requested_data = self.apparent_data[t1:t2,:,:]
+        requested_data = self.apparent_data[:,:,:]
+        #outdata = np.concatenate([self.apparent_data[:t1,:,:], self.apparent_data[t2:,:,:]])
         assert (requested_data!=0).any()
         i1, j1 = p1
         i2, j2 = p2
         S_1 = requested_data[:, i1, j1]
         S_2 = requested_data[:, i2, j2]
 
-        S_1_o = outdata[:, i1, j1]
-        S_2_o = outdata[:, i2, j2]
+        #S_1_o = outdata[:, i1, j1]
+        #S_2_o = outdata[:, i2, j2]
         fig, ax = plt.subplots()
         ax.axis('equal')
         ax.set_xlabel(f"S[{i1}, {j1}]")
         ax.set_ylabel(f"S[{i2}, {j2}]")
-        ax.scatter(S_1_o, S_2_o)
+        #ax.scatter(S_1_o, S_2_o)
         ax.scatter(S_1, S_2)
         maxval = np.max(np.concatenate([S_1, S_2, S_1_o, S_2_o]))
         ax.plot([0, maxval], [0, maxval])

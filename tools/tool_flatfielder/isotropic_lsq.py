@@ -136,7 +136,7 @@ def line_to_mod_params(direction: np.ndarray, multidim_displace: np.ndarray):
 def twodot_line_params(p1, p2):
     direction = p2-p1
     direction = direction/np.sum(direction*direction)**0.5
-    assert (direction>=0).all()
+    #assert (direction>=0).all()
     dims = direction.shape[0]
     start_dir = np.zeros(dims)
     start_dir[-1] = 1

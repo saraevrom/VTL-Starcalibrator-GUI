@@ -6,7 +6,7 @@ from datetime import datetime
 from ..tool_base import ToolBase
 from vtl_common.localization import get_locale
 from vtl_common.common_GUI import TkDictForm
-from vtl_common.parameters import DATETIME_FORMAT
+from vtl_common.parameters import DATETIME_FORMAT, HALF_PIXELS
 import matplotlib.pyplot as plt
 from .form import ViewerForm
 from vtl_common.workspace_manager import Workspace
@@ -172,9 +172,11 @@ class MatPlayer(ToolBase, PopupPlotable):
 
     def on_loaded_file_success(self):
         #self.frames = np.array(self.file["data0"])
-        self.ut0_s = np.array(self.file["UT0"])
+        #self.ut0_s = np.array(self.file["UT0"])
+        self.ut0_s = self.file["UT0"]
+        print("VIEWER: times loaded")
         self.player_controls.link_time(self.ut0_s)
-        self.player_controls.set_limit(len(self.file["UT0"]) - 1)
+        self.player_controls.set_limit(self.file["UT0"].shape[0] - 1)
         #self.plotter.draw()
         self.poke()
 
@@ -184,7 +186,10 @@ class MatPlayer(ToolBase, PopupPlotable):
 
     def on_ff_reload(self):
         ffmodel = self.get_ff_model()
-        self.plotter.set_broken(ffmodel.broken_query())
+        if ffmodel:
+            self.plotter.set_broken(ffmodel.broken_query())
+        else:
+            self.plotter.alive_pixels_matrix = np.ones([2*HALF_PIXELS, 2*HALF_PIXELS]).astype(bool)
         self.plotter.draw()
         self.poke()
 
