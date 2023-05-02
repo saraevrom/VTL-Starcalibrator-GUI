@@ -1,7 +1,8 @@
 import numpy as np
 from .base import Preprocessor
-from .denoising import reduce_noise, antiflash, moving_average_subtract, divide_multidim_3to2
+from .denoising import reduce_noise, antiflash, moving_average_subtract, divide_multidim_3to2, divide_multidim_3to3
 from .denoising import  moving_median_subtract, reduce_noise_robust, window_limiting, slice_for_preprocess
+from .denoising import sliding_robust_dev_centered
 from numba.experimental import jitclass
 import numba as nb
 from numba.core.types.containers import UniTuple
@@ -106,12 +107,14 @@ class DataThreeStagePreProcessor(object):
     # use_robust: nb.boolean
     # independent_pmt: nb.boolean
 
-    def __init__(self, ma_win=10, mstd_win=100, use_antiflash=True, use_robust=False, independent_pmt=False):
+    def __init__(self, ma_win=10, mstd_win=100, use_antiflash=True, use_robust=False, independent_pmt=False,
+                 nooffset=False):
         self.ma_win = ma_win
         self.mstd_win = mstd_win
         self.use_antiflash = use_antiflash
         self.use_robust = use_robust
         self.independent_pmt = independent_pmt
+        self.nooffset = nooffset
 
     def get_representation(self):
         res = "Filter:\n"
@@ -136,7 +139,39 @@ class DataThreeStagePreProcessor(object):
             if self.independent_pmt:
                 res += "\tIndependent PMT\n"
 
+            if self.nooffset:
+                res += "\tNo offset"
+
         return res
+
+
+    def get_nooffset(self, src_raw):
+        src = src_raw.astype(float)
+        if self.use_robust:
+            stage1_f = moving_median_subtract
+            stage2_f = reduce_noise_robust
+        else:
+            stage1_f = moving_average_subtract
+            stage2_f = reduce_noise
+
+        ma_win = self.ma_win
+
+        mstd_win = self.mstd_win
+
+        if ma_win != 0:
+            stage1 = stage1_f(src, ma_win)
+        else:
+            stage1 = src[:]
+
+        if mstd_win != 0:
+            stage2_divider = stage2_f(stage1, mstd_win)[1]
+            if stage2_divider.shape[0]==src.shape[0]:
+                return divide_multidim_3to3(src,stage2_divider)
+            else:
+                return divide_multidim_3to2(src, stage2_divider[0])
+        else:
+            return src
+
 
     def preprocess_bulk(self, src_raw):
         src = src_raw.astype(float)
@@ -159,7 +194,7 @@ class DataThreeStagePreProcessor(object):
             stage1 = src[:]
 
         if mstd_win != 0:
-            stage2 =stage2_f(stage1, mstd_win)
+            stage2 =stage2_f(stage1, mstd_win)[0]
         else:
             stage2 = stage1[:]
 
@@ -171,14 +206,19 @@ class DataThreeStagePreProcessor(object):
         return stage3
 
     def preprocess_whole(self, src: np.ndarray, broken: np.ndarray):
+        if self.nooffset:
+            #print("NOOFFSET")
+            prepfunc = self.get_nooffset
+        else:
+            prepfunc = self.preprocess_bulk
         if self.independent_pmt:
             signal = np.zeros(src.shape)
-            signal[:, :8, :8] = self.preprocess_bulk(src[:, :8, :8])
-            signal[:, 8:, :8] = self.preprocess_bulk(src[:, 8:, :8])
-            signal[:, :8, 8:] = self.preprocess_bulk(src[:, :8, 8:])
-            signal[:, 8:, 8:] = self.preprocess_bulk(src[:, 8:, 8:])
+            signal[:, :8, :8] = prepfunc(src[:, :8, :8])
+            signal[:, 8:, :8] = prepfunc(src[:, 8:, :8])
+            signal[:, :8, 8:] = prepfunc(src[:, :8, 8:])
+            signal[:, 8:, 8:] = prepfunc(src[:, 8:, 8:])
         else:
-            signal = self.preprocess_bulk(src)
+            signal = prepfunc(src)
 
         if broken is not None:
             # noise = np.std(signal[:, np.logical_not(broken)])

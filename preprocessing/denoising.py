@@ -145,18 +145,20 @@ def nb_std0(data):
 def reduce_noise(data,sliding_win):
     if sliding_win>=data.shape[0]:
         std = nb_std0(data)
-        return divide_multidim_3to2(data, std)
+        res = divide_multidim_3to2(data, std)
+        std = np.expand_dims(std,0)
+        return res, std
     else:
         std = sliding_std(data, sliding_win)
         ret_data = divide_multidim_3to3(data, std)
-        return ret_data
+        return ret_data, std
 
 
 @nb.njit(cache=True)
 def reduce_noise_robust(data, sliding_win):
     std = sliding_robust_dev_centered(data, sliding_win)*(np.pi/2)**0.5
     ret_data = divide_multidim_3to3(data, std)
-    return ret_data
+    return ret_data, std
 
 
 @nb.njit(parallel=True,cache=True)

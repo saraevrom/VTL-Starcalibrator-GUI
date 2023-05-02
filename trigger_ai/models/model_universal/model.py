@@ -2,7 +2,7 @@ from ..common import apply_layer_array, deconvolve_windows
 import tensorflow as tf
 from ..model_wrapper import ModelWrapper
 import numpy as np
-from ..common import splat_select, plot_offset, expand_window
+from ..common import splat_select, plot_offset
 
 OUT_SINGLE_SIGMA, OUT_SOFT, OUT_SPLIT = OUTPUT_TYPES = ["single_sigma", "binary_softmax", "splitted_sigma"]
 S_SINGLE_SIGMA, S_SOFT, S_SPLIT = OUTPUT_SHAPES = [(1,), (2,), (4,)]
@@ -65,8 +65,8 @@ class UniversalModel(ModelWrapper):
 
         #print("R0", booled)
         #booled_full = splat_select(booled, 128)
-        return booled_full
-        #return expand_window(booled_full,128)
+        #return booled_full
+        return self.expand_window(booled_full,128)
     
     def trigger_split(self, x, threshold):
         mode = self.get_mode()
@@ -77,8 +77,8 @@ class UniversalModel(ModelWrapper):
             for i in range(4):
                 deconv = deconvolve_windows(y_data[:, i], 128)
                 booled_full = deconv > threshold
-                signal = booled_full
-                #signal = expand_window(booled_full,128)
+                #signal = booled_full
+                signal = self.expand_window(booled_full,128)
                 signals.append(signal)
             return signals
         else:

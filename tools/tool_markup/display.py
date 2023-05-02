@@ -56,6 +56,9 @@ class Display(tk.Frame):
         self.plotter.set_broken(broken)
         self.on_weak_change()
 
+    def get_broken(self):
+        return self.plotter.get_broken()
+
     def serialize(self):
         return  self.storage.serialize()
 

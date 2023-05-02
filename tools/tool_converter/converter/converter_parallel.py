@@ -49,6 +49,7 @@ def simplify_files(file_list, cutter, multiplier=1):
     full_len = 0
     for filename in file_list:
         with h5py.File(filename) as source_file:
+            print("Check", source_file)
             times = source_file['unixtime_dbl_global']
             file_len = times.shape[0]
             file_lengths.append(file_len)

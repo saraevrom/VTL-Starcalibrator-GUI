@@ -164,10 +164,12 @@ class ToolMarkup(ToolBase, PopupPlotable):
                                      command=self.on_export_bg, row=3)
         self.button_panel.add_button(text=get_locale("track_markup.btn.load"),
                                      command=self.on_load_data, row=4)
+        self.button_panel.add_button(text=get_locale("track_markup.btn.diagram"),
+                                     command=self.on_track_diagram, row=5)
 
         if TENSORFLOW_INSTALLED:
             self.button_panel.add_button(text=get_locale("track_markup.btn.load_tf"),
-                      command=self.on_load_tf, row=5)
+                      command=self.on_load_tf, row=6)
 
         self.button_panel.grid(row=0, column=0, sticky="ew")
 
@@ -177,6 +179,12 @@ class ToolMarkup(ToolBase, PopupPlotable):
         #                          text=get_locale("track_markup.btn.spawn_window"),
         #                          command=self.on_spawn_figure_press)
         # spawn_button.pack(side="bottom", expand=True, fill="both")
+
+        retract_btn = tk.Button(bottom_panel,
+                                  text=get_locale("track_markup.btn.retract"),
+                                  command=self.on_retract)
+        retract_btn.pack(side="bottom", expand=True, fill="both")
+
         manual_button = tk.Button(bottom_panel,
                                   text=get_locale("track_markup.btn.direct_interval"),
                                   command=self.on_direct_ask)
@@ -217,10 +225,20 @@ class ToolMarkup(ToolBase, PopupPlotable):
                 self.auto_btn.pack_forget()
             self.start_btn.pack(expand=True, fill="both")
 
+    def on_retract(self):
+        self.display.storage.try_retract()
+        self.update_answer_panel()
 
     def on_form_changed(self):
         self._form_changed = True
 
+    def on_track_diagram(self):
+        self.sync_form()
+        if self.file:
+            self.tracks.display_diagram(self.file, self.get_ff_model(),
+                                        self._formdata["preprocessing"],
+                                        self.display.get_broken()
+                                        )
 
     def sync_form(self, force=False):
         if self._form_changed or force:
@@ -231,6 +249,9 @@ class ToolMarkup(ToolBase, PopupPlotable):
 
             self._formdata = formdata
             self.display.set_formdata(self._formdata)
+            if self.tf_model is not None:
+                trigger = self._formdata["trigger"]
+                self.tf_model.set_window_expansion(trigger["expand_window"])
             self._form_changed = False
 
 
@@ -265,6 +286,7 @@ class ToolMarkup(ToolBase, PopupPlotable):
             self.tf_model = ModelWrapper.load_model(filename)
             self.tf_filter = self.tf_model.get_filter()
             self.tf_filter_info.set("ANN " + self.tf_filter.get_representation())
+            self.sync_form(True)
 
     def on_track_visible(self):
         self.sync_form()

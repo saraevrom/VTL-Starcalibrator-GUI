@@ -6,16 +6,28 @@ class Residual(object):
     def __init__(self, main, shortcut):
         self.main = main
         self.shortcut = shortcut
+        self._known_inputs = None
 
     def __call__(self, inputs):
         normal = apply_layer_array(inputs, self.main)
         shortcut = apply_layer_array(inputs, self.shortcut)
+        self._known_inputs = inputs
         return keras.layers.Add()([normal, shortcut])
 
     @property
     def output_shape(self):
-        assert self.shortcut.output_shape == self.main.output_shape
-        return self.shortcut.output_shape
+        assert self._known_inputs is not None
+        if self.shortcut:
+            sshape = self.shortcut[-1].output_shape
+        else:
+            sshape = tuple(self._known_inputs.shape)
+        if self.main:
+            mshape = self.main[-1].output_shape
+        else:
+            mshape =  tuple(self._known_inputs.shape)
+
+        assert sshape == mshape
+        return sshape
 
 class TrainableScaling(keras.layers.Layer):
     def __init__(self, use_offset):

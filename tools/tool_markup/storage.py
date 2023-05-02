@@ -6,6 +6,7 @@ class ConservativeStorage(object):
         self.on_store = None
         self.on_take = None
         self.last_source = None
+        self.last_index = None
 
     def get_available(self):
         raise NotImplementedError("Cannot determine what is here")
@@ -79,6 +80,7 @@ class ArrayStorage(ConservativeStorage):
 
     def store(self, item):
         self.storage.append(item)
+        self.last_index = len(self.storage)-1
         return True
 
     def get_available(self):
@@ -87,6 +89,7 @@ class ArrayStorage(ConservativeStorage):
 
     def take(self, index):
         if 0 <= index < len(self.storage):
+            self.last_index = None
             return self.storage.pop(index)
         else:
             return None
@@ -118,6 +121,7 @@ class SingleStorage(ConservativeStorage):
 
     def store(self, item):
         if self.item is None:
+            self.last_index = 0
             self.item = item
             return True
         else:
@@ -126,6 +130,7 @@ class SingleStorage(ConservativeStorage):
     def take(self):
         item = self.item
         self.item = None
+        self.last_index = None
         return item
 
     def drop(self):
@@ -212,6 +217,9 @@ class Interval(object):
 
     def to_istorage(self):
         return IntervalStorage(self.start,self.end)
+
+    def to_slice(self):
+        return slice(self.start, self.end)
 
 
 class IntervalStorage(ConservativeStorage):
@@ -312,6 +320,7 @@ class IntervalStorage(ConservativeStorage):
         else:
             self.taken_intervals.insert(index_to_take,interval)
             self.simplify_from(max(index_to_take-1,0))
+            self.last_index = None
             return interval
 
     def store(self, item:Interval):
@@ -327,6 +336,7 @@ class IntervalStorage(ConservativeStorage):
         e1 = item.start
         if s1<e1:
             self.taken_intervals.insert(index,Interval(s1, e1))
+        self.last_index = index
         return True
 
     def get_available(self):

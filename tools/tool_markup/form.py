@@ -18,6 +18,7 @@ class TriggerParameters(FormNode):
     # FIELD__edge_shift = create_value_field(IntNode, get_locale("track_markup.form.trigger.edge_shift"), 64)
     #FIELD__stabilize_slide = create_value_field(BoolNode, get_locale("track_markup.form.trigger.stabilize"), True)
     FIELD__max_plot = create_value_field(IntNode, get_locale("track_markup.form.trigger.max_data_plot"), 5000)
+    FIELD__expand_window = create_value_field(BoolNode, get_locale("track_markup.form.trigger.expand_window"), True)
     USE_SCROLLVIEW = False
 
 

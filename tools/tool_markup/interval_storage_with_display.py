@@ -1,6 +1,11 @@
+import matplotlib.pyplot as plt
+import numpy as np
 import tkinter as tk
 from vtl_common.localization import get_locale
 from .storage import ConservativeStorage, IntervalStorage, ArrayStorage
+
+from vtl_common.common_flatfielding.models import FlatFieldingModel
+from preprocessing.three_stage_preprocess import DataThreeStagePreProcessor
 
 
 class Storing(object):
@@ -51,8 +56,12 @@ class DisplayStorage(tk.Frame, Storing):
             self.listbox.delete(0,tk.END)
             for item in intervals:
                 self.listbox.insert(tk.END, f"{item.start} - {item.end}")
+
+            if self.storage.last_index is not None and 0<=self.storage.last_index<len(intervals):
+                self.listbox.see(self.storage.last_index)
         else:
             self.listbox.delete(0, tk.END)
+
 
     def clear(self):
         self.storage.clear()
@@ -75,3 +84,21 @@ class DisplayStorage(tk.Frame, Storing):
                     self.listbox.selection_clear(0, tk.END)
 
             self.on_change()
+            if cursel:
+                index = cursel[0]
+                if index<self.listbox.size():
+                    self.listbox.see(index)
+
+    def display_diagram(self, source, ffmodel: FlatFieldingModel, preprocessor: DataThreeStagePreProcessor, broken):
+        xs = []
+        ys = []
+        for interval in self.storage.get_available():
+            data = source["data0"][interval.to_slice()]
+            xs.append(interval.length())
+            if ffmodel is not None:
+                data = ffmodel.apply_nobreak(data)
+            data = preprocessor.preprocess_whole(data, broken)
+            ys.append(np.max(data))
+        fig, ax = plt.subplots()
+        ax.scatter(xs,ys)
+        fig.show()
