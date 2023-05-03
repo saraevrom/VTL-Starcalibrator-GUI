@@ -104,7 +104,7 @@ class MatPlayer(ToolBase, PopupPlotable):
         if not self.file:
             return
         filename = WORKSPACE_ANIMATIONS.asksaveasfilename(title=get_locale("matplayer.dialog.gif_target"),
-                                              filetypes=[(get_locale("app.filedialog_formats.gif"), "*.gif")],
+                                              auto_formats=["gif mp4"],
                                               parent=self)
         if filename:
             renderer = self.form_data["gif_renderer"]
@@ -118,7 +118,7 @@ class MatPlayer(ToolBase, PopupPlotable):
             print("-" * 20)
             print(renderer)
             print("-" * 20)
-            writer = iio.get_writer(filename, fps=renderer["fps"])
+            writer = iio.get_writer(filename, duration=1000/renderer["fps"])
             for i in tqdm.tqdm(range(low, high+1, renderer["frame_skip"])):
                 self.on_frame_draw(i)
                 buf = io.BytesIO()
@@ -163,6 +163,7 @@ class MatPlayer(ToolBase, PopupPlotable):
             self.plotter.axes.set_title(time_str)
             #print("Frame calculated:", time.time()-frame_start)
             self.plotter.draw()
+            #self.plotter.figure.canvas.draw()
             #print("Frame END:", time.time()-frame_start)
 
     def click_callback(self):
