@@ -275,6 +275,7 @@
   "track_markup.form.trigger.threshold": "Порог вероятности",
   "track_markup.form.trigger.edge_shift": "Сдвиг краёв диапазона",
   "track_markup.form.trigger.expand_window": "Расширение окна",
+  "track_markup.form.trigger.deconvolve_window": "Развёртка окна",
   "track_markup.form.auto_continue": "Продолжить автоматическую разметку",
   "track_markup.form.override_ann": "Не использовать собственный фильтр нейросети",
   "track_markup.form.trigger.stabilize": "Стабилиировать окно фильтра",
@@ -344,6 +345,9 @@
   "track_toolbox.form.time": "Время",
   "track_toolbox.form.noise": "Шум",
   "track_toolbox.form.seed": "Зерно",
+  "track_toolbox.form.real_bg": "Реальный фон",
+  "track_toolbox.form.real_bg.params": "Параметры фона",
+  "track_toolbox.form.real_bg.params.start": "Начальный кадр",
 
 
   "app.settings.separator.stars_selection": "Выбор звёзд",

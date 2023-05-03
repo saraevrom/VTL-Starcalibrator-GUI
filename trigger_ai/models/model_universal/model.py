@@ -1,4 +1,4 @@
-from ..common import apply_layer_array, deconvolve_windows
+from ..common import apply_layer_array
 import tensorflow as tf
 from ..model_wrapper import ModelWrapper
 import numpy as np
@@ -49,14 +49,14 @@ class UniversalModel(ModelWrapper):
             #y_data = 1 - np.prod(1 - y_data, axis=1)
             deconvolved = []
             for i in range(4):
-                deconvolved.append(deconvolve_windows(y_data[:, i], 128))
+                deconvolved.append(self.deconvolve_windows(y_data[:, i], 128))
             y_data = np.max(np.vstack(deconvolved), axis=0)
         elif mode == OUT_SOFT:
             y_data = y_data[:, 1]
-            y_data = deconvolve_windows(y_data, 128)
+            y_data = self.deconvolve_windows(y_data, 128)
         elif mode == OUT_SINGLE_SIGMA:
             y_data = y_data[:, 0]
-            y_data = deconvolve_windows(y_data, 128)
+            y_data = self.deconvolve_windows(y_data, 128)
         else:
             raise RuntimeError("Unknown mode")
 
@@ -75,7 +75,7 @@ class UniversalModel(ModelWrapper):
             # y_data = 1 - np.prod(1 - y_data, axis=1)
             signals = []
             for i in range(4):
-                deconv = deconvolve_windows(y_data[:, i], 128)
+                deconv = self.deconvolve_windows(y_data[:, i], 128)
                 booled_full = deconv > threshold
                 #signal = booled_full
                 signal = self.expand_window(booled_full,128)
@@ -91,10 +91,10 @@ class UniversalModel(ModelWrapper):
         xs = np.arange(start, end)
         if mode == OUT_SPLIT:
             print("PLOT!")
-            plot_offset(axes, xs, y_data[:, 0], 20, "bottom left", "-", cutter=cutter)
-            plot_offset(axes, xs, y_data[:, 1], 22, "bottom right", "--", cutter=cutter)
-            plot_offset(axes, xs, y_data[:, 2], 24, "top left", "-.", cutter=cutter)
-            plot_offset(axes, xs, y_data[:, 3], 26, "top right", ":", cutter=cutter)
+            plot_offset(axes, xs, y_data[:, 0], 20, "bottom left", "-", cutter=cutter,deconvolve_windows=self.deconvolve_windows)
+            plot_offset(axes, xs, y_data[:, 1], 22, "bottom right", "--", cutter=cutter,deconvolve_windows=self.deconvolve_windows)
+            plot_offset(axes, xs, y_data[:, 2], 24, "top left", "-.", cutter=cutter,deconvolve_windows=self.deconvolve_windows)
+            plot_offset(axes, xs, y_data[:, 3], 26, "top right", ":", cutter=cutter,deconvolve_windows=self.deconvolve_windows)
         else:
             if mode == OUT_SOFT:
                 y_data = y_data[:, 1]
@@ -102,7 +102,7 @@ class UniversalModel(ModelWrapper):
                 y_data = y_data[:, 0]
             else:
                 raise RuntimeError("Unknown mode")
-            plot_offset(axes, xs, y_data, 20, "ANN output", "-")
+            plot_offset(axes, xs, y_data, 20, "ANN output", "-", deconvolve_windows=self.deconvolve_windows)
             #axes.plot(xs, y_data + 20, "-", color="black")
 
     def get_y_spec(self):

@@ -281,6 +281,7 @@
   "track_markup.form.trigger.max_data_plot": "Data plot length limit",
   "track_markup.form.trigger.edge_shift": "Edge interval shift",
   "track_markup.form.trigger.expand_window": "Expand window",
+  "track_markup.form.trigger.deconvolve_window": "Deconvolve window",
   "track_markup.form.override_ann": "Override ANN filter",
   "track_markup.label.accepted": "Accepted intervals (without tracks)",
   "track_markup.label.rejected": "Rejected intervals (with tracks)",
@@ -350,6 +351,9 @@
   "track_toolbox.form.time": "Time",
   "track_toolbox.form.noise": "Noise",
   "track_toolbox.form.seed": "Seed",
+  "track_toolbox.form.real_bg": "Real background",
+  "track_toolbox.form.real_bg.params": "Background parameters",
+  "track_toolbox.form.real_bg.params.start": "Start frame",
 
 
   "app.settings.separator.stars_selection": "Star selection",

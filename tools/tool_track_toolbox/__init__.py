@@ -17,6 +17,7 @@ from track_gen.track_dynamics import TrackTrajectory
 
 from vtl_common.parameters import PIXEL_SIZE, HALF_GAP_SIZE, HALF_PIXELS
 from track_gen.pdm_params import PIXEL_SIZE_A, PIXEL_SIZE_B, SIDE_A, SIDE_B
+from preprocessing.three_stage_preprocess import DataThreeStagePreProcessor
 
 
 GAP_SIZE = HALF_GAP_SIZE*2
@@ -103,6 +104,18 @@ class TrackToolbox(ToolBase, PopupPlotable):
 
         rng = np_rng.default_rng(self._formdata["seed"])
         self._track+=self._formdata["noise"].sample(rng=rng, shape=self._track.shape)
+
+        if (self._formdata["real_bg"] is not None) and (self.file is not None):
+            preprocessor: DataThreeStagePreProcessor = self._formdata["real_bg"]["preprocessor"]
+            start_frame = self._formdata["real_bg"]["start_frame"]
+            event_length = self._track.shape[0]
+            end_frame = start_frame+event_length
+            if end_frame<self.file["data0"].shape[0]:
+                workdata, slicer = preprocessor.prepare_array(self.file["data0"], start_frame, end_frame)
+                workdata = preprocessor.preprocess_whole(workdata, self.plotter.get_broken())
+                workdata = workdata[slicer]
+                self._track += workdata
+
 
         plot_data = np.max(self._track, axis=0)
         self.plotter.buffer_matrix = plot_data

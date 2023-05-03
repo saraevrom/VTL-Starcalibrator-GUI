@@ -15,7 +15,7 @@ def create_lambda(index, *args, **kwrags):
 
 
 @nb.njit
-def deconvolve_windows(convolved, window):
+def deconvolve_windows_mean(convolved, window):
     result_arr = np.full(convolved.shape[0] + window - 1, 0.0)
     norm_arr = np.full(convolved.shape[0] + window - 1, 0.0)
     for i in range(convolved.shape[0]):
@@ -64,7 +64,7 @@ def splat_select(bool_arg, window):
         result_arr[i:i + window] = np.logical_or(bool_arg[i], result_arr[i:i + window])
     return result_arr
 
-def plot_offset(axes, xs, ys, offset, label, style, cutter = None):
+def plot_offset(axes, xs, ys, offset, label, style, deconvolve_windows, cutter = None):
     draw_y = deconvolve_windows(ys,128) + offset
     if cutter is not None:
         draw_y = draw_y[cutter]

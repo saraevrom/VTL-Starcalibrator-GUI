@@ -252,6 +252,7 @@ class ToolMarkup(ToolBase, PopupPlotable):
             if self.tf_model is not None:
                 trigger = self._formdata["trigger"]
                 self.tf_model.set_window_expansion(trigger["expand_window"])
+                self.tf_model.set_window_deconv(trigger["deconvolve_window"])
             self._form_changed = False
 
 
@@ -539,6 +540,7 @@ class ToolMarkup(ToolBase, PopupPlotable):
         self.update_answer_panel()
 
     def get_plot_data(self):
+        self.sync_form()
         return self.display.get_plot_data()
 
     def propose_event(self, item, source=None):

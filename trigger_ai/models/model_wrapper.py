@@ -6,7 +6,7 @@ import json
 from preprocessing.forms import DataPreProcessorField
 from numpy.lib.stride_tricks import sliding_window_view
 from ..compiler_form import CompileForm
-from .common import  expand_window
+from .common import  expand_window, deconvolve_windows_mean
 
 CUSTOM_FIELD = "CUSTOM_MODEL_WRAPPER"
 FILTER_FIELD = "CUSTOM_PREFERRED_FILTER"
@@ -53,15 +53,24 @@ class ModelWrapper(object):
         self.stabilize_slide = True
         self._compile_params = None
         self._expand_window = False
+        self._deconvolver = None
 
     def set_window_expansion(self, v):
         self._expand_window = v
+
+    def set_window_deconv(self,v):
+        self._deconvolver = v
 
     def expand_window(self, booled_full, window):
         if self._expand_window:
             return expand_window(booled_full, window)
         else:
             return booled_full
+
+    def deconvolve_windows(self,y_data,win):
+        if self._deconvolver is None:
+            self._deconvolver = deconvolve_windows_mean
+        return self._deconvolver(y_data,win)
 
     def set_preferred_filter_data(self, data):
         self.preferred_filter_data = data

@@ -164,7 +164,7 @@ class DataThreeStagePreProcessor(object):
             stage1 = src[:]
 
         if mstd_win != 0:
-            stage2_divider = stage2_f(stage1, mstd_win)[1]
+            stage2_divider = stage2_f(stage1, mstd_win, self.ma_win!=0)[1]
             if stage2_divider.shape[0]==src.shape[0]:
                 return divide_multidim_3to3(src,stage2_divider)
             else:
@@ -194,7 +194,7 @@ class DataThreeStagePreProcessor(object):
             stage1 = src[:]
 
         if mstd_win != 0:
-            stage2 =stage2_f(stage1, mstd_win)[0]
+            stage2 =stage2_f(stage1, mstd_win, self.ma_win!=0)[0]
         else:
             stage2 = stage1[:]
 
@@ -226,7 +226,10 @@ class DataThreeStagePreProcessor(object):
             # mean, noise = get_noise(signal, broken)
             # broken_exp = np.expand_dims(broken, 0)
             #signal_means = means_square(signal)
-            signal[:,broken] = 0
+            if self.ma_win==0 and self.mstd_win!=0 and not self.use_antiflash:
+                signal[:, broken] = 1
+            else:
+                signal[:,broken] = 0
             #signal = put_mask_2d(signal, broken, signal_means)
             #signal = independent_noisy(signal, broken, self.ma_win!=0)
             # np.putmask(signal, np.repeat(broken_exp, signal.shape[0], axis=0),
