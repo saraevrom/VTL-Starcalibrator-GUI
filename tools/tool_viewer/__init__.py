@@ -118,7 +118,10 @@ class MatPlayer(ToolBase, PopupPlotable):
             print("-" * 20)
             print(renderer)
             print("-" * 20)
-            writer = iio.get_writer(filename, duration=1000/renderer["fps"])
+            if filename.endswith(".gif"):
+                writer = iio.get_writer(filename, duration=1000/renderer["fps"])
+            else:
+                writer = iio.get_writer(filename, fps=renderer["fps"])
             for i in tqdm.tqdm(range(low, high+1, renderer["frame_skip"])):
                 self.on_frame_draw(i)
                 buf = io.BytesIO()
