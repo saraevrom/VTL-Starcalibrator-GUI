@@ -10,6 +10,8 @@ BATCH = 1000
 
 @nb.njit(cache=True)
 def window_limiting(index, window, target_length):
+    if window>target_length:
+        return 0, target_length
     start = index - window // 2
     if start < 0:
         start = 0

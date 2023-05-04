@@ -64,24 +64,30 @@ class MatPlayer(ToolBase, PopupPlotable):
             self.click_callback()
             low, high = self.player_controls.get_selected_range()
             filter_obj = self.form_data["filter"]
-            affect = filter_obj.get_affected_range()
-            a_low = low - affect
-            if a_low<0:
-                a_low = 0
-            a_high = high+1+affect
-            if a_high>self.file["data0"].shape[0]:
-                a_high = self.file["data0"].shape[0]
+
+            prepdata, cutter = filter_obj.prepare_array(self.file["data0"],low,high)
+            # affect = filter_obj.get_affected_range()
+            # a_low = low - affect
+            # if a_low<0:
+            #     a_low = 0
+            # a_high = high+1+affect
+            # if a_high>self.file["data0"].shape[0]:
+            #     a_high = self.file["data0"].shape[0]
 
             ffmodel = self.get_ff_model()
 
-            data = self.file["data0"][a_low:a_high]
-            ut0 = self.file["UT0"][a_low:a_high]
+            #data = self.file["data0"][a_low:a_high]
+            ut0 = self.file["UT0"][low:high]
 
             if (ffmodel is not None) and self.form_data["use_flatfielding"]:
-                data = ffmodel.apply(data)
+                prepdata = ffmodel.apply(prepdata)
 
             if filter_obj.is_working():
-                data = filter_obj.preprocess_whole(data, self.plotter.get_broken())
+                prepdata = filter_obj.preprocess_whole(prepdata, self.plotter.get_broken())
+
+            data = prepdata[cutter]
+
+            assert ut0.shape[0] == data.shape[0]
 
             with h5py.File(filename, "w") as fp:
                 fp.create_dataset("data0", data=data)
