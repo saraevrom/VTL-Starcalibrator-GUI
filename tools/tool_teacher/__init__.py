@@ -422,6 +422,7 @@ class ToolTeacher(ToolBase):
                 continue
             bg, broken = accessed_data
             broken = np.array(broken)
+            bg[:,broken] = 1
             x_data = preprocessor.preprocess_whole(bg, broken)
             margin_offset = margin//2
             x_data = x_data[margin_offset: margin_offset + frame_size]

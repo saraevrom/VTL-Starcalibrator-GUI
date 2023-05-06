@@ -8,7 +8,7 @@ from vtl_common.parameters import HALF_PIXELS
 from vtl_common.common_flatfielding.models import FlatFieldingModel
 from preprocessing.three_stage_preprocess import DataThreeStagePreProcessor
 from .edges import split_intervals, edged_intervals
-
+from preprocessing.denoising import divide_multidim_3to2
 
 def prepare_data(interval:Interval, formdata, file_src):
     start = interval.start
@@ -103,7 +103,7 @@ class Display(tk.Frame):
             self._processed_data = data
             plotting = np.max(data,axis=0)
             self.plotter.buffer_matrix = plotting
-            self.plotter.axes.set_title(repr(interval))
+            self.plotter.axes.set_title(str(interval))
         else:
             self.plotter.buffer_matrix = np.zeros([2*HALF_PIXELS, 2*HALF_PIXELS]).astype(float)
             self.plotter.axes.set_title("---")
@@ -125,6 +125,7 @@ class Display(tk.Frame):
             end = self._interval.end
             preprocessor = tf_model.get_filter()
             data, slicer = preprocessor.prepare_array(self.controller.file["data0"], start, end, margin_add=257)
+            data = divide_multidim_3to2(data, np.array(self.controller.file["means"]))
             return data, slicer, preprocessor
 
     def trigger(self, tf_model, positive_storage, negative_storage):

@@ -193,7 +193,7 @@ class Interval(object):
         return f"[{self.start}, {self.end})"
 
     def __str__(self):
-        return f"[{self.start}, {self.end})"
+        return f"[{self.start}, {self.end}) ({self.length()})"
 
     def __lt__(self, other):
         return self.start<other.start

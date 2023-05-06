@@ -14,7 +14,7 @@ def create_int_option(default_value,win_key="win"):
 
 
 def data_changed(new_dict, reference_dict):
-    for i in ["ma_win", "mstd_win", "use_antiflash", "use_robust", "independent_pmt", "nooffset"]:
+    for i in ["ma_win", "mstd_win", "use_antiflash", "use_robust", "independent_pmt"]:
         if new_dict[i] != reference_dict[i]:
             return True
     return False
@@ -26,8 +26,8 @@ def correct_data(new_dict):
             new_dict[i] = 0
     if new_dict["independent_pmt"] is None:
         new_dict["independent_pmt"] = False
-    if new_dict["nooffset"] is None:
-        new_dict["nooffset"] = False
+    # if new_dict["nooffset"] is None:
+    #     new_dict["nooffset"] = False
 
 class DataThreeStagesFilter(FormNode):
     USE_SCROLLVIEW = False
@@ -38,8 +38,8 @@ class DataThreeStagesFilter(FormNode):
     FIELD__use_antiflash = create_value_field(BoolNode, get_locale("app.preprocess.form.preprocess.stage3"), True)
     FIELD__independent_pmt = create_value_field(BoolNode,
                                                 get_locale("app.preprocess.form.preprocess.independent_pmt"), False)
-    FIELD__nooffset = create_value_field(BoolNode,
-                                                get_locale("app.preprocess.form.preprocess.nooffset"), False)
+    #FIELD__nooffset = create_value_field(BoolNode,
+    #                                            get_locale("app.preprocess.form.preprocess.nooffset"), False)
 
     def __init__(self):
         super().__init__()

@@ -1,14 +1,16 @@
+import os.path as ospath
 import tkinter as tk
-
-import numpy as np
 from tkinter import filedialog
 from tkinter.simpledialog import askinteger
 
-from vtl_common.localization import get_locale
-import os.path as ospath
+import numpy as np
+import numba as nb
 import h5py
 
-import numba as nb
+from vtl_common.localization import get_locale
+from compatibility.AutoFF import fix_minima
+from preprocessing.denoising import divide_multidim_3to2
+
 
 @nb.njit(nb.int64(nb.boolean[:]))
 def find_first_true(arr):
@@ -134,6 +136,10 @@ class FilePool(tk.Frame):
     def check_hdf5_fields(self,req_fields):
         failed = []
         for file in self.files_list:
+            try:
+                fix_minima(file)
+            except OSError:
+                print("Could not check means. Caveat emptor.")
             with h5py.File(file, "r") as testfile:
                 for present_key in req_fields:
                     failkeys = []
@@ -189,7 +195,8 @@ class RandomIntervalAccess(FilePool):
         super().__init__(master, title_key, "*.mat *.hdf *.h5", workspace=workspace, allow_clear=allow_clear)
 
     def random_access(self, rng, target_length, **kwargs):
-        intervals, data0, broken = self.pull_fields_from_random_file(["marked_intervals", "data0", "broken"], rng)
+        intervals, data0, broken, means = self.pull_fields_from_random_file(["marked_intervals", "data0",
+                                                                             "broken", "means"], rng)
         weights = intervals[:, 2]
         p = weights/np.sum(weights)
         length = intervals.shape[0]
@@ -210,6 +217,6 @@ class RandomIntervalAccess(FilePool):
             sample_start = bg_start
         else:
             sample_start = rng.integers(bg_start, bg_end - target_length)
-        bg = data0[sample_start:sample_start + target_length]
+        bg = divide_multidim_3to2(data0[sample_start:sample_start + target_length], means)
 
         return bg, broken

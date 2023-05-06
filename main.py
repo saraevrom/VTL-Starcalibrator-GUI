@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import numpy as np
 
 #import compatibility.tf_cuda
 
@@ -28,6 +29,8 @@ from vtl_common.workspace_manager import Workspace
 
 from vtl_common import localization
 from compatibility.h5py_aliased_fields import AliasedDataFile
+from compatibility.AutoFF import fix_minima
+from vtl_common.common_flatfielding.models import Linear as LinearFF
 
 
 localization.set_locale(parameters.LOCALE)
@@ -103,6 +106,7 @@ class App(tk.Tk):
         print("Loading file:", filename)
         if filename and os.path.isfile(filename):
             #new_file = h5py.File(filename, "r")
+            fix_minima(filename)
             new_file = AliasedDataFile(filename,"r")
             print("hdf5 loaded")
             if not friendliness.check_data_file(new_file):
@@ -159,7 +163,10 @@ class App(tk.Tk):
         warnings.warn("Flat fielding coefficients are now loaded manually")
 
     def get_ffmodel(self):
-        return self.ffmodel
+        if (self.ffmodel is None) and (self.file is not None):
+            return LinearFF(coefficients=np.array(self.file["means"]),baseline=0)
+        else:
+            return self.ffmodel
 
     def get_loaded_filename(self):
         if self.file:
