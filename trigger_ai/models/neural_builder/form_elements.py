@@ -1,5 +1,5 @@
 from vtl_common.common_GUI.tk_forms_assist import *
-from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field
+from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field, kwarg_builder
 from vtl_common.localization import get_locale
 from tensorflow import keras
 import tensorflow as tf
@@ -13,14 +13,12 @@ class Activation(ComboNode):
     VALUES = list(sorted(["linear", "relu", "sigmoid", "softplus", "softsign", "tanh", "selu", "elu"]))
 
 
+@kwarg_builder(keras.layers.Dense)
 class DenseConstructor(FormNode):
     DISPLAY_NAME = get_locale("app.model_builder.dense")
     FIELD__units = create_value_field(IntNode, get_locale("app.model_builder.dense.count"), 1)
     FIELD__activation = Activation
 
-    def get_data(self):
-        data = super().get_data()
-        return keras.layers.Dense(**data)
 
 
 class NNPadding(ComboNode):
@@ -54,7 +52,6 @@ class Conv3DConstructor(FormNode):
         return keras.layers.Conv3D(conv_outputs, (conv_T, conv_X, conv_Y),
                                    strides=(stride_T, stride_X, stride_Y),
                                    padding=padding, activation=data["activation"])
-
 
 class Conv2DConstructor(FormNode):
     DISPLAY_NAME = get_locale("app.model_builder.conv2d")
@@ -139,16 +136,30 @@ class ExpandDimsConstructor(IntNode):
         val = super().get_data()
         return tf.keras.layers.Lambda(lambda x: tf.expand_dims(x, val))
 
+
+@kwarg_builder(TrainableScaling)
 class ScaleConstructor(FormNode):
     DISPLAY_NAME = get_locale("app.model_builder.scale")
 
     FIELD__use_offset = create_value_field(BoolNode, get_locale("app.model_builder.scale.use_offset"), True)
 
-    def get_data(self):
-        data = super().get_data()
-        return TrainableScaling(**data)
 
+class BatchNormInit(ComboNode):
+    SELECTION_READONLY = True
+    VALUES = ["zeros", "ones"]
 
+@kwarg_builder(keras.layers.BatchNormalization)
+class BatchNormalizationConstructor(FormNode):
+    DISPLAY_NAME = get_locale("app.model_builder.batch_norm")
+    FIELD__axis = create_value_field(IntNode,get_locale("app.model_builder.batch_norm.axis"),-1)
+    FIELD__momentum = create_value_field(FloatNode, get_locale("app.model_builder.batch_norm.momentum"), 0.99)
+    FIELD__epsilon = create_value_field(FloatNode, get_locale("app.model_builder.batch_norm.epsilon"), 0.001)
+    FIELD__center = create_value_field(BoolNode, get_locale("app.model_builder.batch_norm.center"), True)
+    FIELD__scale = create_value_field(BoolNode, get_locale("app.model_builder.batch_norm.scale"), True)
+    FIELD__beta_initializer=create_value_field(BatchNormInit,
+                                               get_locale("app.model_builder.batch_norm.beta_initializer"), "zeros")
+    FIELD__gamma_initializer=create_value_field(BatchNormInit,
+                                                get_locale("app.model_builder.batch_norm.gamma_initializer"), "ones")
 
 class LayerConstructor(AlternatingNode):
     DISPLAY_NAME = get_locale("app.model_builder.layer")
@@ -161,11 +172,16 @@ class LayerConstructor(AlternatingNode):
     SEL__expand_dim = ExpandDimsConstructor
     SEL__flatten = FlattenConstructor
     SEL__scale = ScaleConstructor
+    SEL__batch_norm = BatchNormalizationConstructor
+
+
 
 class LayerSequenceConstructor(ArrayNode):
     DISPLAY_NAME = get_locale("app.model_builder.layers")
     ITEM_TYPE = LayerConstructor
 
+
+@kwarg_builder(Residual)
 class ResidialConstructor(FormNode):
     DISPLAY_NAME = get_locale("app.model_builder.residual")
     FIELD__main = create_value_field(LayerSequenceConstructor,
@@ -173,9 +189,6 @@ class ResidialConstructor(FormNode):
     FIELD__shortcut = create_value_field(LayerSequenceConstructor,
                                             get_locale("app.model_builder.residual.shortcut"))
 
-    def get_data(self):
-        data = super().get_data()
-        return Residual(**data)
 
 
 LayerConstructor.SEL__residual = ResidialConstructor

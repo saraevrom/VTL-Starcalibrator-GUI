@@ -1,9 +1,10 @@
 from vtl_common.common_GUI import TkDictForm
-from vtl_common.common_GUI.tk_forms_assist import FormNode, IntNode, ComboNode, BoolNode, FloatNode
-from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field
+from vtl_common.common_GUI.tk_forms_assist import FormNode, IntNode, ComboNode, BoolNode, FloatNode, OptionNode
+from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field, kwarg_builder
 from vtl_common.localization import get_locale
 from preprocessing.forms import DataPreProcessorField
 from trigger_ai.models.common import deconvolve_windows_mean, deconvolve_windows_max
+from .phase_cutter import PhaseCutter
 
 
 class PmtSelect(ComboNode):
@@ -40,9 +41,22 @@ class TriggerParameters(FormNode):
     USE_SCROLLVIEW = False
 
 
+@kwarg_builder(PhaseCutter)
+class PhaseCutterForm(FormNode):
+    DISPLAY_NAME = ""
+    FIELD__lower_intensity = create_value_field(FloatNode, get_locale("track_markup.form.phase_cut.lower_intensity"))
+    FIELD__lower_duration = create_value_field(FloatNode, get_locale("track_markup.form.phase_cut.lower_duration"))
+    FIELD__upper_duration = create_value_field(FloatNode, get_locale("track_markup.form.phase_cut.upper_duration"))
+
+
+class PhaseCutterOption(OptionNode):
+    DISPLAY_NAME = get_locale("track_markup.form.phase_cut")
+    ITEM_TYPE = PhaseCutterForm
+
 class TrackMarkupForm(FormNode):
     FIELD__max_frame = create_value_field(IntNode, get_locale("track_markup.form.max_frame"), 9000)
     FIELD__preprocessing = DataPreProcessorField
+    FIELD__phase_cut = PhaseCutterOption
     FIELD__min_frame = create_value_field(IntNode, get_locale("track_markup.form.min_frame"), 256)
     FIELD__pmt_select = PmtSelect
     FIELD__trigger = TriggerParameters

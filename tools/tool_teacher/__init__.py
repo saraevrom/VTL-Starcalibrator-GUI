@@ -117,13 +117,13 @@ class ToolTeacher(ToolBase):
         button_panel = ButtonPanel(control_frame)
         button_panel.grid(row=1, column=0, sticky="nsew")
         button_panel.add_button(text=get_locale("teacher.button.probe_track"),
-                                command=lambda: self.on_probe(True), row=0)
+                                command=lambda: self.on_probe_save(True, False), row=0)
         button_panel.add_button(text=get_locale("teacher.button.probe_trackless"),
-                                command=lambda: self.on_probe(False), row=0)
+                                command=lambda: self.on_probe_save(False, False), row=0)
         button_panel.add_button(text=get_locale("teacher.button.probe_track_save"),
-                                command=lambda: self.on_probe_save(True), row=1)
+                                command=lambda: self.on_probe_save(True, True), row=1)
         button_panel.add_button(text=get_locale("teacher.button.probe_trackless_save"),
-                                command=lambda: self.on_probe_save(False), row=1)
+                                command=lambda: self.on_probe_save(False, True), row=1)
         button_panel.add_button(text=get_locale("teacher.button.probe_test"), command=self.on_test, row=0)
         button_panel.add_button(text=get_locale("teacher.button.probe_roc"), command=self.on_plot_roc, row=0)
 
@@ -232,18 +232,25 @@ class ToolTeacher(ToolBase):
                     N = conf.pregenerate
                     trainX = np.zeros((N, 128, 16, 16))
                     trainY = np.zeros(self.workon_model.get_y_signature(N))
-                    gen = self.data_generator(conf)
+                    gen = self.data_generator(conf,require_bg=self.workon_model.require_bg())
                     for i in tqdm.tqdm(range(N)):
                         x,y_par = next(gen)
                         trainX[i] = x
                         trainY[i] = self.workon_model.create_dataset_ydata_for_item(y_par)
                     self.workon_model.model.fit(trainX, trainY, **conf.get_fit_parameters_finite())
                 else:
-                    dataset = Dataset.from_generator(
-                        lambda: self.batch_generator(conf),
-                        output_signature=(tf.TensorSpec(shape=(None, 128, 16, 16), dtype=tf.double),
-                                          self.workon_model.get_y_spec())
-                    )
+                    if self.workon_model.require_bg():
+                        dataset = Dataset.from_generator(
+                            lambda: self.batch_generator(conf, require_bg=True),
+                            output_signature=(tf.TensorSpec(shape=(None, 128, 16, 16, 2), dtype=tf.double),
+                                              self.workon_model.get_y_spec())
+                        )
+                    else:
+                        dataset = Dataset.from_generator(
+                            lambda: self.batch_generator(conf, require_bg=False),
+                            output_signature=(tf.TensorSpec(shape=(None, 128, 16, 16), dtype=tf.double),
+                                              self.workon_model.get_y_spec())
+                        )
                     self.workon_model.model.fit(dataset, **conf.get_fit_parameters())
         self.clear_caches()
 
@@ -256,7 +263,7 @@ class ToolTeacher(ToolBase):
             raw_conf = self.sync_form()
             self.fg_pool.fast_cache = raw_conf["fastcache"]
             self.bg_pool.fast_cache = raw_conf["fastcache"]
-            generator = self.data_generator(self._formdata)
+            generator = self.data_generator(self._formdata,require_bg=self.workon_model.require_bg())
             batch_size = ask_test()
             return self.generate_batch(generator, batch_size)
 
@@ -299,7 +306,7 @@ class ToolTeacher(ToolBase):
         self.interference_pool.clear_cache()
 
 
-    def on_probe_save(self, needstrack):
+    def on_probe_save(self, needstrack, needsave):
         self.sync_form()
         if self._prepare_files() is not None:
             conf = self._formdata
@@ -310,27 +317,17 @@ class ToolTeacher(ToolBase):
                 x_gen, y_par = next(gen)
             print("GENERATE_SUCCESS:", (x_gen!=0).any())
             plot_event(x_gen, y_par, True)
-            ut0 = np.arange(x_gen.shape[0])
-            filename = EXPORT_WORKSPACE.asksaveasfilename(auto_formats=["h5"])
-            if filename:
-                with h5py.File(filename,"w") as fp:
-                    fp.create_dataset("data0", data=x_gen)
-                    fp.create_dataset("UT0", data=ut0)
-                    fp.attrs["has_track"] = y_par.has_track()
+            if needsave:
+                ut0 = np.arange(x_gen.shape[0])
+                filename = EXPORT_WORKSPACE.asksaveasfilename(auto_formats=["h5"])
+                if filename:
+                    with h5py.File(filename,"w") as fp:
+                        fp.create_dataset("data0", data=x_gen)
+                        fp.create_dataset("UT0", data=ut0)
+                        fp.attrs["has_track"] = y_par.has_track()
 
 
-    def on_probe(self, needstrack):
-        self.sync_form()
-        if self._prepare_files() is not None:
-            conf = self._formdata
-            probe_params = conf.probe_params
-            gc.collect()
-            gen = self.data_generator(conf, **probe_params)
-            x_gen, y_par = next(gen)
-            while y_par.has_track() != needstrack:
-                x_gen, y_par = next(gen)
-            print("GENERATE_SUCCESS:", (x_gen!=0).any())
-            plot_event(x_gen,y_par)
+
 
 
     def println_status(self, message, tabs=0):
@@ -399,7 +396,7 @@ class ToolTeacher(ToolBase):
         else:
             return conf.process_it(self.interference_pool.random_access(self.rng)[0], rng=self.rng)
 
-    def data_generator(self, conf, frame_size=128, amount=None):
+    def data_generator(self, conf, frame_size=128, amount=None, require_bg=False):
         i = 0
         cycle_forever = amount is None
         preprocessor : preprocessing.DataThreeStagePreProcessor = conf.get_preprocessor()
@@ -421,10 +418,11 @@ class ToolTeacher(ToolBase):
             if accessed_data is None:
                 continue
             bg, broken = accessed_data
+            margin_offset = margin//2
+            bg_source = bg[margin_offset: margin_offset + frame_size]
             broken = np.array(broken)
             bg[:,broken] = 1
             x_data = preprocessor.preprocess_whole(bg, broken)
-            margin_offset = margin//2
             x_data = x_data[margin_offset: margin_offset + frame_size]
             y_params = TargetParameters()
             artificial_interference = conf.intergerence_artificial()
@@ -478,11 +476,19 @@ class ToolTeacher(ToolBase):
             i += 1
             # obfuscating neural network,
             # so it won't use changing noise for track detection
+
+            if require_bg:
+                new_xdata = np.zeros(shape=x_data.shape+(2,))
+                assert new_xdata.shape==(128,16,16,2)
+                assert bg_source.shape == (128,16,16)
+                new_xdata[:, :, :, 0] = x_data
+                new_xdata[:, :, :, 1] = preprocessor.get_bg(bg_source)
+                x_data = new_xdata
             x_data = conf.process_bg(x_data, y_params, rng=self.rng)
             yield x_data, y_params
 
-    def batch_generator(self, conf, frame_size=128):
-        generator = self.data_generator(conf, frame_size)
+    def batch_generator(self, conf, frame_size=128, require_bg=False):
+        generator = self.data_generator(conf, frame_size, require_bg=require_bg)
         # batchX = []
         # batchY = []
         gen_params = conf.generator_params()

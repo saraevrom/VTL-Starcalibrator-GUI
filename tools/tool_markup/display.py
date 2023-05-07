@@ -125,18 +125,24 @@ class Display(tk.Frame):
             end = self._interval.end
             preprocessor = tf_model.get_filter()
             data, slicer = preprocessor.prepare_array(self.controller.file["data0"], start, end, margin_add=257)
-            data = divide_multidim_3to2(data, np.array(self.controller.file["means"]))
+            data = divide_multidim_3to2(data.astype(float), np.array(self.controller.file["means"]))
             return data, slicer, preprocessor
 
-    def trigger(self, tf_model, positive_storage, negative_storage):
+    def trigger(self, tf_model, positive_storage, negative_storage, fp_filter, original_preprocessor):
+        gc.collect()
         tf_data =  self.get_tf_data(tf_model)
         if tf_data:
             data, slicer, preprocessor = tf_data
             trigger = self._formdata["trigger"]
             threshold = trigger["threshold"]
-
-            data = preprocessor.preprocess_whole(data, self.plotter.get_broken())
-            triggered = tf_model.trigger(data,threshold)
+            x_data = preprocessor.preprocess_whole(data, self.plotter.get_broken())
+            if tf_model.require_bg():
+                background = preprocessor.get_bg(data)
+                x_data_new = np.zeros(shape=x_data.shape+(2,))
+                x_data_new[:, :, :, 0] = x_data
+                x_data_new[:, :, :, 1] = background
+                x_data = x_data_new
+            triggered = tf_model.trigger(x_data,threshold)
             triggered = triggered[slicer]
             intervals = edged_intervals(triggered)
             pos, neg = split_intervals(np.array(intervals))
@@ -145,7 +151,15 @@ class Display(tk.Frame):
             base = self._interval.start
             for p in pos:
                 item = Interval(base+p[0],base+p[1])
-                assert source.try_move_to(positive_storage, item)
+                item.to_slice()
+                if fp_filter is None:
+                    assert source.try_move_to(positive_storage, item)
+                else:
+                    assert self._processed_data.shape == data[slicer].shape
+                    if fp_filter.test_tp(self._processed_data[p[0]:p[1]], item):
+                        assert source.try_move_to(positive_storage, item)
+                    else:
+                        assert source.try_move_to(negative_storage, item)
             for n in neg:
                 item = Interval(base+n[0],base+n[1])
                 assert source.try_move_to(negative_storage, item)
@@ -156,7 +170,12 @@ class Display(tk.Frame):
         tf_data = self.get_tf_data(tf_model)
         if tf_data:
             data, slicer, preprocessor = tf_data
-            data = preprocessor.preprocess_whole(data, self.plotter.get_broken())
+            if tf_model.require_bg():
+                x_data = np.zeros(shape=data.shape + (2,))
+                x_data[:, :, :, 0] = preprocessor.preprocess_whole(data, self.plotter.get_broken())
+                x_data[:, :, :, 1] = preprocessor.get_bg(data)
+            else:
+                x_data = preprocessor.preprocess_whole(data, self.plotter.get_broken())
             start = self._interval.start
             end = self._interval.end
-            tf_model.plot_over_data(data, start, end, axes, slicer)
+            tf_model.plot_over_data(x_data, start, end, axes, slicer)

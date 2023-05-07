@@ -7,6 +7,7 @@ import io
 import tkinter as tk
 
 import h5py
+import numpy as np
 
 from vtl_common.localized_GUI.signal_plotter import PopupPlotable
 from vtl_common.common_GUI import TkDictForm
@@ -237,7 +238,8 @@ class ToolMarkup(ToolBase, PopupPlotable):
         if self.file:
             self.tracks.display_diagram(self.file, self.get_ff_model(),
                                         self._formdata["preprocessing"],
-                                        self.display.get_broken()
+                                        self.display.get_broken(),
+                                        self._formdata["phase_cut"]
                                         )
 
     def sync_form(self, force=False):
@@ -272,7 +274,8 @@ class ToolMarkup(ToolBase, PopupPlotable):
             if auto_call and not self._formdata["auto_cont"]:
                 return
             gc.collect()
-            self.display.trigger(self.tf_model, self.tracks.storage, self.background.storage)
+            self.display.trigger(self.tf_model, self.tracks.storage, self.background.storage,
+                                 self._formdata["phase_cut"], self._formdata["preprocessing"])
             self.pull_next_interval()
             if self.display.storage.has_item() and self._formdata["auto_cont"]:
                 self.after(5000, lambda: self.on_auto(True))
@@ -434,6 +437,13 @@ class ToolMarkup(ToolBase, PopupPlotable):
                         data, slicer, preprocessor = prepare_data(track_interval, self._formdata, self.file)
 
                         plot_data = preprocessor.preprocess_whole(data, self.display.plotter.get_broken())
+                        if self.tf_model.require_bg():
+                            new_data = np.zeros(shape=plot_data.shape+(2,))
+                            new_data[:, :, :, 0] = plot_data
+                            new_data[:, :, :, 1] = preprocessor.get_bg(data)
+                            x_data = new_data
+                        else:
+                            x_data = plot_data
 
                         ut0 = self.file["UT0"][track_start:track_end]
 
@@ -441,7 +451,7 @@ class ToolMarkup(ToolBase, PopupPlotable):
                             trigger = self._formdata["trigger"]
                             threshold = trigger["threshold"]
                             #bl, br, tl, tr = self.form_data["trigger"].get_triggering(self, plot_data)
-                            res = self.tf_model.trigger_split(plot_data, threshold)
+                            res = self.tf_model.trigger_split(x_data, threshold)
                             plot_data = plot_data[slicer]
                             bl, br, tl, tr = [item[slicer].any() for item in res]
 

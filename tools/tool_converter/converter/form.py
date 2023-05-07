@@ -1,5 +1,5 @@
 from vtl_common.common_GUI.tk_forms_assist import FormNode, IntNode, ComboNode, AlternatingNode
-from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field
+from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field, kwarg_builder
 from vtl_common.localization import get_locale
 from .cutters import IntervalCutter, CutoffCutter, SliceCutter
 
@@ -10,33 +10,26 @@ class CutoffUnits(ComboNode):
     DEFAULT_VALUE = "GTU"
 
 
+@kwarg_builder(CutoffCutter)
 class CutoffOption(FormNode):
     DISPLAY_NAME = get_locale("mat_converter.label.mode.cutoff")
     FIELD__at_start = create_value_field(IntNode, get_locale("mat_converter.label.l_cut"), 0)
     FIELD__at_end = create_value_field(IntNode, get_locale("mat_converter.label.r_cut"), 0)
 
-    def get_data(self):
-        data = super().get_data()
-        return CutoffCutter(**data)
 
-
+@kwarg_builder(SliceCutter)
 class SliceOption(FormNode):
     DISPLAY_NAME = get_locale("mat_converter.label.mode.slice")
     FIELD__start = create_value_field(IntNode, get_locale("mat_converter.label.cut_start"), 0)
     FIELD__end = create_value_field(IntNode, get_locale("mat_converter.label.cut_end"), -1)
 
-    def get_data(self):
-        data = super().get_data()
-        return SliceCutter(**data)
 
+@kwarg_builder(IntervalCutter)
 class IntervalOption(FormNode):
     DISPLAY_NAME = get_locale("mat_converter.label.mode.interval")
     FIELD__start = create_value_field(IntNode, get_locale("mat_converter.label.cut_start"), 0)
     FIELD__length = create_value_field(IntNode, get_locale("mat_converter.label.length"), 1)
 
-    def get_data(self):
-        data = super().get_data()
-        return IntervalCutter(**data)
 
 class CuttingAlter(AlternatingNode):
     DISPLAY_NAME = get_locale("mat_converter.label.cut")

@@ -56,7 +56,7 @@ class PMTSplit(object):
         j = 0
         for i in [0, 10, 1, 11]:
             self.pmt_layers.append(
-                [create_lambda(i)] + pmt_tuple[j] + [tf.keras.layers.Dense(1, activation="sigmoid")])
+                [create_lambda(i)] + pmt_tuple[j])
             j += 1
         self.cat = tf.keras.layers.Concatenate()
 

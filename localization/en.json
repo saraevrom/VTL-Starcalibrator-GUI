@@ -107,7 +107,7 @@
   "app.preprocess.form.preprocess.stage3": "Subtract Flash",
   "app.preprocess.advform.ma_win": "MA Window",
   "app.preprocess.advform.mstd_win": "MSTD Window",
-  "app.preprocess.form.preprocess.nooffset": "Conserve bg",
+  "app.preprocess.form.preprocess.display_bg": "Show background",
   "app.preprocess.advform.none": "None",
 
   "app.model.form.title_create": "Create model",
@@ -157,6 +157,14 @@
   "app.model_builder.expand": "Expand dim",
   "app.model_builder.split": "PMT Split",
   "app.model_builder.split_share": "Share configuration",
+  "app.model_builder.batch_norm":"Batch normalization layer",
+  "app.model_builder.batch_norm.axis":"Axis",
+  "app.model_builder.batch_norm.momentum":"Momentum",
+  "app.model_builder.batch_norm.epsilon":"Epsilon",
+  "app.model_builder.batch_norm.center":"Center",
+  "app.model_builder.batch_norm.scale":"Scale",
+  "app.model_builder.batch_norm.beta_initializer":"Beta initializer",
+  "app.model_builder.batch_norm.gamma_initializer":"Gamma initializer",
 
   "models.splitmerge.independent": "Independent",
   "models.splitmerge.independent_share": "Share configuration",
@@ -166,7 +174,7 @@
   "models.universal.output_type": "Output type",
   "models.universal.shape_warning.title": "Shape warning",
   "models.universal.shape_warning.content": "Output shape is {output}. While selected mode requests {request}. Additional layer will be created.",
-
+  "models.universal.require_bg": "Require background",
 
   "app.model.form.set_to_default": "Set to default",
 
@@ -274,6 +282,12 @@
   "track_markup.form.end_skip": "Cut off last [frames]",
   "track_markup.form.start": "Start",
   "track_markup.form.length": "Length",
+  "track_markup.form.phase_cut": "Anti FP cutter",
+  "track_markup.form.phase_cut.lower_intensity": "Lower intensity",
+  "track_markup.form.phase_cut.lower_duration": "Lower duration",
+  "track_markup.form.phase_cut.upper_duration": "Upper duration",
+
+
 
   "track_markup.form.pmt_select": "Select PMT",
   "track_markup.form.trigger": "Trigger",

@@ -89,7 +89,8 @@ class DisplayStorage(tk.Frame, Storing):
                 if index<self.listbox.size():
                     self.listbox.see(index)
 
-    def display_diagram(self, source, ffmodel: FlatFieldingModel, preprocessor: DataThreeStagePreProcessor, broken):
+    def display_diagram(self, source, ffmodel: FlatFieldingModel, preprocessor: DataThreeStagePreProcessor, broken,
+                        phase_cutter=None):
         xs = []
         ys = []
         for interval in self.storage.get_available():
@@ -101,4 +102,6 @@ class DisplayStorage(tk.Frame, Storing):
             ys.append(np.max(data))
         fig, ax = plt.subplots()
         ax.scatter(xs,ys)
+        if phase_cutter is not None and ys:
+            phase_cutter.draw_on_plot(ax, max(ys))
         fig.show()

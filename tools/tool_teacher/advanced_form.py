@@ -1,6 +1,6 @@
 from vtl_common.common_GUI.tk_forms_assist import FormNode, FloatNode, IntNode
 from vtl_common.common_GUI.tk_forms_assist import BoolNode, OptionNode
-from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field, create_label
+from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field, create_label, kwarg_builder
 from vtl_common.localization import get_locale
 from .parameters_processing import Augmenter, DualProcessing, LearnParameters
 from preprocessing import DataPreProcessorField
@@ -34,16 +34,13 @@ def create_dual(shared_field, common_title, title_master, title_slave):
 
     return DualForm
 
+@kwarg_builder(Augmenter)
 class Augmentation(FormNode):
     USE_SCROLLVIEW = False
     FIELD__use_transpose = create_value_field(BoolNode,
                                                      get_locale("teacher.form.augmentation.use_transpose"), True)
     FIELD__use_reverse = create_value_field(BoolNode,
                                                    get_locale("teacher.form.augmentation.use_reverse"), True)
-
-    def get_data(self):
-        data = super().get_data()
-        return Augmenter(**data)
 
 
 class PregenerateDataset(OptionNode):

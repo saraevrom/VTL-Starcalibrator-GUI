@@ -28,6 +28,9 @@ class FilePool(tk.Frame):
             self.workspace = workspace
         label = tk.Label(self, text=get_locale(title_key))
         label.grid(row=0, column=0, sticky="nsew")
+        self.capacity_var = tk.StringVar(self)
+        cap = tk.Label(self, textvariable=self.capacity_var)
+        cap.grid(row=1, column=0, sticky="nsew")
         self.src_extension = src_extension
         self.files_listbox = tk.Listbox(self)
         self.files_listbox.bind("<Button-3>", self.on_rmb)
@@ -35,20 +38,27 @@ class FilePool(tk.Frame):
         self.file_weights = []
         self.open_files_cache = dict()
         self.data_cache = dict()
-        self.files_listbox.grid(row=1, column=0, sticky="nsew")
-        self.rowconfigure(1, weight=1)
+        self.files_listbox.grid(row=2, column=0, sticky="nsew")
+        self.rowconfigure(2, weight=1)
         self.columnconfigure(0, weight=1)
         selectbtn = tk.Button(self, text=get_locale("teacher.button.select_sources"), command=self.on_select_sources)
-        selectbtn.grid(row=2, column=0, sticky="nsew")
+        #selectbtn.grid(row=3, column=0, sticky="nsew")
         if allow_clear:
             clearbtn = tk.Button(self, text=get_locale("teacher.button.clear"), command=self.on_clear)
-            clearbtn.grid(row=2, column=0, sticky="nsew")
+            clearbtn.grid(row=3, column=0, sticky="nsew")
 
-            selectbtn.grid(row=3, column=0, sticky="nsew")
+            selectbtn.grid(row=4, column=0, sticky="nsew")
         else:
-            selectbtn.grid(row=2, column=0, sticky="nsew")
+            selectbtn.grid(row=3, column=0, sticky="nsew")
 
         self.fast_cache = False
+        self.sync_capacity()
+
+    def sync_capacity(self):
+        self.capacity_var.set(str(self.get_capacity()))
+
+    def get_capacity(self):
+        return 0
 
     def on_clear(self):
         self.files_list.clear()
@@ -85,6 +95,7 @@ class FilePool(tk.Frame):
                 self.file_weights.append(1)
                 self.files_listbox.insert(tk.END, f"{ospath.basename(f)} (1)")
             self.file_weights = np.array(self.file_weights)
+        self.sync_capacity()
 
 
     def get_cached_fileaccess(self, filename):
@@ -194,6 +205,19 @@ class RandomIntervalAccess(FilePool):
     def __init__(self, master, title_key, workspace=None, allow_clear=False):
         super().__init__(master, title_key, "*.mat *.hdf *.h5", workspace=workspace, allow_clear=allow_clear)
 
+
+    def get_capacity(self):
+        capacity = 0
+        for file in self.files_list:
+            with h5py.File(file, "r") as fp:
+                if "marked_intervals" in fp.keys():
+                    for i in range(fp["marked_intervals"].shape[0]):
+                        start = fp["marked_intervals"][i, 0]
+                        end = fp["marked_intervals"][i, 1]
+                        capacity += int(end - start)
+
+        return capacity
+
     def random_access(self, rng, target_length, **kwargs):
         intervals, data0, broken, means = self.pull_fields_from_random_file(["marked_intervals", "data0",
                                                                              "broken", "means"], rng)
@@ -217,6 +241,6 @@ class RandomIntervalAccess(FilePool):
             sample_start = bg_start
         else:
             sample_start = rng.integers(bg_start, bg_end - target_length)
-        bg = divide_multidim_3to2(data0[sample_start:sample_start + target_length], means)
+        bg = divide_multidim_3to2(data0[sample_start:sample_start + target_length], means/means[3,3])
 
         return bg, broken

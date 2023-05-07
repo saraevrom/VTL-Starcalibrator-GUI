@@ -7,8 +7,11 @@ from ..common import splat_select, plot_offset
 OUT_SINGLE_SIGMA, OUT_SOFT, OUT_SPLIT = OUTPUT_TYPES = ["single_sigma", "binary_softmax", "splitted_sigma"]
 S_SINGLE_SIGMA, S_SOFT, S_SPLIT = OUTPUT_SHAPES = [(1,), (2,), (4,)]
 
-def create_tf_model(callable_array):
-    inputs = tf.keras.Input(shape=(128, 16, 16))
+def create_tf_model(callable_array, has_bg):
+    if has_bg:
+        inputs = tf.keras.Input(shape=(128, 16, 16, 2))
+    else:
+        inputs = tf.keras.Input(shape=(128, 16, 16))
     outputs = apply_layer_array(inputs, callable_array)
     return tf.keras.Model(inputs, outputs)
 
@@ -16,6 +19,10 @@ class UniversalModel(ModelWrapper):
 
     def get_mode(self):
         return self.additional_params["mode"]
+
+    def require_bg(self):
+        return self.additional_params.get("require_background", False)
+
     def create_dataset_ydata_for_item(self, y_data_parameters):
         mode = self.get_mode()
         if mode == OUT_SPLIT:

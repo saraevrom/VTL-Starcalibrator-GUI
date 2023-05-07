@@ -55,6 +55,10 @@ class ModelWrapper(object):
         self._expand_window = False
         self._deconvolver = None
 
+    def require_bg(self):
+        return False
+
+
     def set_window_expansion(self, v):
         self._expand_window = v
 
@@ -155,6 +159,9 @@ class ModelWrapper(object):
 
     def _predict_raw(self, x):
         x_data = sliding_window_view(x, 128, axis=0)
-        x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
+        if len(x.shape) == 3:
+            x_data = np.moveaxis(x_data, [1, 2, 3], [2, 3, 1])
+        else:
+            x_data = np.moveaxis(x_data, [1, 2, 3, 4], [2, 3, 4, 1])
         y_data = self.model.predict(x_data)
         return y_data

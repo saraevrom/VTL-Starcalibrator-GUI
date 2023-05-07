@@ -199,9 +199,24 @@ def moving_average_subtract(src, win):
         return src - mean_by_axis(src, axis=0)
 
 @nb.njit(cache=True)
+def moving_average_bg(src, win):
+    if src.shape[0] >= win:
+        average = moving_average_edged(src, win)
+        return average
+    else:
+        flat_res = mean_by_axis(src, axis=0)
+        x1 = np.expand_dims(flat_res,0)
+        return np.repeat(x1, src.shape[0], axis=0)
+
+@nb.njit(cache=True)
 def moving_median_subtract(src, win):
     average = sliding_median_pixels(src, win)
     return src - average
+
+@nb.njit(cache=True)
+def moving_median_bg(src, win):
+    average = sliding_median_pixels(src, win)
+    return average
 
 #@nb.njit()
 def slice_for_preprocess(source, slice_min, slice_max, margin):

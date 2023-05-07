@@ -10,4 +10,5 @@ numexpr
 numba
 imageio
 numba-scipy
+numpy
 #tensorflow-cpu

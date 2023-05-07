@@ -1,7 +1,7 @@
 import numpy as np
 from .filepool import RandomFileAccess
 from vtl_common.common_GUI.tk_forms_assist import FormNode, IntNode, AlternatingNode, FloatNode, ArrayNode, OptionNode
-from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field
+from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field, kwarg_builder
 from vtl_common.localization import get_locale
 from noise.noising import FloatDistributedAlter
 from track_gen import generate_track, LinearTrackTrajectory, GaussianPSF, TriangularLightCurve
@@ -32,13 +32,12 @@ class FileTrackSource(TrackSource):
         filelist.set_shift_threshold(self.shift_threshold)
         return filelist.random_access(rng, frame_size)[0]
 
+@kwarg_builder(FileTrackSource)
 class FileTrackSourceForm(FormNode):
     DISPLAY_NAME = get_locale("teacher.form.trackgen.file")
     FIELD__shift_threshold = create_value_field(IntNode, get_locale("teacher.form.trackgen.file.threshold"),32)
 
-    def get_data(self):
-        data = super().get_data()
-        return FileTrackSource(**data)
+
 
 ### Source: random generator
 class GeneratorTrackSource(TrackSource):

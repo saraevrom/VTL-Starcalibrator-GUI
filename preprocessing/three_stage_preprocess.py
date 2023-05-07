@@ -2,6 +2,7 @@ import numpy as np
 from .base import Preprocessor
 from .denoising import reduce_noise, antiflash, moving_average_subtract, divide_multidim_3to2, divide_multidim_3to3
 from .denoising import  moving_median_subtract, reduce_noise_robust, window_limiting, slice_for_preprocess
+from .denoising import  moving_median_bg, moving_average_bg
 from .denoising import sliding_robust_dev_centered
 from numba.experimental import jitclass
 import numba as nb
@@ -107,12 +108,14 @@ class DataThreeStagePreProcessor(object):
     # use_robust: nb.boolean
     # independent_pmt: nb.boolean
 
-    def __init__(self, ma_win=10, mstd_win=100, use_antiflash=True, use_robust=False, independent_pmt=False):
+    def __init__(self, ma_win=10, mstd_win=100, use_antiflash=True, use_robust=False, independent_pmt=False,
+                 display_bg=False):
         self.ma_win = ma_win
         self.mstd_win = mstd_win
         self.use_antiflash = use_antiflash
         self.use_robust = use_robust
         self.independent_pmt = independent_pmt
+        self.display_bg = display_bg
         #self.nooffset = nooffset
 
     def get_representation(self):
@@ -175,8 +178,25 @@ class DataThreeStagePreProcessor(object):
 
         return stage3
 
+    def get_bg(self, src_raw):
+        src = src_raw.astype(float)
+        if self.use_robust:
+            stage1_f = moving_median_bg
+        else:
+            stage1_f = moving_average_bg
+
+        if self.ma_win != 0:
+            stage1 = stage1_f(src, self.ma_win)
+        else:
+            stage1 = src[:]
+
+        return stage1
+
     def preprocess_whole(self, src: np.ndarray, broken: np.ndarray):
-        prepfunc = self.preprocess_bulk
+        if self.display_bg:
+            prepfunc = self.get_bg
+        else:
+            prepfunc = self.preprocess_bulk
         if self.independent_pmt:
             signal = np.zeros(src.shape)
             signal[:, :8, :8] = prepfunc(src[:, :8, :8])
@@ -207,18 +227,6 @@ class DataThreeStagePreProcessor(object):
         truncated, inner_slice = slice_for_preprocess(src, slice_start, slice_end, margin)
         preprocessed = self.preprocess_whole(truncated, broken)
         return preprocessed[inner_slice]
-
-    def stabilized_sliding(self, src: np.ndarray, broken: np.ndarray, window: int):
-        warnings.warn("REMOVE IT ASAP. It will take forever. Edge effect suppression is under construction.")
-        length = src.shape[0]
-        if window >= length:
-            return np.expand_dims(self.preprocess_whole(src, broken), 0)
-        else:
-            res = np.zeros(shape=(length-window+1, window, src.shape[1], src.shape[2]))
-            for i in range(length-window+1):
-                sub_src = src[i:i+window]
-                res[i] = self.preprocess_whole(sub_src, broken)
-            return res
 
     def get_affected_range(self):
         if self.ma_win>self.mstd_win:

@@ -1,5 +1,5 @@
 
-from vtl_common.common_GUI.tk_forms_assist import FormNode, ComboNode
+from vtl_common.common_GUI.tk_forms_assist import FormNode, ComboNode, BoolNode
 from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field
 from ..neural_builder.form_elements import LayerSequenceConstructor
 from vtl_common.localization import get_locale, format_locale
@@ -19,14 +19,16 @@ class UniversalModelForm(FormNode):
     DISPLAY_NAME = "Universal"
     FIELD__layers = create_value_field(LayerSequenceConstructor, get_locale("models.universal.layers"))
     FIELD__output_mode = OutputType
+    FIELD__require_background = create_value_field(BoolNode, get_locale("models.universal.require_bg"),False)
 
     def get_data(self):
         data = super().get_data()
         layers = data["layers"]
         mode = data["output_mode"]
+        require_background = data["require_background"]
         index = OUTPUT_TYPES.index(mode)
         target_shape = OUTPUT_SHAPES[index]
-        model = create_tf_model(layers)
+        model = create_tf_model(layers, require_background)
         if layers:
             last = layers[-1]
             oshape = last.output_shape[1:]
@@ -50,11 +52,11 @@ class UniversalModelForm(FormNode):
                 layers.append(tf.keras.layers.Dense(1, activation="sigmoid"))
             else:
                 raise RuntimeError("Unknown mode "+mode)
-            model = create_tf_model(layers)
+            model = create_tf_model(layers,require_background)
 
             last = layers[-1]
             oshape = last.output_shape[1:]
             assert target_shape == oshape
 
-        add_data = dict(mode=mode)
+        add_data = dict(mode=mode, require_background=require_background)
         return UniversalModel(model=model, additional_params=add_data)
