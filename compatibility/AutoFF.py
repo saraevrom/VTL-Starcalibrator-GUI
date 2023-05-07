@@ -3,7 +3,7 @@ import numpy as np
 import psutil, os
 
 from .h5py_aliased_fields import AliasedDataFile
-from friendliness import show_attention
+from friendliness import show_attention, check_mat
 
 
 def get_mean_image(f:h5py.File):
@@ -40,11 +40,14 @@ def get_mean_image(f:h5py.File):
 
 
 def fix_minima(filename):
-    with AliasedDataFile(filename, "a") as fp:
-        if "means" not in fp.keys():
-            means = np.median(fp["data0"], axis=0)
-            fp.create_dataset("means",data=means, dtype=np.float64)
-            print("Minima fixed")
-            show_attention("add_means")
-        else:
-            print("Mean data is present")
+    if check_mat(filename, False):
+        with AliasedDataFile(filename, "a") as fp:
+            if "means" not in fp.keys():
+                means = np.median(fp["data0"], axis=0)
+                fp.create_dataset("means",data=means, dtype=np.float64)
+                print("Minima fixed")
+                show_attention("add_means",0)
+            else:
+                print("Mean data is present")
+    else:
+        print("Skipped mean test")

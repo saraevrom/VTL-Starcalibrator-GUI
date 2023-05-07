@@ -196,7 +196,7 @@ class ToolTeacher(ToolBase):
                               )
                 else:
                     if not self.workon_model.has_compile_parameters():
-                        show_attention("keras_nocompile")
+                        show_attention("keras_nocompile",1)
                         return
                     self.workon_model.save_model(filename)
 

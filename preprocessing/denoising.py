@@ -198,6 +198,16 @@ def moving_average_subtract(src, win):
     else:
         return src - mean_by_axis(src, axis=0)
 
+
+@nb.njit(cache=True)
+def sweep(array_2d, reps):
+    res = np.zeros(shape=(reps,array_2d.shape[0],array_2d.shape[1]))
+    for k in range(reps):
+        for i in range(array_2d.shape[0]):
+            for j in range(array_2d.shape[1]):
+                res[k,i,j] = array_2d[i,j]
+    return res
+
 @nb.njit(cache=True)
 def moving_average_bg(src, win):
     if src.shape[0] >= win:
@@ -205,8 +215,9 @@ def moving_average_bg(src, win):
         return average
     else:
         flat_res = mean_by_axis(src, axis=0)
-        x1 = np.expand_dims(flat_res,0)
-        return np.repeat(x1, src.shape[0], axis=0)
+        return sweep(flat_res, src.shape[0])
+        # x1 = np.expand_dims(flat_res,0)
+        # return np.repeat(x1, src.shape[0], axis=0)
 
 @nb.njit(cache=True)
 def moving_median_subtract(src, win):

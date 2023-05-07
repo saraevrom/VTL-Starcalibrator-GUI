@@ -8,5 +8,6 @@ ADD_PARAMS = [
     ["USE_BACKGROUND_EXTRACTOR", BoolNode, True],
     ["USE_DATASET_CREATOR", BoolNode, True],
     ["USE_TRAINER", BoolNode, True],
-    ["USE_TRACK_TOOLBOX", BoolNode, True]
+    ["USE_TRACK_TOOLBOX", BoolNode, True],
+    ["ALLOW_MAT_MODIFICATION", BoolNode, False]
 ]

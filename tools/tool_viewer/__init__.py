@@ -17,6 +17,7 @@ import matplotlib.dates as md
 from datetime import datetime
 import json, h5py
 from vtl_common.localized_GUI.signal_plotter import PopupPlotable
+from friendliness import check_mat
 from preprocessing.denoising import slice_for_preprocess
 
 
@@ -101,8 +102,9 @@ class MatPlayer(ToolBase, PopupPlotable):
 
                 remembered_filename = self.get_loaded_filepath()
                 self.close_mat_file()
-                with h5py.File(remembered_filename, "a") as rw_file:
-                    rw_file.attrs["ffmodel"] = json.dumps(jsd)
+                if check_mat(remembered_filename):
+                    with h5py.File(remembered_filename, "a") as rw_file:
+                        rw_file.attrs["ffmodel"] = json.dumps(jsd)
 
                 self.reload_mat_file(remembered_filename, silent=True)
 

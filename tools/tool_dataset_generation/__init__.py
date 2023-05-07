@@ -15,6 +15,7 @@ from datetime import datetime
 from vtl_common.parameters import DATETIME_FORMAT
 from vtl_common.workspace_manager import Workspace
 import tkinter as tk
+from friendliness import check_mat
 
 MARKUP_WORKSPACE = Workspace("marked_up_tracks")
 
@@ -161,9 +162,10 @@ class DatasetGenerator(ToolBase):
             print("FILE SAVE PRESSED!!!")
             remembered_filename = self.get_loaded_filepath()
             self.close_mat_file()
-            with h5py.File(remembered_filename, "a") as rw_file:
-                overwrite_with_numpy(rw_file, "marked_intervals", self.interval_editor.marked_intervals)
-                overwrite_with_numpy(rw_file, "broken", np.logical_not(self.plotter.alive_pixels_matrix))
+            if check_mat(remembered_filename):
+                with h5py.File(remembered_filename, "a") as rw_file:
+                    overwrite_with_numpy(rw_file, "marked_intervals", self.interval_editor.marked_intervals)
+                    overwrite_with_numpy(rw_file, "broken", np.logical_not(self.plotter.alive_pixels_matrix))
 
             self.reload_mat_file(remembered_filename, silent=True)
             messagebox.showinfo(title=get_locale("datasetgen.messagebox.save_success.title"),

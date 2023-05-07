@@ -422,6 +422,7 @@
   "app.parameters.USE_DATASET_CREATOR": "Включить инструмент создания обучающих выборок",
   "app.parameters.USE_TRAINER": "Включить инструмент обучения нейросети",
   "app.parameters.USE_TRACK_TOOLBOX": "Включить инструмент генерации треков",
+  "app.parameters.ALLOW_MAT_MODIFICATION": "Разрешить модификацию mat файлов",
 
   "app.filedialog.save_model.title": "Сохранение модели",
   "app.filedialog.load_model.title": "Загрузка модели",

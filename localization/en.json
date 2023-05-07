@@ -431,6 +431,7 @@
   "app.parameters.USE_DATASET_CREATOR": "Enable dataset creation tool",
   "app.parameters.USE_TRAINER": "Enable trainer tool",
   "app.parameters.USE_TRACK_TOOLBOX": "Enable track toolbox",
+  "app.parameters.ALLOW_MAT_MODIFICATION": "Allow .mat file modification",
 
 
   "app.filedialog.save_model.title": "Save model",

@@ -2,5 +2,6 @@
   "attention": "Attention",
   "attention.convert_data": "This is not converted data file. Use converter tool to make converted one. Program will still attemt to load this file.",
   "attention.keras_nocompile": "Model is not compiled. Compile it before saving.",
-  "attention.add_means": "Added mean values to dataset."
+  "attention.add_means": "Added mean values to dataset.",
+  "attention.mat_modification": "Attempted to modify MAT file.\n Modified as HDF5 file can fail to open in MATLAB.\n You can enable modification in settings if you are not using MATLAB."
 }
