@@ -54,9 +54,14 @@ class ProbeParameters(FormNode):
     FIELD__frame_size = create_value_field(IntNode, get_locale("teacher.form.probing.size"), 128)
 
 
+class TrackSuppressorBackground(OptionNode):
+    DISPLAY_NAME = get_locale("teacher.form.track_suppress")
+    ITEM_TYPE = create_value_field(IntNode,"teacher.form.track_suppress.threshold", 1000)
+
 class SettingForm(FormNode):
     FIELD__label_dataset_parameters = create_label(get_locale("teacher.form.separator.dataset_parameters"), True)
     FIELD__preprocessing = DataPreProcessorField
+    FIELD__track_suppression = TrackSuppressorBackground
     FIELD__artificial_interference = create_value_field(BoolNode,
                                                         get_locale("teacher.form.artificial_interference"), False)
     FIELD__quick_track_probability = create_value_field(FloatNode,

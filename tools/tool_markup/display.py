@@ -37,6 +37,7 @@ class Display(tk.Frame):
         self._data_cache = None
         self._slicer_cache = None
         self._interval = None
+        self.apply_ff = True
 
     def set_formdata(self, formdata, lazy=False):
         self._formdata = formdata
@@ -96,7 +97,7 @@ class Display(tk.Frame):
             preprocessor = self._formdata["preprocessing"]
             interval = self._interval
             self._ffmodel: FlatFieldingModel
-            if self._ffmodel:
+            if self._ffmodel and self.apply_ff:
                 data = self._ffmodel.apply(data)
             data = preprocessor.preprocess_whole(data, self.plotter.get_broken())
             data = data[slicer]
@@ -125,7 +126,9 @@ class Display(tk.Frame):
             end = self._interval.end
             preprocessor = tf_model.get_filter()
             data, slicer = preprocessor.prepare_array(self.controller.file["data0"], start, end, margin_add=257)
-            data = divide_multidim_3to2(data.astype(float), np.array(self.controller.file["means"]))
+            data = data.astype(float)
+            if "means" in self.controller.keys():
+                data = divide_multidim_3to2(data, np.array(self.controller.file["means"]))
             return data, slicer, preprocessor
 
     def trigger(self, tf_model, positive_storage, negative_storage, fp_filter, original_preprocessor):
@@ -137,7 +140,9 @@ class Display(tk.Frame):
             threshold = trigger["threshold"]
             x_data = preprocessor.preprocess_whole(data, self.plotter.get_broken())
             if tf_model.require_bg():
-                background = preprocessor.get_bg(data)
+                #background = preprocessor.preprocess_whole(data, self.plotter.get_broken(), force_bg=True)
+                print("Calling explicitly get_bg", self.plotter.get_broken())
+                background = preprocessor.get_bg(data, self.plotter.get_broken())
                 x_data_new = np.zeros(shape=x_data.shape+(2,))
                 x_data_new[:, :, :, 0] = x_data
                 x_data_new[:, :, :, 1] = background
@@ -173,7 +178,7 @@ class Display(tk.Frame):
             if tf_model.require_bg():
                 x_data = np.zeros(shape=data.shape + (2,))
                 x_data[:, :, :, 0] = preprocessor.preprocess_whole(data, self.plotter.get_broken())
-                x_data[:, :, :, 1] = preprocessor.get_bg(data)
+                x_data[:, :, :, 1] = preprocessor.get_bg(data, self.plotter.get_broken())
             else:
                 x_data = preprocessor.preprocess_whole(data, self.plotter.get_broken())
             start = self._interval.start

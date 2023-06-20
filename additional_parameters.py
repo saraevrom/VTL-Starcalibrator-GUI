@@ -9,5 +9,7 @@ ADD_PARAMS = [
     ["USE_DATASET_CREATOR", BoolNode, True],
     ["USE_TRAINER", BoolNode, True],
     ["USE_TRACK_TOOLBOX", BoolNode, True],
-    ["ALLOW_MAT_MODIFICATION", BoolNode, False]
+    ["USE_AUTOMATION", BoolNode, True],
+    ["ALLOW_MAT_MODIFICATION", BoolNode, False],
+    ["USE_MANDATORY_FLATFIELDING", BoolNode, False],
 ]

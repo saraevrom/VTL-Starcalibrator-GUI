@@ -45,4 +45,4 @@ class Converter(tk.Frame):
         conv_parameters = self.form.get_values()
         self.form_parser.parse_formdata(conv_parameters)
         conv_parameters = self.form_parser.get_data()
-        ConverterParallel(self, filelist=files, conv_parameters=conv_parameters, output_filename=filename)
+        return ConverterParallel(self, filelist=files, conv_parameters=conv_parameters, output_filename=filename)

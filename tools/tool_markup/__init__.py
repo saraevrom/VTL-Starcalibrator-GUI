@@ -10,11 +10,12 @@ import h5py
 import numpy as np
 
 from vtl_common.localized_GUI.signal_plotter import PopupPlotable
-from vtl_common.common_GUI import TkDictForm
+from vtl_common.localized_GUI.tk_forms import SaveableTkDictForm
 from vtl_common.localized_GUI import GridPlotter
 from .form import TrackMarkupForm
 from vtl_common.localization import get_locale
 from vtl_common.common_GUI.button_panel import ButtonPanel
+from inner_communication import register_action
 
 from ..tool_base import ToolBase
 from .interval_storage_with_display import DisplayStorage
@@ -38,7 +39,7 @@ else:
 MARKUP_WORKSPACE = Workspace("marked_up_tracks")
 TENSORFLOW_MODELS_WORKSPACE = Workspace("ann_models")
 TRACKS_WORKSPACE = Workspace("tracks")
-
+MARKUP_PARAMS_WORKSPACE = Workspace("mark_up_parameters")
 
 def dualcollapse(arr0, func):
     arr = [item for item in arr0 if item]
@@ -141,7 +142,8 @@ class ToolMarkup(ToolBase, PopupPlotable):
 
         self.params_form_parser = TrackMarkupForm()
 
-        self.params_form = TkDictForm(right_panel, self.params_form_parser.get_configuration_root())
+        self.params_form = SaveableTkDictForm(right_panel, self.params_form_parser.get_configuration_root(),
+                                              file_asker=MARKUP_PARAMS_WORKSPACE)
         self.params_form.grid(row=2, column=0, sticky="nsew")
         self.params_form.on_commit = self.on_form_changed
 
@@ -210,6 +212,10 @@ class ToolMarkup(ToolBase, PopupPlotable):
         self._form_changed = False
 
         self.sync_form(True)
+        register_action("load_markup_parameters", self.action_load_params)
+        register_action("load_markup_ann", self.action_load_params)
+        register_action("markup_mark_broken", self.action_set_broken)
+        register_action("markup_auto", self.action_trigger)
 
 
     def update_answer_panel(self):
@@ -256,7 +262,7 @@ class ToolMarkup(ToolBase, PopupPlotable):
                 self.tf_model.set_window_expansion(trigger["expand_window"])
                 self.tf_model.set_window_deconv(trigger["deconvolve_window"])
             self._form_changed = False
-
+            self.display.apply_ff = formdata["apply_ff"]
 
     #Button press events
     def on_redraw_event(self):
@@ -269,23 +275,31 @@ class ToolMarkup(ToolBase, PopupPlotable):
         return  self.tf_model is not None
 
     def on_auto(self, auto_call=False):
+        self.sync_form()
+        if auto_call and not self._formdata["auto_cont"]:
+            return
+        if self.single_trigger():
+            if self._formdata["auto_cont"]:
+                self.after(1000, lambda: self.on_auto(True))
+
+    def single_trigger(self):
         if self.ensure_tfmodel():
             self.sync_form()
-            if auto_call and not self._formdata["auto_cont"]:
-                return
             gc.collect()
             self.display.trigger(self.tf_model, self.tracks.storage, self.background.storage,
                                  self._formdata["phase_cut"], self._formdata["preprocessing"])
             self.pull_next_interval()
-            if self.display.storage.has_item() and self._formdata["auto_cont"]:
-                self.after(5000, lambda: self.on_auto(True))
-
+            return self.display.storage.has_item()
+        return False
 
     def on_load_tf(self):
         filename = TENSORFLOW_MODELS_WORKSPACE.askopenfilename(
             title=get_locale("app.filedialog.load_model.title"),
             filetypes=[(get_locale("app.filedialog_formats.model"), "*.h5")]
         )
+
+
+    def load_tf(self, filename):
         if filename:
             self.tf_model = ModelWrapper.load_model(filename)
             self.tf_filter = self.tf_model.get_filter()
@@ -423,60 +437,66 @@ class ToolMarkup(ToolBase, PopupPlotable):
             fbase = self.get_loaded_filename()
             fbase = ospath.splitext(fbase)[0]
             filename = TRACKS_WORKSPACE.asksaveasfilename(auto_formats=["zip"], initialfile=f"tracks-{fbase}.zip")
-            if filename:
-                with zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
-                    index = 1
-                    for track_interval in self.tracks.storage.get_available():
-                        track_start = track_interval.start
-                        track_end = track_interval.end
-                        buffer = io.BytesIO(b"")
+            self.export_data(filename)
+                        # tgtfile = zipf.open(f"track_{track_start}_{track_end}", "w")
+                        #tgtfile.close()
 
-                        #plot_data = self.file["data0"][track_start:track_end]
-                        #plot_data, plot_data_cutter = self._get_data_at_semiprepared(track_start, track_end, True, margin_add=256)
-                        self.sync_form()
-                        data, slicer, preprocessor = prepare_data(track_interval, self._formdata, self.file)
+    def export_data(self, filename):
+        if filename:
+            with zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                index = 1
+                for track_interval in self.tracks.storage.get_available():
+                    track_start = track_interval.start
+                    track_end = track_interval.end
+                    buffer = io.BytesIO(b"")
 
-                        plot_data = preprocessor.preprocess_whole(data, self.display.plotter.get_broken())
+                    # plot_data = self.file["data0"][track_start:track_end]
+                    # plot_data, plot_data_cutter = self._get_data_at_semiprepared(track_start, track_end, True, margin_add=256)
+                    self.sync_form()
+                    data, slicer, preprocessor = prepare_data(track_interval, self._formdata, self.file)
+
+                    plot_data = preprocessor.preprocess_whole(data, self.display.plotter.get_broken())
+
+                    ut0 = self.file["UT0"][track_start:track_end]
+
+                    if self.tf_model is not None:
                         if self.tf_model.require_bg():
-                            new_data = np.zeros(shape=plot_data.shape+(2,))
+                            new_data = np.zeros(shape=plot_data.shape + (2,))
                             new_data[:, :, :, 0] = plot_data
-                            new_data[:, :, :, 1] = preprocessor.get_bg(data)
+                            new_data[:, :, :, 1] = preprocessor.preprocess_whole(data,
+                                                                                 self.display.plotter.get_broken(),
+                                                                                 force_bg=True)
                             x_data = new_data
                         else:
                             x_data = plot_data
 
-                        ut0 = self.file["UT0"][track_start:track_end]
+                        trigger = self._formdata["trigger"]
+                        threshold = trigger["threshold"]
+                        # bl, br, tl, tr = self.form_data["trigger"].get_triggering(self, plot_data)
+                        res = self.tf_model.trigger_split(x_data, threshold)
+                        plot_data = plot_data[slicer]
+                        bl, br, tl, tr = [item[slicer].any() for item in res]
 
-                        if self.tf_model is not None:
-                            trigger = self._formdata["trigger"]
-                            threshold = trigger["threshold"]
-                            #bl, br, tl, tr = self.form_data["trigger"].get_triggering(self, plot_data)
-                            res = self.tf_model.trigger_split(x_data, threshold)
-                            plot_data = plot_data[slicer]
-                            bl, br, tl, tr = [item[slicer].any() for item in res]
+                        print(f"TRACK {index}:")
+                        print_track(bl, br, tl, tr)
+                    else:
+                        plot_data = plot_data[slicer]
+                        bl, br, tl, tr = [True for _ in range(4)]
 
-                            print(f"TRACK {index}:")
-                            print_track(bl, br, tl, tr)
-                        else:
-                            plot_data = plot_data[slicer]
-                            bl, br, tl, tr = [True for _ in range(4)]
+                        # self.tf_model.trigger_split(plot_data, threshold, broken, ts_filter)
+                    if bl or br or tl or tr:
+                        assert plot_data.shape[0] == ut0.shape[0]
+                        h5_file = h5py.File(buffer, "w")
+                        h5_file.create_dataset("data0", data=plot_data)
+                        h5_file.create_dataset("UT0", data=ut0)
+                        h5_file.attrs["bottom_left"] = bl
+                        h5_file.attrs["bottom_right"] = br
+                        h5_file.attrs["top_left"] = tl
+                        h5_file.attrs["top_right"] = tr
 
-                            #self.tf_model.trigger_split(plot_data, threshold, broken, ts_filter)
-                        if bl or br or tl or tr:
-                            assert plot_data.shape[0] == ut0.shape[0]
-                            h5_file = h5py.File(buffer, "w")
-                            h5_file.create_dataset("data0", data=plot_data)
-                            h5_file.create_dataset("UT0", data=ut0)
-                            h5_file.attrs["bottom_left"] = bl
-                            h5_file.attrs["bottom_right"] = br
-                            h5_file.attrs["top_left"] = tl
-                            h5_file.attrs["top_right"] = tr
-
-                            h5_file.close()
-                            zipf.writestr(f"f{index}_track_{track_start}_{track_end}.h5", buffer.getvalue())
-                        index += 1
-                        # tgtfile = zipf.open(f"track_{track_start}_{track_end}", "w")
-                        #tgtfile.close()
+                        h5_file.close()
+                        zipf.writestr(f"f{index}_track_{track_start}_{track_end}.h5", buffer.getvalue())
+                    index += 1
 
     def on_export_bg(self):
         if not self.background.storage.is_empty() and self.file:
@@ -561,4 +581,27 @@ class ToolMarkup(ToolBase, PopupPlotable):
 
     def postprocess_plot(self, axes):
         if self.tf_model:
+            gc.collect()
             self.display.postprocess(self.tf_model, axes)
+
+    def action_load_params(self, filename):
+        filepath = MARKUP_PARAMS_WORKSPACE.get_file(filename)
+        with open(filepath,"r") as fp:
+            vals = json.load(fp)
+        self.params_form.set_values(vals)
+
+    def action_load_ann(self, filename):
+        if TENSORFLOW_INSTALLED:
+            filepath = TENSORFLOW_MODELS_WORKSPACE.get_file(filename)
+            self.load_tf(filepath)
+
+    def action_set_broken(self,i,j):
+        self.display.plotter.mark_broken(i,j)
+        self.display.plotter.draw()
+
+    def action_trigger(self):
+        return self.single_trigger()
+
+    def action_export_data(self,filename):
+        filepath = TRACKS_WORKSPACE.get_file(filename)
+        self.export_data(filepath)

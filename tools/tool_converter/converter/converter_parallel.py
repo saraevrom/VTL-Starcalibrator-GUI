@@ -5,10 +5,10 @@ import gc
 import numpy as np
 import time
 
-import h5py
+#import h5py
 
 from vtl_common.localization import get_locale
-
+from compatibility.h5py_aliased_fields import SafeMatHDF5
 
 def where_is_index(lengths, index):
     '''
@@ -40,15 +40,15 @@ def where_is_index_inverse(lengths, index):
 def simplify_files(file_list, cutter, multiplier=1):
     '''
     Simplify representation of files for merging
-    :param file_list: sit of files
+    :param file_list: list of file_access objects
     :param lcut: cut beginning
     :param rcut: cut ending
-    :return: list of tuples with (filename, lcut, rcut)
+    :return: list of tuples with (file_access, lcut, rcut)
     '''
     file_lengths = []
     full_len = 0
-    for filename in file_list:
-        with h5py.File(filename) as source_file:
+    for fa in file_list:
+        with fa.get_h5() as source_file:
             print("Check", source_file)
             times = source_file['unixtime_dbl_global']
             file_len = times.shape[0]
@@ -97,20 +97,20 @@ class ParallelWorker(Process):
         simplified_files = simplify_files(self.filelist, self.cutter, multiplier)
         start_time = time.time()
 
-        with h5py.File(self.output_filename, "w") as output_file:
-            data0 = output_file.create_dataset("data0", (1, 16, 16), dtype="f8", maxshape=(None, 16, 16))
-            utc_time = output_file.create_dataset("UT0", (1,), dtype="f8", maxshape=(None,))
+        with SafeMatHDF5(self.output_filename, "w") as output_file:
+            data0 = output_file.create_dataset("data0", (1, 16, 16), dtype="f8", maxshape=(None, 16, 16), chunks=True)
+            utc_time = output_file.create_dataset("UT0", (1,), dtype="f8", maxshape=(None,), chunks=True)
             dset_length = 0
             for file_index, file_data in enumerate(simplified_files):
-                filename, lcut, rcut = file_data
+                fa, lcut, rcut = file_data
                 self.conn.send({
                     "msg":"FILE",
-                    "name": filename,
+                    "name": fa.get_repr(),
                     "index": file_index+1,
                     "total": len(simplified_files),
                     "determinate": True
                 })
-                with h5py.File(filename, "r") as source_file:
+                with fa.get_h5() as source_file:
                     times = source_file['unixtime_dbl_global']
                     signals = source_file["pdm_2d_rot_global"]
                     assert times.shape[0] == signals.shape[0]
@@ -151,7 +151,7 @@ class ParallelWorker(Process):
                                 start_time = cur_time
                                 self.conn.send({
                                     "msg": "FRAME",
-                                    "name": filename,
+                                    "name": fa.get_repr(),
                                     "index": progress + 1,
                                     "total": appended_length,
                                     "determinate": True

@@ -1,4 +1,4 @@
-import h5py
+
 import numpy as np
 from tensorflow import keras
 import tensorflow as tf
@@ -7,6 +7,7 @@ from preprocessing.forms import DataPreProcessorField
 from numpy.lib.stride_tricks import sliding_window_view
 from ..compiler_form import CompileForm
 from .common import  expand_window, deconvolve_windows_mean
+from compatibility.h5py_aliased_fields import SafeMatHDF5
 
 CUSTOM_FIELD = "CUSTOM_MODEL_WRAPPER"
 FILTER_FIELD = "CUSTOM_PREFERRED_FILTER"
@@ -92,7 +93,7 @@ class ModelWrapper(object):
 
     def save_model(self, file_path, compile_parameters=None, attach_filter=None):
         self.model.save(file_path)
-        with h5py.File(file_path, "a") as fp:
+        with SafeMatHDF5(file_path, "a") as fp:
             fp.attrs[CUSTOM_FIELD] = type(self).__name__.encode("utf-8")
             if self.additional_params is not None:
                 fp.attrs[ATTRS_FIELD] = json.dumps(self.additional_params)
@@ -115,7 +116,7 @@ class ModelWrapper(object):
         compile_params = None
         add_data = None
         filter_data = None
-        with h5py.File(file_path, "r") as fp:
+        with SafeMatHDF5(file_path, "r") as fp:
             print(fp.keys())
             instance_class = ModelWrapper.SUBCLASSES[fp.attrs[CUSTOM_FIELD]]
             if FILTER_FIELD in fp.attrs.keys():

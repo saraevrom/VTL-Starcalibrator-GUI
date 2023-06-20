@@ -3,7 +3,7 @@ from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field, kw
 from vtl_common.localization import get_locale
 from tensorflow import keras
 import tensorflow as tf
-from .custom_structures import Residual, TrainableScaling, PMTSplit
+from .custom_structures import Residual, TrainableScaling, PMTSplit, Conv2DPlus1
 
 
 class Activation(ComboNode):
@@ -27,8 +27,7 @@ class NNPadding(ComboNode):
     DEFAULT_VALUE = "valid"
     VALUES = ["valid", "same"]
 
-class Conv3DConstructor(FormNode):
-    DISPLAY_NAME = get_locale("app.model_builder.conv3d")
+class Conv3DLikeConstructor(FormNode):
     FIELD__conv_outputs = create_value_field(IntNode, get_locale("app.model_builder.convnd.outputs"), 1)
     FIELD__conv_X = create_value_field(IntNode, get_locale("app.model_builder.convnd.conv_X"), 3)
     FIELD__conv_Y = create_value_field(IntNode, get_locale("app.model_builder.convnd.conv_Y"), 3)
@@ -39,6 +38,9 @@ class Conv3DConstructor(FormNode):
     FIELD__padding = NNPadding
     FIELD__activation = Activation
 
+
+class Conv3DConstructor(Conv3DLikeConstructor):
+    DISPLAY_NAME = get_locale("app.model_builder.conv3d")
     def get_data(self):
         data = super().get_data()
         conv_outputs = data["conv_outputs"]
@@ -52,6 +54,27 @@ class Conv3DConstructor(FormNode):
         return keras.layers.Conv3D(conv_outputs, (conv_T, conv_X, conv_Y),
                                    strides=(stride_T, stride_X, stride_Y),
                                    padding=padding, activation=data["activation"])
+
+class Conv2plus1DConstructor(Conv3DLikeConstructor):
+    DISPLAY_NAME = get_locale("app.model_builder.conv2plus1d")
+    FIELD__activation_int = create_value_field(Activation, get_locale("app.model_builder.activation_intermediate"),
+                                               "relu")
+
+    def get_data(self):
+        data = super().get_data()
+        conv_outputs = data["conv_outputs"]
+        conv_T = data["conv_T"]
+        conv_X = data["conv_X"]
+        conv_Y = data["conv_Y"]
+        stride_T = data["stride_T"]
+        stride_X = data["stride_X"]
+        stride_Y = data["stride_Y"]
+        padding = data["padding"]
+        return Conv2DPlus1(conv_outputs, (conv_T, conv_X, conv_Y),
+                           strides=(stride_T, stride_X, stride_Y),
+                           padding=padding, activation_main=data["activation"],
+                           activation_intermediate=data["activation_int"])
+
 
 class Conv2DConstructor(FormNode):
     DISPLAY_NAME = get_locale("app.model_builder.conv2d")
@@ -74,15 +97,23 @@ class Conv2DConstructor(FormNode):
         return keras.layers.Conv2D(conv_outputs, (conv_X, conv_Y),
                                    strides=(stride_X, stride_Y), padding=padding, activation=data["activation"])
 
+class Stride(FormNode):
+    DISPLAY_NAME = ""
+    FIELD__stride_X = create_value_field(IntNode, get_locale("app.model_builder.stride_X"), 1)
+    FIELD__stride_Y = create_value_field(IntNode, get_locale("app.model_builder.stride_Y"), 1)
+    FIELD__stride_T = create_value_field(IntNode, get_locale("app.model_builder.stride_T"), 1)
+
+class StrideOption(OptionNode):
+    DISPLAY_NAME = get_locale("app.model_builder.stride")
+    ITEM_TYPE = Stride
+    DEFAULT_VALUE = None
 
 class MaxPooling3DConstructor(FormNode):
     DISPLAY_NAME = get_locale("app.model_builder.maxpool3d")
     FIELD__pool_X = create_value_field(IntNode, get_locale("app.model_builder.pool.pool_X"), 2)
     FIELD__pool_Y = create_value_field(IntNode, get_locale("app.model_builder.pool.pool_Y"), 2)
     FIELD__pool_T = create_value_field(IntNode, get_locale("app.model_builder.pool.pool_T"), 2)
-    FIELD__stride_X = create_value_field(IntNode, get_locale("app.model_builder.stride_X"), 1)
-    FIELD__stride_Y = create_value_field(IntNode, get_locale("app.model_builder.stride_Y"), 1)
-    FIELD__stride_T = create_value_field(IntNode, get_locale("app.model_builder.stride_T"), 1)
+    FIELD__stride = StrideOption
     FIELD__padding = NNPadding
 
     def get_data(self):
@@ -90,11 +121,9 @@ class MaxPooling3DConstructor(FormNode):
         pool_X = data["pool_X"]
         pool_Y = data["pool_Y"]
         pool_T = data["pool_T"]
-        stride_T = data["stride_T"]
-        stride_X = data["stride_X"]
-        stride_Y = data["stride_Y"]
+        stride=data["stride"]
         padding = data["padding"]
-        return keras.layers.MaxPooling3D(pool_size=(pool_T, pool_X, pool_Y), strides=(stride_T, stride_X, stride_Y),
+        return keras.layers.MaxPooling3D(pool_size=(pool_T, pool_X, pool_Y), strides=stride,
                                          padding=padding)
 
 
@@ -165,6 +194,7 @@ class LayerConstructor(AlternatingNode):
     DISPLAY_NAME = get_locale("app.model_builder.layer")
     SEL__dense = DenseConstructor
     SEL__conv3d = Conv3DConstructor
+    SEL__conv2plus1d = Conv2plus1DConstructor
     SEL__conv2d = Conv2DConstructor
     SEL__maxpool3d = MaxPooling3DConstructor
     SEL__maxpool2d = MaxPooling2DConstructor

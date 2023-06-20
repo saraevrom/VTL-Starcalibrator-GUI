@@ -1,7 +1,7 @@
 import h5py
 import numpy as np
 from vtl_common.parameters import ALLOW_MAT_MODIFICATION
-
+from .gigastats import get_median
 
 
 SUBSTITUTIONS = {
@@ -13,7 +13,8 @@ class MatViolationError(Exception):
     def __init__(self, filename):
         super().__init__(f"Attempted to modify {filename}")
 
-class AliasedDataFile(h5py.File):
+
+class SafeMatHDF5(h5py.File):
     def __init__(self, *args,**kwargs):
         if args:
             filename = args[0]
@@ -21,7 +22,11 @@ class AliasedDataFile(h5py.File):
             filename = kwargs["name"]
         else:
             filename = None
-        is_mat =  filename.endswith(".mat")
+
+        if (filename is not None) and isinstance(filename, str):
+            is_mat = filename.endswith(".mat")
+        else:
+            is_mat = False
 
         if len(args)>=2:
             rmode = args[1]
@@ -34,6 +39,10 @@ class AliasedDataFile(h5py.File):
             if rmode!="r" and not ALLOW_MAT_MODIFICATION and is_mat:
                 raise MatViolationError(filename)
         super().__init__(*args,**kwargs)
+
+class AliasedDataFile(SafeMatHDF5):
+    def __init__(self, *args,**kwargs):
+        super().__init__(*args,**kwargs)
         self._means = None
 
     def __getitem__(self, item):
@@ -43,7 +52,7 @@ class AliasedDataFile(h5py.File):
             except KeyError:
                 if self._means is None:
                     print("Creating temporary mean values")
-                    self._means = np.median(self["data0"], axis=0)
+                    self._means = get_median(self)
                 return self._means.copy()
 
         try:
@@ -54,4 +63,5 @@ class AliasedDataFile(h5py.File):
                 new_key, transformation = SUBSTITUTIONS[item]
                 retrieved = super().__getitem__(new_key)
                 return transformation(retrieved)
+            print(f"Key \"{item}\" is missing in substututions")
             raise err

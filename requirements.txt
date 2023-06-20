@@ -11,4 +11,5 @@ numba
 imageio
 numba-scipy
 numpy
+fsspec
 #tensorflow-cpu

@@ -56,6 +56,8 @@
   "teacher.form.seed": "Seed",
   "teacher.form.probing": "Probing",
   "teacher.form.probing.size": "Size",
+  "teacher.form.track_suppress": "Track suppression",
+  "teacher.form.track_suppress.threshold": "Background threshold",
 
   "teacher.form.trackgen_false": "False Tracks",
   "teacher.form.trackgen": "Track generation",
@@ -131,9 +133,11 @@
   "app.model_builder.layers": "Layers",
   "app.model_builder.layer": "Layer",
   "app.model_builder.activation": "Activation",
+  "app.model_builder.activation_intermediate": "Intermediate activation",
   "app.model_builder.dense": "Dense",
   "app.model_builder.dense.count": "Dense neurons",
   "app.model_builder.conv3d": "Convolution 3D",
+  "app.model_builder.conv2plus1d": "Convolution 2+1D",
   "app.model_builder.conv2d": "Convolution 2D",
   "app.model_builder.scale": "Scale",
   "app.model_builder.scale.use_offset": "Use offset",
@@ -149,6 +153,7 @@
   "app.model_builder.pool.pool_X": "Pooling X",
   "app.model_builder.pool.pool_Y": "Pooling Y",
   "app.model_builder.pool.pool_T": "Pooling T",
+  "app.model_builder.stride": "Stride",
   "app.model_builder.stride_X": "Stride X",
   "app.model_builder.stride_Y": "Stride Y",
   "app.model_builder.stride_T": "Stride T",
@@ -312,6 +317,7 @@
 
   "mat_converter.title": "Data converter",
   "mat_converter.btn.add":"Add",
+  "mat_converter.btn.add_remote": "Add (remote)",
   "mat_converter.btn.remove":"Remove",
   "mat_converter.btn.move_up":"Move up",
   "mat_converter.btn.move_down":"Move down",
@@ -411,6 +417,7 @@
   "app.menu.tools.dataset_generator": "Dataset generator",
   "app.menu.tools.teacher": "ANN model",
   "app.menu.tools.track_toolbox": "Track toolbox",
+  "app.menu.tools.automation": "Automation",
 
 
 
@@ -432,6 +439,7 @@
   "app.parameters.USE_TRAINER": "Enable trainer tool",
   "app.parameters.USE_TRACK_TOOLBOX": "Enable track toolbox",
   "app.parameters.ALLOW_MAT_MODIFICATION": "Allow .mat file modification",
+  "app.parameters.USE_MANDATORY_FLATFIELDING": "Use mandatory flatfielding",
 
 
   "app.filedialog.save_model.title": "Save model",

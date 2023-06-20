@@ -2,7 +2,7 @@ from extension.optional_tensorflow import TENSORFLOW_INSTALLED
 import vtl_common.parameters
 print(dir(vtl_common.parameters))
 from vtl_common.parameters import USE_VIEWER, USE_CONVERTER, USE_FLATFIELDER, USE_STARCALIBRATOR, USE_BACKGROUND_EXTRACTOR
-from vtl_common.parameters import USE_DATASET_CREATOR, USE_TRAINER, USE_TRACK_TOOLBOX
+from vtl_common.parameters import USE_DATASET_CREATOR, USE_TRAINER, USE_TRACK_TOOLBOX, USE_AUTOMATION
 
 def add_tools(adder):
         if USE_VIEWER:
@@ -31,3 +31,6 @@ def add_tools(adder):
         if TENSORFLOW_INSTALLED and USE_TRAINER:
                 from .tool_teacher import ToolTeacher
                 adder("app.menu.tools.teacher", ToolTeacher)
+        if USE_AUTOMATION:
+            from .tool_automation import ToolAutomation
+            adder("app.menu.tools.automation", ToolAutomation)

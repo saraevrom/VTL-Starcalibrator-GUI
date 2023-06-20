@@ -31,7 +31,7 @@ from vtl_common import localization
 from compatibility.h5py_aliased_fields import AliasedDataFile
 from compatibility.AutoFF import fix_minima
 from vtl_common.common_flatfielding.models import Linear as LinearFF
-
+from inner_communication import register_action
 
 localization.set_locale(parameters.LOCALE)
 localization.SEARCH_DIRS.append(ospath.join(ospath.dirname(ospath.abspath(__file__)),"localization"))
@@ -43,6 +43,7 @@ parameters.localize_parameters_fields()
 
 MDATA_WORKSPACE = Workspace("merged_data")
 FF_WORKSPACE = Workspace("ff_calibration")
+UNPROCESSED_DATA_WORKSPACE = Workspace("unprocessed_data")
 
 class App(tk.Tk):
 
@@ -76,6 +77,9 @@ class App(tk.Tk):
         add_tools(self.add_tool)
         self.update_title()
         Workspace.initialize_workspace()
+        register_action("load_file", self.action_load_file)
+        register_action("load_file_raw", self.action_load_file_raw)
+        register_action("load_ff", self.action_loadff)
 
     def update_title(self):
         title = get_locale("app.title")
@@ -102,9 +106,19 @@ class App(tk.Tk):
                                               ])
         self.reload_mat_file(filename)
 
+    def action_load_file(self, filename):
+        filepath = MDATA_WORKSPACE.get_file(filename)
+        self.reload_mat_file(filepath, True)
+
+    def action_load_file_raw(self, filename):
+        filepath = UNPROCESSED_DATA_WORKSPACE.get_file(filename)
+        self.reload_mat_file(filepath, True)
+
     def reload_mat_file(self, filename, silent=False):
         print("Loading file:", filename)
         if filename and os.path.isfile(filename):
+            if self.file:
+                self.file.close()
             #new_file = h5py.File(filename, "r")
             fix_minima(filename)
             new_file = AliasedDataFile(filename,"r")
@@ -112,8 +126,6 @@ class App(tk.Tk):
             if not friendliness.check_data_file(new_file):
                 self.update_title()
                 return
-            if self.file:
-                self.file.close()
             self.filename = filename
             self.file = new_file
             if "ffmodel" in new_file.attrs.keys():
@@ -148,6 +160,13 @@ class App(tk.Tk):
                                               filetypes=[
                                                   (get_locale("app.filedialog_formats.ff_json"), "*.json")
                                               ])
+        self.open_ffmodel(filename)
+
+    def action_loadff(self, filename):
+        filepath = FF_WORKSPACE.get_file(filename)
+        self.open_ffmodel(filepath)
+
+    def open_ffmodel(self, filename):
         if filename:
             model: FlatFieldingModel
             model = FlatFieldingModel.load(filename)
@@ -164,8 +183,11 @@ class App(tk.Tk):
 
     def get_ffmodel(self):
         if (self.ffmodel is None) and (self.file is not None):
-            c33 = self.file["means"][3,3]
-            return LinearFF(coefficients=np.array(self.file["means"]/c33),baseline=np.zeros(shape=self.file["means"].shape))
+            if "means" in self.file.keys():
+                c33 = self.file["means"][3,3]
+                return LinearFF(coefficients=np.array(self.file["means"]/c33),baseline=np.zeros(shape=self.file["means"].shape))
+            else:
+                return None
         else:
             return self.ffmodel
 

@@ -1,7 +1,8 @@
 import tkinter as tk
 
 import numpy as np
-import h5py
+#import h5py
+from compatibility.h5py_aliased_fields import SafeMatHDF5
 import numpy.random as np_rng
 
 from ..tool_base import ToolBase
@@ -68,7 +69,8 @@ class TrackToolbox(ToolBase, PopupPlotable):
         off_x = GAP_OFFSET_X + HALF_PIXELS * PIXEL_SIZE_A
         off_y = GAP_OFFSET_Y + HALF_PIXELS * PIXEL_SIZE_B
 
-        bl_trajectory:TrackTrajectory = kwargs["trajectory"]
+        off_bl_trajectory:TrackTrajectory = kwargs["trajectory"]
+        bl_trajectory = off_bl_trajectory.offset(off_x/2,off_y/2)
         br_trajectory = bl_trajectory.offset(-off_x,0)
         tl_trajectory:TrackTrajectory = bl_trajectory.offset(0, -off_y)
         tr_trajectory = bl_trajectory.offset(-off_x, -off_y)
@@ -88,6 +90,7 @@ class TrackToolbox(ToolBase, PopupPlotable):
         self._track = np.zeros((kwargs["duration"],PIXELS,PIXELS))
 
         #BOTTOM LEFT
+        kwargs["trajectory"] = bl_trajectory
         self._track[:, :8, :8], _ = generate_track(**kwargs)
 
         #BOTTOM RIGHT
@@ -130,7 +133,7 @@ class TrackToolbox(ToolBase, PopupPlotable):
             if filename:
                 ut0,data = self.get_plot_data()
 
-                with h5py.File(filename, "w") as fp:
+                with SafeMatHDF5(filename, "w") as fp:
                     fp.create_dataset("data0", data=data)
                     fp.create_dataset("UT0", data=ut0)
 

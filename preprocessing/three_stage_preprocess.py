@@ -87,6 +87,27 @@ def means_square(signal):
     res[:,8:,8:] = np.expand_dims(np.median(signal[:,8:,8:], axis=(1,2)),axis=(1,2))
     return res
 
+@nb.njit()
+def fill_holes_bg(bg,broken):
+    res = np.zeros(shape=bg.shape)
+    for k in range(bg.shape[0]):
+        res[k] = bg[k]
+        med = np.median(bg[k])
+        for i in range(bg.shape[1]):
+            for j in range(bg.shape[2]):
+                if broken[i,j]:
+                    res[k,i,j] = med
+    return res
+
+@nb.njit()
+def fill_holes_bg_indep(bg,broken):
+    res = np.zeros(bg.shape)
+    res[:, :8, :8] = fill_holes_bg(bg[:,:8,:8], broken[:8,:8])
+    res[:, 8:, :8] = fill_holes_bg(bg[:,8:,:8], broken[8:,:8])
+    res[:, :8, 8:] = fill_holes_bg(bg[:,:8,8:], broken[:8,8:])
+    res[:, 8:, 8:] = fill_holes_bg(bg[:,8:,8:], broken[8:,8:])
+    return res
+
 
 @nb.njit(nb.float64[:,:,:](nb.float64[:,:,:], nb.boolean[:,:], nb.float64[:,:,:]),cache=True)
 def put_mask_2d(target_arr, mask, repl):
@@ -178,7 +199,7 @@ class DataThreeStagePreProcessor(object):
 
         return stage3
 
-    def get_bg(self, src_raw):
+    def get_bg(self, src_raw, broken=None):
         src = src_raw.astype(float)
         if self.use_robust:
             stage1_f = moving_median_bg
@@ -189,11 +210,15 @@ class DataThreeStagePreProcessor(object):
             stage1 = stage1_f(src, self.ma_win)
         else:
             stage1 = src[:]
-
+        #print("Called get_bg")
+        #print(broken)
+        if broken is not None:
+            stage1 = fill_holes_bg_indep(stage1, broken)
+            #print("Input modified")
         return stage1
 
-    def preprocess_whole(self, src: np.ndarray, broken: np.ndarray):
-        if self.display_bg:
+    def preprocess_whole(self, src: np.ndarray, broken: np.ndarray, force_bg=False):
+        if self.display_bg or force_bg:
             prepfunc = self.get_bg
         else:
             prepfunc = self.preprocess_bulk

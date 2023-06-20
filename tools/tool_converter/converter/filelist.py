@@ -3,6 +3,8 @@ from vtl_common.localization import get_locale, format_locale
 from tkinter import messagebox
 import os.path as ospath
 
+from .file_access import RemoteFileAccess, LocalFileAccess, FileAccess
+from .ftp_dialog import FtpBrowser
 
 def format_path(fpath):
     filename = ospath.basename(fpath)
@@ -23,12 +25,21 @@ class Filelist(tk.Frame):
             bottompanel.columnconfigure(i, weight=1)
         tk.Button(bottompanel, command=self.on_add_file, text=get_locale("mat_converter.btn.add"))\
             .grid(row=0, column=0, sticky="nsew")
-        tk.Button(bottompanel, command=self.on_remove_file, text=get_locale("mat_converter.btn.remove"))\
+        tk.Button(bottompanel, command=self.on_add_file_remote, text=get_locale("mat_converter.btn.add_remote")) \
             .grid(row=0, column=1, sticky="nsew")
-        tk.Button(bottompanel, command=self.on_move_up, text=get_locale("mat_converter.btn.move_up"))\
+        tk.Button(bottompanel, command=self.on_remove_file, text=get_locale("mat_converter.btn.remove"))\
             .grid(row=0, column=2, sticky="nsew")
-        tk.Button(bottompanel, command=self.on_move_down, text=get_locale("mat_converter.btn.move_down"))\
+        tk.Button(bottompanel, command=self.on_move_up, text=get_locale("mat_converter.btn.move_up"))\
             .grid(row=0, column=3, sticky="nsew")
+        tk.Button(bottompanel, command=self.on_move_down, text=get_locale("mat_converter.btn.move_down"))\
+            .grid(row=0, column=4, sticky="nsew")
+
+
+    def on_add_file_remote(self):
+        file_accesses = FtpBrowser(self)
+        if file_accesses.result_filelist:
+            for fa in file_accesses.result_filelist:
+                self.add_fileaccess(fa)
 
     def on_add_file(self):
         filenames = self.workspace.askopenfilenames(
@@ -37,15 +48,19 @@ class Filelist(tk.Frame):
             parent=self)
         if filenames:
             for filename in filenames:
-                if filename not in self.file_list:
-                    self.file_listbox.insert(tk.END, format_path(filename))
-                    self.file_list.append(filename)
-                else:
-                    messagebox.showwarning(title=get_locale("mat_converter.messagebox.file_in_list.title"),
-                                           message=format_locale(
-                        "mat_converter.messagebox.file_in_list", filename=filename
-                    ),
-                                           parent=self)
+                self.add_fileaccess(LocalFileAccess(filename))
+
+
+    def add_fileaccess(self, fa: FileAccess):
+        if fa not in self.file_list:
+            self.file_listbox.insert(tk.END, fa.get_repr())
+            self.file_list.append(fa)
+        else:
+            messagebox.showwarning(title=get_locale("mat_converter.messagebox.file_in_list.title"),
+                                   message=format_locale(
+                                       "mat_converter.messagebox.file_in_list", filename=fa.get_repr()
+                                   ),
+                                   parent=self)
 
     def get_files(self):
         return self.file_list.copy()
@@ -56,6 +71,10 @@ class Filelist(tk.Frame):
         for i in cursel[::-1]:
             self.file_listbox.delete(i)
             self.file_list.pop(i)
+
+    def clear(self):
+        self.file_listbox.delete(0,tk.END)
+        self.file_list.clear()
 
     def on_move_up(self):
         cursel = self.file_listbox.curselection()

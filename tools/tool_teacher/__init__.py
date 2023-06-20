@@ -6,7 +6,7 @@ import tqdm
 import preprocessing
 from ..tool_base import ToolBase
 from .filepool import RandomIntervalAccess, RandomFileAccess, FilePool
-import h5py
+from compatibility.h5py_aliased_fields import SafeMatHDF5
 import tkinter as tk
 from tkinter.scrolledtext import ScrolledText
 from vtl_common.localization import get_locale, format_locale
@@ -105,7 +105,9 @@ class ToolTeacher(ToolBase):
 
         control_frame = tk.Frame(self)
         control_frame.grid(row=0, column=3, sticky="nsew")
+        self.columnconfigure(3,weight=2)
         control_frame.rowconfigure(0, weight=1)
+        control_frame.columnconfigure(0, weight=1)
 
         self.settings_form = SettingForm()
         form_conf = self.settings_form.get_configuration_root()
@@ -180,15 +182,16 @@ class ToolTeacher(ToolBase):
 
     def on_save_model(self):
         if self.workon_model:
-            file_types = [(get_locale("app.filedialog_formats.model"), "*.h5")]
+            file_types = ["h5"]
             if PYDOT_INSTALLED:
-                file_types.append((get_locale("app.filedialog_formats.png"), "*.png"))
+                file_types.append("png")
+                file_types.append("pdf")
             filename = TENSORFLOW_MODELS_WORKSPACE.asksaveasfilename(
                 title=get_locale("app.filedialog.save_model.title"),
-                filetypes=file_types
+                auto_formats=file_types
             )
             if filename:
-                if filename.endswith(".png") and PYDOT_INSTALLED:
+                if filename.endswith(".png") or filename.endswith(".pdf") and PYDOT_INSTALLED:
                     plot_model(self.workon_model.model, to_file=filename,
                                show_shapes=True,
                                show_dtype=True,
@@ -321,7 +324,7 @@ class ToolTeacher(ToolBase):
                 ut0 = np.arange(x_gen.shape[0])
                 filename = EXPORT_WORKSPACE.asksaveasfilename(auto_formats=["h5"])
                 if filename:
-                    with h5py.File(filename,"w") as fp:
+                    with SafeMatHDF5(filename,"w") as fp:
                         fp.create_dataset("data0", data=x_gen)
                         fp.create_dataset("UT0", data=ut0)
                         fp.attrs["has_track"] = y_par.has_track()
@@ -382,12 +385,12 @@ class ToolTeacher(ToolBase):
     def get_interference(self, conf, use_artificial, frame_size):
         if use_artificial:
             if self._formdata.false_track_gen.sources and self.rng.random()<self._formdata.false_track_probability:
-                false_track = self._formdata.false_track_gen.get_track(self.interference_pool, self.rng, frame_size)
+                false_track = self._formdata.false_track_gen.get_track(self.interference_pool, self.rng, frame_size)[0]
                 return conf.process_it(false_track, rng=self.rng)
             else:
                 track_gen: TrackSource = self._formdata.get_trackgen()
                 #source_foreground, e_length = self.fg_pool.random_access(self.rng, frame_size)
-                source_foreground = track_gen.get_track(self.fg_pool, self.rng, frame_size)
+                source_foreground = track_gen.get_track(self.fg_pool, self.rng, frame_size)[0]
                 # We can create artificial "meteor" interference signal from foreground signal
                 flattened = np.sum(source_foreground, axis=0)
                 interference = np.zeros(source_foreground.shape)
@@ -421,9 +424,11 @@ class ToolTeacher(ToolBase):
             margin_offset = margin//2
             bg_source = bg[margin_offset: margin_offset + frame_size]
             broken = np.array(broken)
+            true_background = preprocessor.preprocess_whole(bg, broken, force_bg=True)
             bg[:,broken] = 1
             x_data = preprocessor.preprocess_whole(bg, broken)
             x_data = x_data[margin_offset: margin_offset + frame_size]
+            true_background = true_background[margin_offset: margin_offset + frame_size]
             y_params = TargetParameters()
             artificial_interference = conf.intergerence_artificial()
             if artificial_interference or self.interference_pool.files_list:
@@ -449,6 +454,13 @@ class ToolTeacher(ToolBase):
                 if artificial_interference and self.rng.random() < conf.flash_probability:
                     interf = interf + self.generate_artificial_flash(conf)
                 x_data = x_data + interf
+
+            if conf.track_suppression is None:
+                threshold = np.inf
+            else:
+                threshold = conf.track_suppression
+
+
             if self.rng.random() >= conf.track_probability:
                 pass
             else:
@@ -456,21 +468,29 @@ class ToolTeacher(ToolBase):
                 #self.fg_pool.set_shift_threshold(conf.shift_threshold)
                 rng_append = self.rng.integers(1, 16)
                 if rng_append % 2 == 1:
-                    y_params.pmt_bottom_left = True
-                    #fg[:, :8, :8] = conf.process_fg(self.fg_pool.random_access(self.rng, frame_size)[0], rng=self.rng)
-                    fg[:, :8, :8] = conf.process_fg(track_src.get_track(self.fg_pool,self.rng, frame_size), rng=self.rng)
+                    candidate, strong = track_src.get_track(self.fg_pool,self.rng, frame_size)
+                    if np.max(true_background[:,:8,:8])<=threshold or strong:
+                        y_params.pmt_bottom_left = True
+                        #fg[:, :8, :8] = conf.process_fg(self.fg_pool.random_access(self.rng, frame_size)[0], rng=self.rng)
+                        fg[:, :8, :8] = conf.process_fg(candidate, rng=self.rng)
                 if rng_append // 2 % 2 == 1:
-                    y_params.pmt_bottom_right = True
-                    #fg[:, 8:, :8] = conf.process_fg(self.fg_pool.random_access(self.rng, frame_size)[0], rng=self.rng)
-                    fg[:, 8:, :8] = conf.process_fg(track_src.get_track(self.fg_pool,self.rng, frame_size), rng=self.rng)
+                    candidate, strong = track_src.get_track(self.fg_pool,self.rng, frame_size)
+                    if np.max(true_background[:,8:,:8])<=threshold or strong:
+                        y_params.pmt_bottom_right = True
+                        #fg[:, 8:, :8] = conf.process_fg(self.fg_pool.random_access(self.rng, frame_size)[0], rng=self.rng)
+                        fg[:, 8:, :8] = conf.process_fg(candidate, rng=self.rng)
                 if rng_append // 4 % 2 == 1:
-                    y_params.pmt_top_left = True
-                    #fg[:, :8, 8:] = conf.process_fg(self.fg_pool.random_access(self.rng, frame_size)[0], rng=self.rng)
-                    fg[:, :8, 8:] = conf.process_fg(track_src.get_track(self.fg_pool,self.rng, frame_size), rng=self.rng)
+                    candidate, strong = track_src.get_track(self.fg_pool,self.rng, frame_size)
+                    if np.max(true_background[:,:8,8:])<=threshold or strong:
+                        y_params.pmt_top_left = True
+                        #fg[:, :8, 8:] = conf.process_fg(self.fg_pool.random_access(self.rng, frame_size)[0], rng=self.rng)
+                        fg[:, :8, 8:] = conf.process_fg(candidate, rng=self.rng)
                 if rng_append // 8 % 2 == 1:
-                    y_params.pmt_top_right = True
-                    #fg[:, 8:, 8:] = conf.process_fg(self.fg_pool.random_access(self.rng, frame_size)[0], rng=self.rng)
-                    fg[:, 8:, 8:] = conf.process_fg(track_src.get_track(self.fg_pool,self.rng, frame_size), rng=self.rng)
+                    candidate, strong = track_src.get_track(self.fg_pool,self.rng, frame_size)
+                    if np.max(true_background[:,8:,8:])<=threshold or strong:
+                        y_params.pmt_top_right = True
+                        #fg[:, 8:, 8:] = conf.process_fg(self.fg_pool.random_access(self.rng, frame_size)[0], rng=self.rng)
+                        fg[:, 8:, 8:] = conf.process_fg(candidate, rng=self.rng)
                 fg[:, broken] = 0
                 x_data = x_data + fg
             i += 1
@@ -482,7 +502,7 @@ class ToolTeacher(ToolBase):
                 assert new_xdata.shape==(128,16,16,2)
                 assert bg_source.shape == (128,16,16)
                 new_xdata[:, :, :, 0] = x_data
-                new_xdata[:, :, :, 1] = preprocessor.get_bg(bg_source)
+                new_xdata[:, :, :, 1] = true_background
                 x_data = new_xdata
             x_data = conf.process_bg(x_data, y_params, rng=self.rng)
             yield x_data, y_params
@@ -512,7 +532,7 @@ class ToolTeacher(ToolBase):
         self.sync_form()
         track_src: TrackSource = self._formdata.get_trackgen()
         self.check_passed = True
-        self.check_pool("teacher.status.msg_bg", self.bg_pool, ["data0", "marked_intervals", "broken"])
+        self.check_pool("teacher.status.msg_bg", self.bg_pool, ["data0", "marked_intervals", "broken", "means"])
         self.check_pool("teacher.status.msg_fg", self.fg_pool, ["EventsIJ"], not track_src.uses_files())
         self.check_pool("teacher.status.msg_it", self.interference_pool, ["EventsIJ"], True)
 

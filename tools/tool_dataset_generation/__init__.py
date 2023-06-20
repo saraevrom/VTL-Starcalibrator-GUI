@@ -16,6 +16,7 @@ from vtl_common.parameters import DATETIME_FORMAT
 from vtl_common.workspace_manager import Workspace
 import tkinter as tk
 from friendliness import check_mat
+from tools.tool_markup.storage import IntervalStorage
 
 MARKUP_WORKSPACE = Workspace("marked_up_tracks")
 
@@ -153,7 +154,13 @@ class DatasetGenerator(ToolBase):
             if load_path:
                 with open(load_path,"r") as fp:
                     jsd = json.load(fp)
-                    self.interval_editor.populate_intervals(jsd["found_event"])
+                    if "found_event" in jsd.keys():
+                        self.interval_editor.populate_intervals(jsd["found_event"])
+                    else:
+                        tracks = jsd["tracks"]
+                        storage = IntervalStorage.deserialize(tracks)
+                        events = [item.serialize for item in storage.get_available()]
+                        self.interval_editor.populate_intervals(events)
                     self.interval_editor.redraw(self.settings_dict)
 
     def on_save(self):

@@ -1,6 +1,6 @@
 import tkinter as tk
 from tools.tool_base import ToolBase
-from .converter_old import ConverterOld
+#from .converter_old import ConverterOld
 from .converter import Converter
 from .downloader import Downloader
 

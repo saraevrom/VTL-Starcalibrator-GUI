@@ -8,10 +8,10 @@ import tkinter.simpledialog as simpledialog
 import os.path as ospath
 import os
 from multiprocessing import Process, Pipe
-import h5py
 import time
 import gc
 from vtl_common.workspace_manager import Workspace
+from compatibility.h5py_aliased_fields import SafeMatHDF5
 
 UNPROCESSED_DATA_WORKSPACE = Workspace("unprocessed_data")
 
@@ -80,7 +80,7 @@ def verify_mat(file_path: str):
     if not ospath.isfile(file_path):
         return False
     try:
-        f = h5py.File(file_path, "r")
+        f = SafeMatHDF5(file_path, "r")
         f.close()
         return True
     except OSError:

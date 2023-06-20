@@ -1,6 +1,7 @@
 from tensorflow import keras
 from ..common import apply_layer_array, create_lambda
 import tensorflow as tf
+import numpy as np
 
 class Residual(object):
     def __init__(self, main, shortcut):
@@ -67,3 +68,39 @@ class PMTSplit(object):
     @property
     def output_shape(self):
         return self.cat.output_shape
+
+class Conv2DPlus1(object):
+    def __init__(self, conv_outputs, win_shape, strides, padding, activation_intermediate, activation_main):
+
+        # layer = keras.layers.Conv3D(conv_outputs, (conv_T, conv_X, conv_Y),
+        #                     strides=(stride_T, stride_X, stride_Y),
+        #                     padding=padding, activation=data["activation"])
+        self.temporal = None
+        self.spatial = None
+        self.conv_outputs = conv_outputs
+        self.win_shape = win_shape
+        self.strides = strides
+        self.padding = padding
+        self.activation_intermediate = activation_intermediate
+        self.activation_main = activation_main
+
+    def __call__(self, inputs):
+        if self.temporal is None:
+            (conv_T, conv_X, conv_Y) = self.win_shape
+            (stride_T, stride_X, stride_Y) = self.strides
+            c = inputs.shape[-1]
+            print("C=",c)
+            conv_imm = np.floor(
+                (conv_T * conv_X * conv_Y * c * self.conv_outputs) / (conv_X * conv_Y * c + conv_T * self.conv_outputs))
+            self.spatial = keras.layers.Conv3D(conv_imm, (1, conv_X, conv_Y),
+                                               strides=(1, stride_X, stride_Y),
+                                               padding=self.padding, activation=self.activation_intermediate)
+            self.temporal = keras.layers.Conv3D(self.conv_outputs, (conv_T, 1, 1),
+                                                strides=(stride_T, 1, 1),
+                                                padding=self.padding, activation=self.activation_main)
+        intermediate = self.spatial(inputs)
+        return self.temporal(intermediate)
+
+    @property
+    def output_shape(self):
+        return self.temporal.output_shape

@@ -1,6 +1,7 @@
 import numpy as np
 from .filepool import RandomFileAccess
 from vtl_common.common_GUI.tk_forms_assist import FormNode, IntNode, AlternatingNode, FloatNode, ArrayNode, OptionNode
+from vtl_common.common_GUI.tk_forms_assist import BoolNode
 from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field, kwarg_builder
 from vtl_common.localization import get_locale
 from noise.noising import FloatDistributedAlter
@@ -30,7 +31,7 @@ class FileTrackSource(TrackSource):
 
     def get_track(self, filelist:RandomFileAccess, rng, frame_size):
         filelist.set_shift_threshold(self.shift_threshold)
-        return filelist.random_access(rng, frame_size)[0]
+        return filelist.random_access(rng, frame_size)[0], False
 
 @kwarg_builder(FileTrackSource)
 class FileTrackSourceForm(FormNode):
@@ -41,7 +42,8 @@ class FileTrackSourceForm(FormNode):
 
 ### Source: random generator
 class GeneratorTrackSource(TrackSource):
-    def __init__(self, velocity, a, psf, min_len, max_len, start_energy, t_peak, subframes, time_cap=None):
+    def __init__(self, velocity, a, psf, min_len, max_len, start_energy, t_peak, subframes, peak_energy,
+                 time_cap=None, strong=False):
         # PARAMETERS:
         # velocity: distributed velocity
         self.velocity_sampler = velocity
@@ -53,6 +55,8 @@ class GeneratorTrackSource(TrackSource):
         self.max_len = max_len
         self.subframes = subframes
         self.time_cap = time_cap
+        self.strong = strong
+        self.peak_energy = peak_energy
 
     def get_track(self, filelist:RandomFileAccess, rng, frame_size):
         attempts = 10000
@@ -60,6 +64,7 @@ class GeneratorTrackSource(TrackSource):
             speed = self.velocity_sampler.sample(rng)
             psf = self.psf_sampler.sample(rng)
             a = self.a_sampler.sample(rng)
+            peak_energy = self.peak_energy.sample(rng)
             t_peak = self.t_peak_sampler.sample(rng) # 0.0=start of track, 1.0=end of track
             x0 = (rng.random()*2-1) * SIDE_A / 2
             y0 = (rng.random()*2-1) * SIDE_B / 2
@@ -72,7 +77,7 @@ class GeneratorTrackSource(TrackSource):
             else:
                 time_cap = int(self.time_cap.sample(rng))
                 t_peak = t_peak * trajectory.length(min(frame_size, time_cap)) # Modify t_peak according to track length
-            lc = TriangularLightCurve(t_peak, 1.0, e_min)
+            lc = TriangularLightCurve(t_peak, peak_energy, e_min*peak_energy)
             psf = GaussianPSF(psf,psf)
             if self.min_len<=trajectory.length(frame_size)<=self.max_len:
                 track, actual_duration = generate_track(trajectory,lc,psf, frame_size, self.subframes,
@@ -89,7 +94,7 @@ class GeneratorTrackSource(TrackSource):
                     shift = 0
 
 
-                return np.roll(track,shift, axis=0)
+                return np.roll(track,shift, axis=0), self.strong
             attempts-=1
         raise RuntimeError("Expired attempts for track generation")
 
@@ -98,6 +103,7 @@ class CapOption(OptionNode):
     DISPLAY_NAME = get_locale("teacher.form.trackgen.random.duration")
     ITEM_TYPE = create_value_field(FloatDistributedAlter, "")
 
+@kwarg_builder(GeneratorTrackSource)
 class GeneratorTrackSourceForm(FormNode):
     DISPLAY_NAME = get_locale("teacher.form.trackgen.random")
     FIELD__velocity = create_value_field(FloatDistributedAlter, get_locale("teacher.form.trackgen.random.speed"))
@@ -108,11 +114,13 @@ class GeneratorTrackSourceForm(FormNode):
     FIELD__min_len = create_value_field(FloatNode, get_locale("teacher.form.trackgen.random.length.min"),4.0)
     FIELD__max_len = create_value_field(FloatNode, get_locale("teacher.form.trackgen.random.length.max"),16.0)
     FIELD__subframes = create_value_field(IntNode, get_locale("teacher.form.trackgen.random.subframes"), 10)
+    FIELD__strong = create_value_field(BoolNode, get_locale("teacher.form.trackgen.random.strong"), False)
+    FIELD__peak_energy = create_value_field(FloatDistributedAlter, get_locale("teacher.form.trackgen.random.peak"),
+                                            {
+                                                "selection_type": "const",
+                                                "value": 1.0
+                                            })
     FIELD__time_cap = CapOption
-
-    def get_data(self):
-        kwargs = super().get_data()
-        return GeneratorTrackSource(**kwargs)
 
 
 class ShuffleSource(TrackSource):

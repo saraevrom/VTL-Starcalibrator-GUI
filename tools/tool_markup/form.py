@@ -55,6 +55,7 @@ class PhaseCutterOption(OptionNode):
 
 class TrackMarkupForm(FormNode):
     FIELD__max_frame = create_value_field(IntNode, get_locale("track_markup.form.max_frame"), 9000)
+    FIELD__apply_ff = create_value_field(BoolNode, get_locale("track_markup.form.apply_ff"), True)
     FIELD__preprocessing = DataPreProcessorField
     FIELD__phase_cut = PhaseCutterOption
     FIELD__min_frame = create_value_field(IntNode, get_locale("track_markup.form.min_frame"), 256)

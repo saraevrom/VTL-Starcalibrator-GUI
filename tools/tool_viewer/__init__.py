@@ -15,9 +15,10 @@ import io
 import imageio as iio
 import matplotlib.dates as md
 from datetime import datetime
-import json, h5py
+import json
 from vtl_common.localized_GUI.signal_plotter import PopupPlotable
 from friendliness import check_mat
+from compatibility.h5py_aliased_fields import SafeMatHDF5
 from preprocessing.denoising import slice_for_preprocess
 
 
@@ -90,7 +91,7 @@ class MatPlayer(ToolBase, PopupPlotable):
 
             assert ut0.shape[0] == data.shape[0]
 
-            with h5py.File(filename, "w") as fp:
+            with SafeMatHDF5(filename, "w") as fp:
                 fp.create_dataset("data0", data=data)
                 fp.create_dataset("UT0", data=ut0)
 
@@ -103,7 +104,7 @@ class MatPlayer(ToolBase, PopupPlotable):
                 remembered_filename = self.get_loaded_filepath()
                 self.close_mat_file()
                 if check_mat(remembered_filename):
-                    with h5py.File(remembered_filename, "a") as rw_file:
+                    with SafeMatHDF5(remembered_filename, "a") as rw_file:
                         rw_file.attrs["ffmodel"] = json.dumps(jsd)
 
                 self.reload_mat_file(remembered_filename, silent=True)

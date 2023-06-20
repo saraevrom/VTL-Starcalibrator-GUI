@@ -5,7 +5,8 @@ from tkinter.simpledialog import askinteger
 
 import numpy as np
 import numba as nb
-import h5py
+#import h5py
+from compatibility.h5py_aliased_fields import SafeMatHDF5
 
 from vtl_common.localization import get_locale
 from compatibility.AutoFF import fix_minima
@@ -102,7 +103,7 @@ class FilePool(tk.Frame):
         if filename in self.open_files_cache.keys():
             return self.open_files_cache[filename]
         else:
-            obj = h5py.File(filename, "r")
+            obj = SafeMatHDF5(filename, "r")
             self.open_files_cache[filename] = obj
             return obj
 
@@ -151,7 +152,7 @@ class FilePool(tk.Frame):
                 fix_minima(file)
             except OSError:
                 print("Could not check means. Caveat emptor.")
-            with h5py.File(file, "r") as testfile:
+            with SafeMatHDF5(file, "r") as testfile:
                 for present_key in req_fields:
                     failkeys = []
                     if present_key not in testfile.keys():
@@ -209,7 +210,7 @@ class RandomIntervalAccess(FilePool):
     def get_capacity(self):
         capacity = 0
         for file in self.files_list:
-            with h5py.File(file, "r") as fp:
+            with SafeMatHDF5(file, "r") as fp:
                 if "marked_intervals" in fp.keys():
                     for i in range(fp["marked_intervals"].shape[0]):
                         start = fp["marked_intervals"][i, 0]
