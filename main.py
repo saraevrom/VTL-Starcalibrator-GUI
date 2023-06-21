@@ -183,11 +183,11 @@ class App(tk.Tk):
 
     def get_ffmodel(self):
         if (self.ffmodel is None) and (self.file is not None):
-            if "means" in self.file.keys():
-                c33 = self.file["means"][3,3]
-                return LinearFF(coefficients=np.array(self.file["means"]/c33),baseline=np.zeros(shape=self.file["means"].shape))
-            else:
-                return None
+            # if "means" in self.file.keys():
+            c33 = self.file["means"][3,3]
+            return LinearFF(coefficients=np.array(self.file["means"]/c33),baseline=np.zeros(shape=self.file["means"].shape))
+            # else:
+            #     return None
         else:
             return self.ffmodel
 

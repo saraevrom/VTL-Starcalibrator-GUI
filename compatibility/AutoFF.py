@@ -26,4 +26,5 @@ def fix_minima(filename):
                     print("Mean data is present")
         else:
             print("Skipped mean test")
-    print("Mandatory FF is disabled")
+    else:
+        print("Mandatory FF is disabled")
