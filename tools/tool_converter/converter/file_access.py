@@ -1,6 +1,6 @@
 import fsspec
 import os.path
-from compatibility.h5py_aliased_fields import SafeMatHDF5
+from compatibility.h5py_aliased_fields import SafeMatHDF5, AliasedDataFile
 from compatibility.alt_ftp import FTPFileSystem
 
 class FileAccess(object):

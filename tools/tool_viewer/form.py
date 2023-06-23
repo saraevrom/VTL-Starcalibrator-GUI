@@ -12,6 +12,7 @@ class GifRenderer(FormNode):
 class ViewerForm(FormNode):
     FIELD__use_flatfielding = create_value_field(BoolNode, get_locale("matplayer.form.use_flatfielding"), True)
     FIELD__use_times = create_value_field(BoolNode, get_locale("matplayer.form.use_times"), False)
+    FIELD__use_gtu = create_value_field(BoolNode, get_locale("matplayer.form.use_gtu"), False)
     FIELD__filter = DataPreProcessorField
     #FIELD__use_filter = create_value_field(BoolNode, get_locale("matplayer.form.use_filter"), False)
     #FIELD__filter_window = create_value_field(IntNode, get_locale("matplayer.form.filter_window"), 60)

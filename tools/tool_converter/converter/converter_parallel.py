@@ -8,7 +8,7 @@ import time
 #import h5py
 
 from vtl_common.localization import get_locale
-from compatibility.h5py_aliased_fields import SafeMatHDF5
+from compatibility.h5py_aliased_fields import SafeMatHDF5, AliasedDataFile
 
 def where_is_index(lengths, index):
     '''

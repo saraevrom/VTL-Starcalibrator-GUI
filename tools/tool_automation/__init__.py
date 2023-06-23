@@ -34,4 +34,4 @@ class ToolAutomation(ToolBase):
                 fp.write(content)
 
     def on_run(self):
-        run_script(self.text.get("1.0", tk.END))
+        run_script(self.text.get("1.0", tk.END), self.file)

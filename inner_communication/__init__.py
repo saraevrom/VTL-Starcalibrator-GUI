@@ -18,10 +18,11 @@ class ManualStopException(Exception):
 def die():
     raise ManualStopException()
 
-def run_script(source):
+def run_script(source,filesource):
     globals = SHARED_ACTIONS.copy()
     globals["__builtins__"] = builtins
     globals["die"] = die
+    globals["file"] = filesource
     try:
         exec (source, globals, dict())
     except ManualStopException:

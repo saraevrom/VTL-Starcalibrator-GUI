@@ -11,3 +11,5 @@ load_markup_parameters(filename) -- load markup parameters
 load_markup_ann(filename) -- load markup neural network
 markup_mark_broken(i,j) -- mark pixel as broken in markup
 markup_auto() -- make one auto markup iteration. Returns true if another one is possible.
+view_frame(frame=None) -- set frame in viewer if provided, returns resulting frame
+view_save(frame) -- save selected frame in viewer

@@ -20,11 +20,12 @@ from vtl_common.localized_GUI.signal_plotter import PopupPlotable
 from friendliness import check_mat
 from compatibility.h5py_aliased_fields import SafeMatHDF5
 from preprocessing.denoising import slice_for_preprocess
+from inner_communication import register_action
 
 
 WORKSPACE_ANIMATIONS = Workspace("animations")
 WORKSPACE_EXPORT = Workspace("export")
-
+WORKSPACE_FRAMES = Workspace("frames")
 
 class MatPlayer(ToolBase, PopupPlotable):
     def __init__(self, master):
@@ -56,6 +57,8 @@ class MatPlayer(ToolBase, PopupPlotable):
         self.form_data = None
         self.fig, self.ax = None, None
         PopupPlotable.__init__(self, self.plotter)
+        register_action("view_frame", self.action_set_frame)
+        register_action("view_save", self.action_save_frame)
         self.click_callback()
 
     def on_export(self):
@@ -217,6 +220,8 @@ class MatPlayer(ToolBase, PopupPlotable):
 
     def __get_plot_x(self, start, end):
         if self.form_data["use_times"]:
+            if self.form_data["use_gtu"]:
+                return self.ut0_s[start: end+1]
             return list(map(datetime.utcfromtimestamp, self.ut0_s[start: end+1]))
         else:
             return np.arange(start, end+1)
@@ -225,6 +230,7 @@ class MatPlayer(ToolBase, PopupPlotable):
         if self.file:
             start, end = self.player_controls.get_selected_range()
             xs = self.__get_plot_x(start, end)
+            #assert (np.diff(xs)>0).all()
             #ys = self.file["data0"][start: end + 1]
             filter_obj = self.form_data["filter"]
             ys, ys_slice = filter_obj.prepare_array(self.file["data0"], start, end+1)
@@ -241,3 +247,10 @@ class MatPlayer(ToolBase, PopupPlotable):
         else:
             return None
 
+    def action_set_frame(self,frame=None):
+        if frame is not None:
+            self.player_controls.playing_position.set_frame(frame)
+        return self.player_controls.playing_position.get_frame()
+
+    def action_save_frame(self, filename):
+        self.plotter.figure.savefig(WORKSPACE_FRAMES.get_file(filename))
