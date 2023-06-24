@@ -102,6 +102,7 @@ class MatPlayer(ToolBase, PopupPlotable):
         if self.file:
             ffmodel = self.get_ff_model()
             if ffmodel:
+                ffmodel.broken_pixels = self.plotter.get_broken()
                 jsd = ffmodel.dump()
 
                 remembered_filename = self.get_loaded_filepath()
