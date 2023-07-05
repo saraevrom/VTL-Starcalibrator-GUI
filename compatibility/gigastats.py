@@ -47,7 +47,7 @@ def get_median(srcf: h5py.File):
         return np.median(srcf["data0"], axis=0)
     else:
         chunk_len = srcf["data0"].chunks[0]
-        assert srcf["data0"].shape[0]%chunk_len == 0
+        #assert srcf["data0"].shape[0]%chunk_len == 0
         assert srcf["data0"].chunks[1] == 16
         assert srcf["data0"].chunks[2] == 16
         dset = srcf["data0"]

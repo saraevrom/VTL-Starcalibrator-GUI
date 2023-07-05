@@ -264,13 +264,20 @@ def pile_up_manual(requested_data0):
             # Converting to mean by dividing by number of gtu per 1e-3 s
     return None
 
+def medians_44(requested_data0):
+    medians = np.median(requested_data0,axis=0)
+    med44 = medians[3,3]  #A[3,3] is pixel 4,4
+    coeffs = medians/med44
+    return Linear(coeffs, np.zeros(coeffs.shape))
+
 
 ALGO_MAP = {
     "linear_correlation": (isotropic_lsq_corr_flatfield_parallel, "LC"),
     "linear_multidimensional_correlation": (multidim_lad_corr_flatfield, "LMDC"),
     "isotropic_lad_multidim_no_bg": (multidim_lad_corr_flatfield_no_bg, "LMSCNBG"),
-    "nonlinear_saturated_respone": (isotropic_lsq_corr_flatfield_nonlinear, "NSR"),
-    "pileup_manual": (pile_up_manual, "PUM")
+    "nonlinear_saturated_response": (isotropic_lsq_corr_flatfield_nonlinear, "NSR"),
+    "pileup_manual": (pile_up_manual, "PUM"),
+    "medians_44":(medians_44, "M44")
 }
 
 if weighted_median is not None:

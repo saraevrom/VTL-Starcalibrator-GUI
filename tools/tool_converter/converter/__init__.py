@@ -20,7 +20,7 @@ class Converter(tk.Frame):
         tk.Label(self, text=get_locale("mat_converter.title"), font='TkDefaultFont 10 bold') \
             .pack(side="top", fill="x")
         self.file_list = Filelist(self, UNPROCESSED_DATA_WORKSPACE)
-        self.file_list.pack(side="left", fill="y", expand=True)
+        self.file_list.pack(side="left", fill="both", expand=True)
         rpanel = tk.Frame(self)
         rpanel.pack(side="right", fill="y")
         self.form_parser = ConverterForm()
