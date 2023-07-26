@@ -1,238 +1,41 @@
 import matplotlib.pyplot as plt
 import numpy as np
+
 try:
     from robustats import weighted_median
 except ImportError:
     weighted_median = None
-from .isotropic_lsq import isotropic_lad_line, phir0_to_kb, phir0_to_kb_inv, isotropic_lad_multidim
-from .isotropic_lsq import isotropic_lad_multidim_no_bg, multidim_sphere
-from multiprocessing import Pool
-from vtl_common.parameters import NPROC
-from .models import Linear, NonlinearSaturation, NonlinearPileup
+
+try:
+    import pymc as pm
+    import arviz as az
+    try:
+        import aesara.tensor as pt
+    except ImportError:
+        import pytensor.tensor as pt
+except ImportError:
+    pm = None
+    pt = None
+    az = None
+
+from scipy.special import lambertw
 from scipy.optimize import minimize, Bounds, LinearConstraint
 import numpy.random as rng
+import numba as nb
+
+from .isotropic_lsq import isotropic_lsq_line, phir0_to_kb, phir0_to_kb_inv, isotropic_lsq_multidim
+from .isotropic_lsq import isotropic_lad_multidim_no_bg, multidim_sphere, get_sphere_angles
+from multiprocessing import Pool
+
+from vtl_common.parameters import NPROC
+from .models import Linear, NonlinearPileup, Interpolative
+from .pileup_math import fit_pileup
 from vtl_common.localization import get_locale
 from vtl_common.workspace_manager import Workspace
 
 CALIBRATION_WORKSPACE = Workspace("calibration")
 
 
-def line_fit_robust(xs, ys):
-    k = np.float(weighted_median(ys/xs, xs))
-    return k
-
-def get_working_pixels(coeffs, x_len, y_len):
-    return np.where((coeffs <= 0).sum(axis=0) < x_len * y_len - 1)[0]
-
-def get_pivot(reduced_coeff_matrix):
-    sample_row = reduced_coeff_matrix[0]
-    print(len(sample_row))
-    sample_median = np.median(sample_row[sample_row != 0])
-    sample_distances = np.abs(sample_row - sample_median)
-    pivot = np.argmin(sample_distances)
-    return pivot
-
-def median_corr_flatfield(requested_data_0):
-    tim_len, x_len, y_len = requested_data_0.shape
-    requested_data = requested_data_0.reshape((tim_len, x_len * y_len))
-    coeff_matrix = np.zeros([x_len * y_len, x_len * y_len])
-    for i in range(x_len * y_len):
-        i_data = requested_data[:, i]
-        for j in range(x_len * y_len):
-            j_data = requested_data[:, j]
-
-            k_ij = line_fit_robust(i_data, j_data)
-            if k_ij != 0:
-                coeff_matrix[i, j] = k_ij
-    coeff_matrix = np.nan_to_num(coeff_matrix, nan=0)
-    print(coeff_matrix.shape)
-    #bad_indices, = np.where((coeff_matrix == 0).sum(axis=0) >= x_len * y_len - 1)
-    good_indices = get_working_pixels(coeff_matrix, x_len, y_len)
-    #coeff_matrix[bad_indices] = np.zeros(x_len * y_len)
-
-
-
-    coeff_matrix_reduced = coeff_matrix[good_indices]
-    pivot = get_pivot(coeff_matrix_reduced)
-    print("Chosen pivot:", pivot)
-    coeff_matrix_reduced = (coeff_matrix_reduced.T / coeff_matrix_reduced[:, pivot]).T
-
-    # good_indices = np.where((coeff_matrix != 0).any(axis=0))
-    # assert len(good_indices) > 0
-    # correct_row = 0
-    # correct_row = np.argmax(coeff_matrix) // coeff_matrix.shape[0]
-    # coeff_array = coeff_matrix[correct_row]
-    coeff_array = np.median(coeff_matrix_reduced, axis=0)
-    draw_coeff_matrix = coeff_array.reshape(x_len, y_len)
-    return Linear(draw_coeff_matrix, np.zeros([x_len, y_len]))
-
-
-def isotropic_lsq_corr_flatfield_raw(requested_data_0):
-    tim_len, x_len, y_len = requested_data_0.shape
-    requested_data = requested_data_0.reshape((tim_len, x_len * y_len))
-    coeff_matrix = np.zeros([x_len * y_len, x_len * y_len])
-    bg_matrix = np.zeros([x_len * y_len, x_len * y_len])
-
-    for i in range(x_len * y_len):
-        i_data = requested_data[:, i]
-        coeff_matrix[i, i] = 1
-        bg_matrix[i, i] = 0
-        # results = []
-        for j in range(i + 1, x_len * y_len):
-            j_data = requested_data[:, j]
-            # result_promise = pool.apply_async(pool_worker, args=(i, j, i_data, j_data), callback=pool_callback)
-            # results.append(result_promise)
-            phi_ij, r0_ij = isotropic_lad_line(i_data, j_data)
-
-            if phi_ij != 0 and np.abs(phi_ij) != np.pi / 2:
-                k_ij, b_ij = phir0_to_kb(phi_ij, r0_ij)
-                k_ji, b_ji = phir0_to_kb_inv(phi_ij, r0_ij)
-                coeff_matrix[i, j] = k_ij
-                coeff_matrix[j, i] = k_ji
-                bg_matrix[i, j] = b_ij
-                bg_matrix[j, i] = b_ji
-
-    coeff_matrix = np.nan_to_num(coeff_matrix, nan=0)
-    bg_matrix = np.nan_to_num(bg_matrix, nan=0)
-    good_indices = get_working_pixels(coeff_matrix, x_len, y_len)
-    coeff_matrix_reduced = coeff_matrix[good_indices]
-    bg_matrix_reduced = bg_matrix[good_indices]
-    pivot = get_pivot(coeff_matrix_reduced)
-    coeff_matrix_normalized = (coeff_matrix_reduced.T / coeff_matrix_reduced[:, pivot]).T
-    bg_matrix_normalized = ((bg_matrix_reduced.T - bg_matrix_reduced[:, pivot]) / coeff_matrix_reduced[:, pivot]).T
-    coeff_array = np.median(coeff_matrix_normalized, axis=0)
-    bg_array = np.median(bg_matrix_normalized, axis=0)
-    draw_coeff_matrix = coeff_array.reshape(x_len, y_len)
-    draw_bg_matrix = bg_array.reshape(x_len, y_len)
-    return draw_coeff_matrix, draw_bg_matrix
-
-def isotropic_lsq_corr_flatfield(requested_data_0):
-    a,b = isotropic_lsq_corr_flatfield_raw(requested_data_0)
-    return Linear(a,b)
-
-
-def isotropic_lsq_corr_flatfield_nonlinear(requested_data_0):
-    dir_start = np.ones(256)
-    offset_start = np.zeros(256)
-    tim_len, x_len, y_len = requested_data_0.shape
-    req_data_shaped = requested_data_0.reshape((tim_len, x_len * y_len))
-    sat_start = np.max(req_data_shaped, axis=0)
-    sat_start[sat_start==0] = 1e-6
-    print()
-    sep = x_len*y_len
-    broken_pixels = np.median(req_data_shaped, axis=0)<1e-6
-
-    def fit_function(params):
-        saturation, response_raw, offset = params[:sep], params[sep:2*sep], params[2*sep:]
-        response = response_raw/saturation
-
-        transformed = offset-np.log(1-(req_data_shaped)/saturation)/response
-        med = np.median(transformed, axis=1)
-        disp = np.abs(transformed.T-med).T
-        disp[:,broken_pixels] = 0
-        #resf = np.mean(np.median(disp,axis=0))
-        resf = np.mean(disp)
-        print("\r", resf, end="")
-        return resf
-    print()
-    aux_bound = np.infty*np.ones(offset_start.shape[0]-1)
-    aux_bound[broken_pixels[1:]] = 0
-    start = np.concatenate([sat_start, dir_start, offset_start])
-    lower_bound_diag = np.concatenate([sat_start, np.zeros(dir_start.shape),
-                                       [0], -aux_bound])
-    upper_bound_diag = np.concatenate([np.ones(sat_start.shape)*np.infty, 10*np.ones(dir_start.shape),
-                                       [0], aux_bound])
-
-    res = minimize(fit_function, start, bounds=Bounds(lb=lower_bound_diag, ub=upper_bound_diag),
-                   method="powell",options={"ftol":1e-1})
-    print("\n",res.message)
-    assert res.success
-    params = res.x
-    saturation, response, offset = params[:sep], params[sep:2*sep], params[2*sep:]
-    #response = response_raw/saturation
-    #response = 1/response
-    return NonlinearSaturation(offset=offset.reshape(16,16), saturation=saturation.reshape(x_len, y_len),response=response.reshape(x_len,y_len))
-
-
-class PoolWorker(object):
-    def __init__(self,requested_data):
-        self.requested_data = requested_data
-
-    def __call__(self, index_pair):
-        i, j = index_pair
-        # if j > i:
-        i_data = self.requested_data[:, i]
-        j_data = self.requested_data[:, j]
-        phi_ij, r0_ij = isotropic_lad_line(i_data, j_data)
-        return phi_ij, r0_ij
-        #else:
-        #    return 0, 0
-
-
-def isotropic_lsq_corr_flatfield_parallel(requested_data_0):
-    tim_len, x_len, y_len = requested_data_0.shape
-    requested_data = requested_data_0.reshape((tim_len, x_len * y_len))
-    #coeff_matrix = np.zeros([x_len * y_len, x_len * y_len])
-    #bg_matrix = np.zeros([x_len * y_len, x_len * y_len])
-    indices_raw_i, indices_raw_j = np.meshgrid(np.arange(x_len * y_len), np.arange(x_len * y_len), indexing="ij")
-    indices_raw_i = indices_raw_i.flatten()
-    indices_raw_j = indices_raw_j.flatten()
-    indices = np.vstack([indices_raw_i, indices_raw_j]).T
-    print(indices)
-    poolworker = PoolWorker(requested_data)
-    with Pool(NPROC) as pool:
-        parallel_result = pool.map(poolworker, indices)
-        flat_angles, flat_distances = np.array(parallel_result).T
-        angle_matrix = flat_angles.reshape(x_len * y_len, x_len * y_len)
-        distance_matrix = flat_distances.reshape(x_len * y_len, x_len * y_len)
-        coeff_matrix, bg_matrix = phir0_to_kb(angle_matrix, distance_matrix)
-        coeff_matrix[angle_matrix == 0] = 0
-        # upper_coeffs, upper_bg = phir0_to_kb(angle_matrix, distance_matrix)
-        # lower_coeffs, lower_bg = phir0_to_kb_inv(angle_matrix.T, distance_matrix.T)
-        # upper_coeffs[angle_matrix == 0] = 0
-        # upper_coeffs[np.abs(angle_matrix) == np.pi/2] = 0
-        # lower_coeffs[(angle_matrix == 0).T] = 0
-        # lower_coeffs[(np.abs(angle_matrix) == np.pi/2).T] = 0
-        # coeff_matrix = upper_coeffs + lower_coeffs + np.identity(x_len * y_len)
-        # bg_matrix = upper_bg + lower_bg
-    coeff_matrix = np.nan_to_num(coeff_matrix, nan=0)
-    bg_matrix = np.nan_to_num(bg_matrix, nan=0)
-    # plt.matshow(coeff_matrix)
-    # plt.show()
-    # plt.matshow(bg_matrix)
-    # plt.show()
-    good_indices = get_working_pixels(coeff_matrix, x_len, y_len)
-    coeff_matrix_reduced = coeff_matrix[good_indices]
-    bg_matrix_reduced = bg_matrix[good_indices]
-
-    pivot = get_pivot(coeff_matrix_reduced)
-    #coeff_matrix_normalized = (coeff_matrix_reduced.T / coeff_matrix_reduced[:, pivot]).T
-    #coeff_matrix_normalized = np.nan_to_num(coeff_matrix_normalized)
-    #bg_matrix_normalized = ((bg_matrix_reduced.T - bg_matrix_reduced[:, pivot]) / coeff_matrix_reduced[:, pivot]).T
-    #bg_matrix_normalized = np.nan_to_num(bg_matrix_normalized)
-    #coeff_array = np.median(coeff_matrix_normalized, axis=0)
-    #bg_array = np.median(bg_matrix_normalized, axis=0)
-    coeff_array = coeff_matrix_reduced[pivot]
-    bg_array = bg_matrix_reduced[pivot]
-    draw_coeff_matrix = coeff_array.reshape(x_len, y_len)
-    draw_bg_matrix = bg_array.reshape(x_len, y_len)
-    return Linear(draw_coeff_matrix, draw_bg_matrix)
-
-def multidim_lad_corr_flatfield(requested_data_0):
-    tim_len, x_len, y_len = requested_data_0.shape
-    requested_data = requested_data_0.reshape((tim_len, x_len * y_len))
-    coeff_vector, bg_vector = isotropic_lad_multidim(requested_data)
-    draw_coeff_matrix = coeff_vector.reshape(x_len, y_len)
-    draw_bg_matrix = bg_vector.reshape(x_len, y_len)
-    return Linear(draw_coeff_matrix, draw_bg_matrix)
-
-def multidim_lad_corr_flatfield_no_bg(requested_data_0):
-    tim_len, x_len, y_len = requested_data_0.shape
-    requested_data = requested_data_0.reshape((tim_len, x_len * y_len))
-    coeff_vector = isotropic_lad_multidim_no_bg(requested_data)
-    draw_coeff_matrix = coeff_vector.reshape(x_len, y_len)
-    draw_bg_matrix = np.zeros((x_len, y_len))
-    return Linear(draw_coeff_matrix, draw_bg_matrix)
 
 
 def pile_up_manual(requested_data0):
@@ -259,10 +62,73 @@ def pile_up_manual(requested_data0):
             k = np.genfromtxt(filename_k, delimiter=",").T  # Original format is transposed
             tau = np.genfromtxt(filename_tau, delimiter=",").T * 1e-6 # ns->ms
             gtu = 1 # ms
-            return NonlinearPileup(sensitivity=k*gtu, divider=gtu / tau, prescaler=1.0)
+            return NonlinearPileup(sensitivity=k*gtu, divider=gtu / tau, prescaler=1.0, offset=0.0)
             # Device is outputting integrated signal
             # Converting to mean by dividing by number of gtu per 1e-3 s
     return None
+
+
+@nb.njit(nb.float64[:,:,:](nb.float64[:,:,:],nb.float64[:,:]))
+def spacetime_outer_div(st_arr, s_arr):
+    res = np.zeros(st_arr.shape)
+    for k in range(st_arr.shape[0]):
+        for i in range(st_arr.shape[1]):
+            for j in range(st_arr.shape[2]):
+                if s_arr[i,j] != 0:
+                    res[k,i,j] = st_arr[k,i,j]/s_arr[i, j]
+    return res
+
+@nb.njit(nb.float64[:,:,:](nb.float64[:,:],nb.float64[:,:,:]))
+def sweep_product(s_arr, st_arr):
+    res = np.zeros(st_arr.shape)
+    for k in range(st_arr.shape[0]):
+        for i in range(st_arr.shape[1]):
+            for j in range(st_arr.shape[2]):
+                res[k,i,j] = s_arr[i,j]*st_arr[k, i, j]
+    return res
+
+@nb.njit(nb.float64[:,:,:](nb.float64[:],nb.float64[:,:,:]))
+def mae_sub(a,b):
+    res = np.zeros(b.shape)
+    for k in range(b.shape[0]):
+        for i in range(b.shape[1]):
+            for j in range(b.shape[2]):
+                res[k,i,j] = b[k,i,j] - a[k]
+    return res
+
+
+
+def parametrization_matrix(shape_len):
+    basis_projected = np.identity(shape_len) - 1/shape_len
+    basis_planar = basis_projected[:,:-1]
+    basis = []
+    for i in range(shape_len-1):
+        new_element = basis_planar[:,i]
+        for in_basis in basis:
+            new_element = new_element - in_basis*(in_basis@new_element)
+        new_element = new_element/(new_element@new_element)**0.5
+        basis.append(new_element)
+    basis = np.vstack(basis)
+    return basis.T
+
+def parametrize(basis, coeffs_flat):
+    l = coeffs_flat.shape[0]
+    projected = coeffs_flat*(l**0.5)/np.sum(coeffs_flat) - 1/l**0.5
+    print("PROJECTION SUM", np.sum(projected))
+    return basis.T @ projected
+
+def pile_up_auto(requested_data0):
+    k,div = fit_pileup(requested_data0)
+    return NonlinearPileup(sensitivity=k, divider=div, prescaler=1.0, offset=0.0 )
+
+
+LEARN_SW = [
+    #(1000.0, 0.1),
+    (30000, 500.0),
+    (25000, 200.0),
+    (1000, 100.0),
+    (100,10.0)
+]
 
 def medians_44(requested_data0):
     medians = np.median(requested_data0,axis=0)
@@ -271,14 +137,115 @@ def medians_44(requested_data0):
     return Linear(coeffs, np.zeros(coeffs.shape))
 
 
+def median_offset(requested_data0):
+    medians = np.median(requested_data0,axis=0)
+    true_median = np.median(requested_data0)
+    offsets = medians-true_median
+    return Linear(np.ones(offsets.shape), offsets)
+
+
+def get_model(requested_data0):
+    median_frame = np.median(requested_data0, axis=0)
+    min_frame = np.min(requested_data0, axis=0)
+    max_frame = np.max(requested_data0, axis=0)
+    pixels_amount = sum(median_frame.shape)
+    print("Building model")
+
+    with pm.Model() as model:
+        # off0 = pm.Normal("OFF",sigma=1.0, shape=min_frame.shape)
+        # offset = pt.expand_dims(off0, (0,))
+
+        intensity = pm.Uniform("I", lower=0.0, upper=100.0, shape=(requested_data0.shape[0],))
+        intens1 = pt.expand_dims(intensity, (1, 2))
+
+        D = pm.TruncatedNormal("D_P", mu=1, lower=1, sigma=1, shape=min_frame.shape) * max_frame
+        div_norm = pm.TruncatedNormal("DIVN_P", sigma=10.0, mu=1.0, lower=1.0, shape=min_frame.shape) * 100.0
+
+        div = pm.Deterministic("DIV", D * np.e)
+        pm.Deterministic("EFF", div / div_norm)
+
+        D1 = pt.expand_dims(D, (0,))
+        divnorm1 = pt.expand_dims(div_norm, (0))
+        # signal = np.e*D1/divnorm1 * (intens1-offset)*pt.exp(-(intens1-offset)/divnorm1)
+        signal = np.e * D1 / divnorm1 * intens1 * pt.exp(-intens1 / divnorm1)
+        sigma = pm.Exponential("σ", lam=1e4, shape=min_frame.shape)
+        # b = pm.Exponential("b",lam=1e3, shape=min_frame.shape)
+        posterior = pm.Normal("POST", mu=signal, sigma=sigma, observed=requested_data0)
+        print("Model ready")
+    return model
+
+def pile_up_prob(requested_data0):
+    model = get_model(requested_data0)
+    with model:
+        idata = pm.sample(draws=2000,tune=4000, chains=4, target_accept=0.95)
+    #print(az.summary(idata))
+    print("Getting efficiency")
+    efficiency = idata.posterior["EFF"].median(dim=["draw", "chain"]).to_numpy()
+    print("Getting divider")
+    divider = idata.posterior["DIV"].median(dim=["draw", "chain"]).to_numpy()
+    print("Getting stdev")
+    sigma0 = idata.posterior["σ"].median(dim=["draw", "chain"]).to_numpy()
+    #b0 = idata.posterior["b"].median(dim=["draw", "chain"]).to_numpy()
+    #offset = idata.posterior["OFF"].median(dim=["draw", "chain"]).to_numpy()
+    print("Calculation stdev:", sigma0)
+    return NonlinearPileup(sensitivity=efficiency, divider=divider, prescaler=1.0, offset=0.0)
+
+def interpolative_median(requested_data0):
+    zero_frame = np.zeros(shape=(1,requested_data0.shape[1], requested_data0.shape[2]))
+    data0 = np.concatenate([zero_frame, requested_data0], axis=0)
+    intensities = np.median(data0, axis=(1,2))
+    indices = np.argsort(intensities)
+
+    x_frames = data0[indices]
+    y_frames = intensities[indices]
+
+    return Interpolative(x_frames=x_frames, y_frames=y_frames)
+
+def interpolative_mean(requested_data0):
+    zero_frame = np.zeros(shape=(1,requested_data0.shape[1], requested_data0.shape[2]))
+    data0 = np.concatenate([zero_frame, requested_data0], axis=0)
+    intensities = np.mean(data0, axis=(1,2))
+    indices = np.argsort(intensities)
+
+    x_frames = data0[indices]
+    y_frames = intensities[indices]
+
+    return Interpolative(x_frames=x_frames, y_frames=y_frames)
+
+def interpolative_probabilistic(requested_data0):
+    model = get_model(requested_data0)
+    with model:
+        idata = pm.sample(draws=2000, tune=4000, chains=4, target_accept=0.95)
+    intensities = idata.posterior["I"].median(dim=["draw", "chain"]).to_numpy()
+    #print(intensities)
+
+    zero_frame = np.zeros(shape=(1,requested_data0.shape[1], requested_data0.shape[2]))
+    data0 = np.concatenate([zero_frame, requested_data0], axis=0)
+    intensities = np.concatenate([[0],intensities])
+    indices = np.argsort(intensities)
+
+    x_frames = data0[indices]
+    y_frames = intensities[indices]
+
+    return Interpolative(x_frames=x_frames, y_frames=y_frames)
+
+
+
 ALGO_MAP = {
-    "linear_correlation": (isotropic_lsq_corr_flatfield_parallel, "LC"),
-    "linear_multidimensional_correlation": (multidim_lad_corr_flatfield, "LMDC"),
-    "isotropic_lad_multidim_no_bg": (multidim_lad_corr_flatfield_no_bg, "LMSCNBG"),
-    "nonlinear_saturated_response": (isotropic_lsq_corr_flatfield_nonlinear, "NSR"),
+    # "linear_correlation": (isotropic_lsq_corr_flatfield_parallel, "LC"),
+    # "isotropic_lad_multidim_no_bg": (multidim_lad_corr_flatfield_no_bg, "LMSCNBG"),
+    # "nonlinear_saturated_response": (isotropic_lsq_corr_flatfield_nonlinear, "NSR"),
     "pileup_manual": (pile_up_manual, "PUM"),
-    "medians_44":(medians_44, "M44")
+    "pileup_heuristic": (pile_up_auto, "PUH"),
+    "medians_44":(medians_44, "M44"),
+    "align_offset":(median_offset, "MAL"),
+    "interpolative_median":(interpolative_median, "INTPM"),
+    "interpolative_average":(interpolative_mean, "INTPA")
 }
 
-if weighted_median is not None:
-    ALGO_MAP["proportional_correlation"] = (median_corr_flatfield, "PC")
+if pm is not None:
+    ALGO_MAP["pileup_probabilistic"] = (pile_up_prob, "PUP")
+    ALGO_MAP["interpolative_probabilistic"] = (interpolative_probabilistic, "IPP")
+
+# if weighted_median is not None:
+#     ALGO_MAP["proportional_correlation"] = (median_corr_flatfield, "PC")

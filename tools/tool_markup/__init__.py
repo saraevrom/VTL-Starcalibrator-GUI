@@ -297,6 +297,7 @@ class ToolMarkup(ToolBase, PopupPlotable):
             title=get_locale("app.filedialog.load_model.title"),
             filetypes=[(get_locale("app.filedialog_formats.model"), "*.h5")]
         )
+        self.load_tf(filename)
 
 
     def load_tf(self, filename):

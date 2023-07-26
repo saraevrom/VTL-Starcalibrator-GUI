@@ -312,7 +312,7 @@ class FlatFielder(ToolBase):
         ax.set_ylabel(f"S[{i2}, {j2}]")
         #ax.scatter(S_1_o, S_2_o)
         ax.scatter(S_1, S_2)
-        maxval = np.max(np.concatenate([S_1, S_2, S_1_o, S_2_o]))
+        maxval = np.max(np.concatenate([S_1, S_2]))
         ax.plot([0, maxval], [0, maxval])
         # xs_test = np.array([min(S_1), max(S_1)])
         # ys_test = draw_coeff_matrix[i2, j2] * (xs_test - draw_bg_matrix[i1, j1]) / draw_coeff_matrix[i1, j1] + \

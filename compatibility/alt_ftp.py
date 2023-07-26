@@ -68,6 +68,7 @@ class FTPFileSystem(AbstractFileSystem):
         self.cred = username, password, acct
         self.timeout = timeout
         self.encoding = encoding
+        self.ftp = None
         if block_size is not None:
             self.blocksize = block_size
         else:
@@ -75,6 +76,8 @@ class FTPFileSystem(AbstractFileSystem):
         self._connect()
 
     def _connect(self):
+        if self.ftp is not None:
+            self.ftp.close()
         if sys.version_info >= (3, 9):
             self.ftp = FTP(timeout=self.timeout, encoding=self.encoding)
         elif self.encoding:
@@ -84,6 +87,7 @@ class FTPFileSystem(AbstractFileSystem):
             self.ftp = FTP(timeout=self.timeout)
         self.ftp.connect(self.host, self.port)
         self.ftp.login(*self.cred)
+        self.ftp.set_pasv(True)
 
     @classmethod
     def _strip_protocol(cls, path):
@@ -258,6 +262,9 @@ class FTPFileSystem(AbstractFileSystem):
             self.dircache.pop(path, None)
         super(FTPFileSystem, self).invalidate_cache(path)
 
+    def reset_ftp(self):
+        self._connect()
+
 
 class TransferDone(Exception):
     """Internal exception to break out of transfer"""
@@ -308,41 +315,56 @@ class FTPFile(AbstractBufferedFile):
         Will fail if the server does not respect the REST command on
         retrieve requests.
         """
+
         out = []
-        total = [0]
-
-        def callback(x):
-            total[0] += len(x)
-            if total[0] > end - start:
-                out.append(x[: (end - start) - total[0]])
-                if end < self.size:
-                    raise TransferDone
-            else:
-                out.append(x)
-
-            if total[0] == end - start and end < self.size:
-                raise TransferDone
-
-        try:
-            trying = True
-            while trying: # Cost of broken line
-                try:
-                    self.fs.ftp.retrbinary(
-                        "RETR %s" % self.path,
-                        blocksize=self.blocksize,
-                        rest=start,
-                        callback=callback,
-                    )
-                    trying = False
-                except error_perm:
-                    trying = True
-        except TransferDone:
+        trying = True
+        while trying:  # Timeout handling
             try:
-                # stop transfer, we got enough bytes for this block
-                self.fs.ftp.abort()
-                # self.fs.ftp.getmultiline()  # Broken
-            except Error:
-                self.fs._connect()
+                out.clear()
+                total = [0]
+
+                def callback(x):
+                    total[0] += len(x)
+                    if total[0] > end - start:
+                        out.append(x[: (end - start) - total[0]])
+                        if end < self.size:
+                            raise TransferDone
+                    else:
+                        out.append(x)
+
+                    if total[0] == end - start and end < self.size:
+                        raise TransferDone
+
+                try:
+                    trying_inner = True
+                    while trying_inner: # Cost of broken line
+                        try:
+                            self.fs.ftp.retrbinary(
+                                "RETR %s" % self.path,
+                                blocksize=self.blocksize,
+                                rest=start,
+                                callback=callback,
+                            )
+                            trying_inner = False
+                        except error_perm:
+                            trying_inner = True
+
+                except TransferDone:
+                    trying = False
+                    try:
+                        # stop transfer, we got enough bytes for this block
+                        self.fs.ftp.abort()
+                        # self.fs.ftp.getmultiline()  # Broken
+                    except Error:
+                        self.fs._connect()
+
+            except TimeoutError:
+                if trying:
+                    print("Timeout error. Retrying...")
+                else:
+                    print("Timeout error but mission accomplished. ")
+                self.fs.reset_ftp()
+
 
         return b"".join(out)
 

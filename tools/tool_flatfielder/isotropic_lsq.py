@@ -71,10 +71,11 @@ def multidim_sphere(angles):
     for i in prange(N):
         accum = 1
         for j in range(i+1):
-            if j < i:
-                accum = accum * np.sin(angles[j])
-            else:
-                accum = accum * np.cos(angles[j])
+            if j<N-1:
+                if j < i:
+                    accum = accum * np.sin(angles[j])
+                else:
+                    accum = accum * np.cos(angles[j])
         result[i] = accum
     return result
 
@@ -157,6 +158,26 @@ def calculate_distances(points, direction):
         result[i] = np.sqrt(np.sum(point * point))
     return result
 
+@nb.njit(parallel=True)
+def calculate_distances_sqr(points, direction):
+    N, dims = points.shape
+    assert dims == 256
+    result = np.zeros(N)
+    for i in prange(N):
+        point = points[i]
+        point = point - direction*np.sum(direction*point)
+        result[i] = np.sum(point * point)
+    return result
+
+def multidim_vec_score_lsq(params, signal_mat):
+    dims = signal_mat.shape[1]
+    direction, displace = mod_params_to_line(params, dims)
+    modded_signals = signal_mat - displace
+
+    distances = calculate_distances_sqr(modded_signals, direction)
+    res = np.sum(distances)
+    print("\r", res/distances.shape[0], end="")
+    return res
 
 def multidim_vec_score(params, signal_mat):
     dims = signal_mat.shape[1]
@@ -168,7 +189,8 @@ def multidim_vec_score(params, signal_mat):
     print("\r", res/distances.shape[0], end="")
     return res
 
-def isotropic_lad_multidim(signal_mat):
+
+def isotropic_lasd_multidim(signal_mat, method):
     dims = signal_mat.shape[1]
     #initial_guess = np.zeros(2*(dims-1))
     distances_from_origin = np.sum(signal_mat * signal_mat, axis=1)
@@ -178,11 +200,17 @@ def isotropic_lad_multidim(signal_mat):
     initial_guess = twodot_line_params(signal_mat[closest], signal_mat[furthest])
     #params = initial_guess
     print("")
-    res = minimize(multidim_vec_score, np.array(initial_guess), args=(signal_mat,), method="Powell")
+    res = minimize(method, np.array(initial_guess), args=(signal_mat,), method="Powell", tol=1e-8)
     print("")
     assert res.success
     params = res.x
     return mod_params_to_line(params, dims)
+
+def isotropic_lad_multidim(signal_mat):
+    return isotropic_lasd_multidim(signal_mat,multidim_vec_score)
+
+def isotropic_lsq_multidim(signal_mat):
+    return isotropic_lasd_multidim(signal_mat,multidim_vec_score_lsq)
 
 def multidim_vec_score_no_bg(params, signal_mat):
     direction = multidim_sphere(params)
