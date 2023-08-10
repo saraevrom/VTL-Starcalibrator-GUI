@@ -117,6 +117,8 @@ class Display(tk.Frame):
 
         return self._interval.to_arange(), self._processed_data
 
+    def get_current_range(self):
+        return self._interval.start, self._interval.end
 
     def get_tf_data(self, tf_model):
         if self.storage.has_item() and (self._formdata is not None) and self.controller.file:

@@ -9,7 +9,7 @@ import tkinter as tk
 import h5py
 import numpy as np
 
-from vtl_common.localized_GUI.signal_plotter import PopupPlotable
+from vtl_common.localized_GUI.signal_plotter import PopupPlotable, ChoosablePlotter
 from vtl_common.localized_GUI.tk_forms import SaveableTkDictForm
 from vtl_common.localized_GUI import GridPlotter
 from .form import TrackMarkupForm
@@ -572,7 +572,23 @@ class ToolMarkup(ToolBase, PopupPlotable):
 
     def get_plot_data(self):
         self.sync_form()
-        return self.display.get_plot_data()
+        start, end = self.display.get_current_range()
+        auxdata = {
+            "start":start,
+            "end":end
+        }
+        r = self.display.get_plot_data()
+        return r[0], r[1], auxdata
+
+    def postprocess_plot_export(self, h5filename:str, caller_window:ChoosablePlotter):
+        start = caller_window.aux_data["start"]
+        end = caller_window.aux_data["end"]
+        times = self.file["UT0"][start:end]
+        raw_data = self.file["data0"][start:end]
+        with h5py.File(h5filename,"a") as fp:
+            fp.create_dataset("UT0", data=times)
+            fp.create_dataset("raw_data", data=raw_data)
+
 
     def propose_event(self, item, source=None):
         if not self.display.storage.has_item() or self.display.storage.try_retract():

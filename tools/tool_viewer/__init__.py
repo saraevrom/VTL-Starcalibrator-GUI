@@ -1,4 +1,7 @@
 import tkinter as tk
+
+import h5py
+
 from vtl_common.localized_GUI.plotter import GridPlotter
 from .player_controls import PlayerControls
 import numpy as np
@@ -16,7 +19,7 @@ import imageio as iio
 import matplotlib.dates as md
 from datetime import datetime
 import json
-from vtl_common.localized_GUI.signal_plotter import PopupPlotable
+from vtl_common.localized_GUI.signal_plotter import PopupPlotable, ChoosablePlotter
 from friendliness import check_mat
 from compatibility.h5py_aliased_fields import SafeMatHDF5
 from preprocessing.denoising import slice_for_preprocess
@@ -244,9 +247,23 @@ class MatPlayer(ToolBase, PopupPlotable):
 
             ys = ys[ys_slice]
             print("Y shape", ys.shape)
-            return xs, ys
+            auxdata = {
+                "start":start,
+                "end":end
+            }
+            return xs, ys, auxdata
         else:
             return None
+
+    def postprocess_plot_export(self, h5filename:str, caller_window:ChoosablePlotter):
+        start = caller_window.aux_data["start"]
+        end = caller_window.aux_data["end"]
+        ut0 = self.ut0_s[start:end+1]
+        data0 = self.file["data0"][start:end+1]
+        with h5py.File(h5filename, "a") as fp:
+            fp.create_dataset("UT0", data=ut0)
+            fp.create_dataset("raw_data", data=data0)
+
 
     def action_set_frame(self,frame=None):
         if frame is not None:
