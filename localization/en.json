@@ -296,7 +296,7 @@
 
   "track_markup.form.pmt_select": "Select PMT",
   "track_markup.form.trigger": "Trigger",
-  "track_markup.form.trigger.threshold": "Probability threshold",
+  "track_markup.form.trigger.threshold": "Probability/Signal threshold",
   "track_markup.form.trigger.max_data_plot": "Data plot length limit",
   "track_markup.form.trigger.edge_shift": "Edge interval shift",
   "track_markup.form.trigger.expand_window": "Expand window",

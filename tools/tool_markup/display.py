@@ -9,6 +9,7 @@ from vtl_common.common_flatfielding.models import FlatFieldingModel
 from preprocessing.three_stage_preprocess import DataThreeStagePreProcessor
 from .edges import split_intervals, edged_intervals
 from preprocessing.denoising import divide_multidim_3to2
+from trigger_ai.models.common import expand_window
 
 def prepare_data(interval:Interval, formdata, file_src):
     start = interval.start
@@ -133,6 +134,55 @@ class Display(tk.Frame):
                 data = divide_multidim_3to2(data, np.array(self.controller.file["means"]))
             return data, slicer, preprocessor
 
+    def get_no_tf_data(self, preprocessor):
+        if self.storage.has_item() and (self._formdata is not None) and self.controller.file:
+            assert self.storage.item.is_same_as(self._interval)
+            start = self._interval.start
+            end = self._interval.end
+            data, slicer = preprocessor.prepare_array(self.controller.file["data0"], start, end, margin_add=257)
+            data = data.astype(float)
+            if "means" in self.controller.keys():
+                data = divide_multidim_3to2(data, np.array(self.controller.file["means"]))
+            return data, slicer
+
+
+    def _distribute_data(self, positive_storage, negative_storage, triggered, datashape, fp_filter):
+        intervals = edged_intervals(triggered)
+        pos, neg = split_intervals(np.array(intervals))
+        source: IntervalStorage
+        source = self._interval.to_istorage()
+        base = self._interval.start
+        for p in pos:
+            item = Interval(base + p[0], base + p[1])
+            item.to_slice()
+            if fp_filter is None:
+                assert source.try_move_to(positive_storage, item)
+            else:
+                assert self._processed_data.shape == datashape
+                if fp_filter.test_tp(self._processed_data[p[0]:p[1]], item):
+                    assert source.try_move_to(positive_storage, item)
+                else:
+                    assert source.try_move_to(negative_storage, item)
+        for n in neg:
+            item = Interval(base + n[0], base + n[1])
+            assert source.try_move_to(negative_storage, item)
+        assert source.is_empty()
+        self.storage.take_external()
+
+    def simple_threshold_trigger(self, positive_storage, negative_storage, trigger_params, preprocessor):
+        gc.collect()
+        trigger_data = self.get_no_tf_data(preprocessor)
+        threshold = trigger_params["threshold"]
+        use_expand = trigger_params["expand_window"]
+        if trigger_data:
+            data, slicer = trigger_data
+            x_data = preprocessor.preprocess_whole(data, self.plotter.get_broken())
+            triggered = np.logical_or.reduce(x_data>threshold, axis=(1,2))
+            if use_expand:
+                triggered = expand_window(triggered, 128)
+            triggered = triggered[slicer]
+            self._distribute_data(positive_storage, negative_storage, triggered, data[slicer].shape, None)
+
     def trigger(self, tf_model, positive_storage, negative_storage, fp_filter, original_preprocessor):
         gc.collect()
         tf_data =  self.get_tf_data(tf_model)
@@ -151,27 +201,27 @@ class Display(tk.Frame):
                 x_data = x_data_new
             triggered = tf_model.trigger(x_data,threshold)
             triggered = triggered[slicer]
-            intervals = edged_intervals(triggered)
-            pos, neg = split_intervals(np.array(intervals))
-            source: IntervalStorage
-            source = self._interval.to_istorage()
-            base = self._interval.start
-            for p in pos:
-                item = Interval(base+p[0],base+p[1])
-                item.to_slice()
-                if fp_filter is None:
-                    assert source.try_move_to(positive_storage, item)
-                else:
-                    assert self._processed_data.shape == data[slicer].shape
-                    if fp_filter.test_tp(self._processed_data[p[0]:p[1]], item):
-                        assert source.try_move_to(positive_storage, item)
-                    else:
-                        assert source.try_move_to(negative_storage, item)
-            for n in neg:
-                item = Interval(base+n[0],base+n[1])
-                assert source.try_move_to(negative_storage, item)
-            assert source.is_empty()
-            self.storage.take_external()
+            self._distribute_data(positive_storage, negative_storage, triggered, data[slicer].shape, fp_filter)
+            # pos, neg = split_intervals(np.array(intervals))
+            # source: IntervalStorage
+            # source = self._interval.to_istorage()
+            # base = self._interval.start
+            # for p in pos:
+            #     item = Interval(base+p[0],base+p[1])
+            #     item.to_slice()
+            #     if fp_filter is None:
+            #         assert source.try_move_to(positive_storage, item)
+            #     else:
+            #         assert self._processed_data.shape == data[slicer].shape
+            #         if fp_filter.test_tp(self._processed_data[p[0]:p[1]], item):
+            #             assert source.try_move_to(positive_storage, item)
+            #         else:
+            #             assert source.try_move_to(negative_storage, item)
+            # for n in neg:
+            #     item = Interval(base+n[0],base+n[1])
+            #     assert source.try_move_to(negative_storage, item)
+            # assert source.is_empty()
+            # self.storage.take_external()
 
     def postprocess(self, tf_model, axes):
         tf_data = self.get_tf_data(tf_model)

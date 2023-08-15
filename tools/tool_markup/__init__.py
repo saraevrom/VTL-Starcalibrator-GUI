@@ -270,8 +270,8 @@ class ToolMarkup(ToolBase, PopupPlotable):
 
 
     def ensure_tfmodel(self):
-        if self.tf_model is None:
-            self.on_load_tf()
+        #if self.tf_model is None:
+        #    self.on_load_tf()
         return  self.tf_model is not None
 
     def on_auto(self, auto_call=False):
@@ -283,11 +283,17 @@ class ToolMarkup(ToolBase, PopupPlotable):
                 self.after(1000, lambda: self.on_auto(True))
 
     def single_trigger(self):
+        self.sync_form()
+        gc.collect()
         if self.ensure_tfmodel():
-            self.sync_form()
-            gc.collect()
             self.display.trigger(self.tf_model, self.tracks.storage, self.background.storage,
                                  self._formdata["phase_cut"], self._formdata["preprocessing"])
+            self.pull_next_interval()
+            return self.display.storage.has_item()
+        else:
+            trigger = self._formdata["trigger"]
+            preprocessor = self._formdata["preprocessing"]
+            self.display.simple_threshold_trigger(self.tracks.storage, self.background.storage,trigger,preprocessor)
             self.pull_next_interval()
             return self.display.storage.has_item()
         return False

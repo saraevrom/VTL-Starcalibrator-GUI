@@ -289,7 +289,7 @@
   "track_markup.form.end_skip": "Пропуск кадров в конце",
   "track_markup.form.pmt_select": "ФЭУ",
   "track_markup.form.trigger": "Триггер",
-  "track_markup.form.trigger.threshold": "Порог вероятности",
+  "track_markup.form.trigger.threshold": "Порог вероятности/сигнала",
   "track_markup.form.trigger.edge_shift": "Сдвиг краёв диапазона",
   "track_markup.form.trigger.expand_window": "Расширение окна",
   "track_markup.form.trigger.deconvolve_window": "Развёртка окна",
