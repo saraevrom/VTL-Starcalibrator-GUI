@@ -60,8 +60,10 @@ class MatPlayer(ToolBase, PopupPlotable):
         self.form_data = None
         self.fig, self.ax = None, None
         PopupPlotable.__init__(self, self.plotter)
+        register_action("view_get_frame", self.action_get_current_frame)
         register_action("view_frame", self.action_set_frame)
         register_action("view_save", self.action_save_frame)
+        register_action("view_range", self.action_get_range)
         self.click_callback()
 
     def on_export(self):
@@ -265,6 +267,9 @@ class MatPlayer(ToolBase, PopupPlotable):
             fp.create_dataset("raw_data", data=data0)
 
 
+    def action_get_current_frame(self):
+        return self.plotter.buffer_matrix[:]
+
     def action_set_frame(self,frame=None):
         if frame is not None:
             self.player_controls.playing_position.set_frame(frame)
@@ -272,3 +277,6 @@ class MatPlayer(ToolBase, PopupPlotable):
 
     def action_save_frame(self, filename):
         self.plotter.figure.savefig(WORKSPACE_FRAMES.get_file(filename))
+
+    def action_get_range(self):
+        return self.player_controls.get_selected_range()
