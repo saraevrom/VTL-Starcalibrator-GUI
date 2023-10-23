@@ -9,7 +9,7 @@ from extension.optional_tensorflow import TENSORFLOW_INSTALLED
 if TENSORFLOW_INSTALLED:
     from trigger_ai.models.common import deconvolve_windows_mean, deconvolve_windows_max
 else:
-    deconvolve_window_mean = None
+    deconvolve_windows_mean = None
     deconvolve_windows_max = None
 
 from .phase_cutter import PhaseCutter
