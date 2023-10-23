@@ -91,7 +91,7 @@ class ToolTeacher(ToolBase):
         self.fg_pool.grid(row=0, column=1, sticky="nsew")
         self.interference_pool = RandomFileAccess(self, "teacher.pool_interference.title",
                                                   workspace=MODELED_TRACK_WORKSPACE, allow_clear=True)
-        self.interference_pool.grid(row=0, column=2, sticky="nsew")
+        #self.interference_pool.grid(row=0, column=2, sticky="nsew")
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
@@ -104,7 +104,7 @@ class ToolTeacher(ToolBase):
         self.rng = None
 
         control_frame = tk.Frame(self)
-        control_frame.grid(row=0, column=3, sticky="nsew")
+        control_frame.grid(row=0, column=2,columnspan=2, sticky="nsew")
         self.columnconfigure(3,weight=2)
         control_frame.rowconfigure(0, weight=1)
         control_frame.columnconfigure(0, weight=1)
