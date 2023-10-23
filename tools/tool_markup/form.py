@@ -3,9 +3,16 @@ from vtl_common.common_GUI.tk_forms_assist import FormNode, IntNode, ComboNode, 
 from vtl_common.common_GUI.tk_forms_assist.factory import create_value_field, kwarg_builder
 from vtl_common.localization import get_locale
 from preprocessing.forms import DataPreProcessorField
-from trigger_ai.models.common import deconvolve_windows_mean, deconvolve_windows_max
-from .phase_cutter import PhaseCutter
 
+
+from extension.optional_tensorflow import TENSORFLOW_INSTALLED
+if TENSORFLOW_INSTALLED:
+    from trigger_ai.models.common import deconvolve_windows_mean, deconvolve_windows_max
+else:
+    deconvolve_window_mean = None
+    deconvolve_windows_max = None
+
+from .phase_cutter import PhaseCutter
 
 class PmtSelect(ComboNode):
     DISPLAY_NAME = get_locale("track_markup.form.pmt_select")
