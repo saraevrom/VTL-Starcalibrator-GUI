@@ -9,7 +9,12 @@ from vtl_common.common_flatfielding.models import FlatFieldingModel
 from preprocessing.three_stage_preprocess import DataThreeStagePreProcessor
 from .edges import split_intervals, edged_intervals
 from preprocessing.denoising import divide_multidim_3to2
-from trigger_ai.models.common import expand_window
+from extension.optional_tensorflow import TENSORFLOW_INSTALLED
+
+if TENSORFLOW_INSTALLED:
+    from trigger_ai.models.common import expand_window
+else:
+    expand_window = None
 
 def prepare_data(interval:Interval, formdata, file_src):
     start = interval.start
@@ -178,7 +183,7 @@ class Display(tk.Frame):
             data, slicer = trigger_data
             x_data = preprocessor.preprocess_whole(data, self.plotter.get_broken())
             triggered = np.logical_or.reduce(x_data>threshold, axis=(1,2))
-            if use_expand:
+            if use_expand and expand_window is not None:
                 triggered = expand_window(triggered, 128)
             triggered = triggered[slicer]
             self._distribute_data(positive_storage, negative_storage, triggered, data[slicer].shape, None)
